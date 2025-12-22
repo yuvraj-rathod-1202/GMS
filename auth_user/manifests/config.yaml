@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-config
+data:
+  DB_HOST: localhost
+  DB_USER: mms_user
+  DB_NAME: auth
+  DB_PORT: "3306"

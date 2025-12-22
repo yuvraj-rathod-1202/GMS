@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY . /app
 
-CMD ["uvicorn", "auth_user.main:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "5000"]

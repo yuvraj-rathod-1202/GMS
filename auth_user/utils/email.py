@@ -1,6 +1,6 @@
 from faker import Faker
 import bcrypt
-from auth_user.utils.db import get_db
+from utils.db import get_db
 
 def request_password_reset(email: str):
     
