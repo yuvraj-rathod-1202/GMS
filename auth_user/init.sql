@@ -1,0 +1,15 @@
+CREATE USER 'mms_user'@'%' IDENTIFIED BY 'MmsUserPass123';
+
+CREATE DATABASE auth;
+
+GRANT ALL PRIVILEGES ON auth.* TO 'mms_user'@'%';
+
+USE auth;
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    password_hash VARCHAR(256) NOT NULL,
+    email VARCHAR(128) NOT NULL UNIQUE,
+    last_login TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -1,0 +1,145 @@
+import datetime, os, bcrypt
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
+from dotenv import load_dotenv
+from models.schema import User, SignUpUser
+from utils.security import create_jwt_token, verify_jwt_token, verify_password
+from utils.email import request_password_reset
+from utils.db import get_db
+
+load_dotenv()
+
+app = FastAPI()
+
+basic_auth = HTTPBasic()
+bearer_auth = HTTPBearer()
+    
+@app.post("/login")
+def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
+    db = get_db()
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    cur = db.cursor()
+    cur.execute(
+        "SELECT id, email, username, password_hash FROM users WHERE email = %s",
+        (credentials.username,)
+    )
+    row = cur.fetchone()
+    
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
+        
+    id, email, username, password_hash = row
+    if not verify_password(credentials.password, password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
+        
+    token = create_jwt_token(
+        User(id=id, username=username, email=email),
+        os.getenv("JWT_SECRET_KEY") or "default",
+    )
+    
+    return {token}
+
+@app.post("/verify-token")
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
+    return verify_jwt_token(credentials)
+        
+@app.post("/signup")
+def signup(user: SignUpUser, credentials: HTTPBasicCredentials = Depends(basic_auth)):
+    db = get_db()
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    cur = db.cursor()
+    cur.execute(
+        "SELECT id FROM users WHERE email = %s",
+        (user.email,)
+    )
+    if cur.fetchone():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+        
+    password_hash = bcrypt.hashpw(credentials.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    cur.execute(
+        "INSERT INTO users (username, email, password_hash, last_login, created_at) VALUES (%s, %s, %s, %s, %s)",
+        (user.username, user.email, password_hash, None, datetime.datetime.now(tz=datetime.timezone.utc))
+    )
+    db.commit()
+    
+    return {"User created successfully"}
+
+@app.post("/logout")
+def logout(credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
+    # token blacklisting can be implemented here
+    return {"text": "Logged out successfully"}
+
+@app.put("/change-password")
+def change_password(new_password: str, credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
+    try:
+        payload = verify_jwt_token(credentials)
+    except HTTPException as e:
+        return {"text": "authentication_error"}
+        
+    db = get_db()
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    cur = db.cursor()
+    cur.execute(
+        "UPDATE users SET password_hash = %s WHERE email = %s",
+        (password_hash, payload["email"],)
+    )
+    db.commit()
+    
+    return {"text": "Password changed successfully"}
+
+@app.post("/forgot-password")
+def forgot_password(email: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    cur = db.cursor()
+    cur.execute(
+        "SELECT id FROM users WHERE email = %s",
+        (email,)
+    )
+    if not cur.fetchone():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email not registered"
+        )
+        
+    err = request_password_reset(email)
+    
+    if err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send password reset email"
+        )
+    else:
+        return {"text": "Password reset instructions sent"}

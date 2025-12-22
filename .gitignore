@@ -1,0 +1,10 @@
+.venv/
+**/.venv/
+
+__pylance__/
+**/__pylance__/
+
+__pycache__/
+**/__pycache__/
+
+.vscode/
