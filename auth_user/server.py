@@ -90,12 +90,13 @@ def logout(credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
     return {"text": "Logged out successfully"}
 
 @app.put("/change-password")
-def change_password(new_password: str, credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
+def change_password(old_password_hash: str, new_password: str, credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
     try:
         payload = verify_jwt_token(credentials)
     except HTTPException as e:
         return {"text": "authentication_error"}
-        
+    
+    # macth old password with current password in db
     db = get_db()
     if not db:
         raise HTTPException(
@@ -103,9 +104,20 @@ def change_password(new_password: str, credentials: HTTPAuthorizationCredentials
             detail="Database connection error"
         )
         
+    cur = db.cursor()
+    cur.execute(
+        "SELECT password_hash FROM users WHERE email = %s",
+        (payload["email"],)
+    )
+    row = cur.fetchone()
+    if not row or not verify_password(old_password_hash, row[0]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid old password"
+        )
+        
     password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
-    cur = db.cursor()
     cur.execute(
         "UPDATE users SET password_hash = %s WHERE email = %s",
         (password_hash, payload["email"],)
