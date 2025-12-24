@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import httpx, os
 from dotenv import load_dotenv
-from models.schema import SignUpUser
+from models.schema import SignUpUser, ChangePasswordRequest, ForgotPasswordRequest
 from utils.auth import verify_token
 
 load_dotenv()
@@ -94,13 +94,12 @@ async def logout(credentials: HTTPBasicCredentials = Depends(basic_auth)):
             )
             
 @router.post("/change-password", dependencies=[Depends(verify_token)])
-async def change_password(old_password_hash: str, new_password: str, credentials: HTTPBasicCredentials = Depends(basic_auth)):
+async def change_password(data: ChangePasswordRequest):
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(
+            response = await client.put(
                 f"{AUTH_SERVICE_URL}/change-password",
-                json={"old_password_hash": old_password_hash, "new_password": new_password},
-                auth=(credentials.username, credentials.password)
+                json={"old_password": data.old_password, "new_password": data.new_password, "email": data.email},
             )
             
             if response.status_code == 200:
@@ -117,12 +116,12 @@ async def change_password(old_password_hash: str, new_password: str, credentials
             )
             
 @router.post("/forgot-password", dependencies=[Depends(verify_token)])
-async def forgot_password(email: str):
+async def forgot_password(data: ForgotPasswordRequest):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
                 f"{AUTH_SERVICE_URL}/forgot-password",
-                json={"email": email}
+                json={"email": data.email}
             )
             
             if response.status_code == 200:

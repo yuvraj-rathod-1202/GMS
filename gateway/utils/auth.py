@@ -12,11 +12,10 @@ async def verify_token(authorization: Optional[str] = Header(None)) -> str:
         raise HTTPException(status_code=401, detail="Missing authorization header")
     
     token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
-    
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{AUTH_SERVICE_URL}/verify-token",
-            json={"token": token}
+            headers={"Authorization": f"Bearer {token}"}
         )
         if response.status_code != 200:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
