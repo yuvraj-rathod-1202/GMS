@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: auth-config
 data:
-  DB_HOST: localhost
+  DB_HOST: host.minikube.internal
   DB_USER: mms_user
   DB_NAME: auth
   DB_PORT: "3306"
