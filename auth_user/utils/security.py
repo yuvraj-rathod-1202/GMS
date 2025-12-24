@@ -10,7 +10,6 @@ def create_jwt_token(user: User, secret: str):
     return jwt.encode(
         {
             "user_id": user.id,
-            "username": user.username,
             "email": user.email,
             "exp": datetime.datetime.utcnow() + datetime.timedelta(days=1)
         },

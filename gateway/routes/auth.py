@@ -12,6 +12,14 @@ basic_auth = HTTPBasic()
 
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:5000")
 
+def _error_detail(response, default_msg: str) -> str:
+    try:
+        data = response.json()
+        return data.get("detail", default_msg)
+    except Exception:
+        text = (response.text or "").strip()
+        return text or default_msg
+
 @router.post("/login")
 async def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
     async with httpx.AsyncClient() as client:
@@ -22,11 +30,14 @@ async def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
             )
             
             if response.status_code == 200:
-                return response.json()
+                try:
+                    return response.json()
+                except Exception:
+                    return {"text": response.text}
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Authentication failed")
+                    detail=_error_detail(response, "Authentication failed")
                 )
         except httpx.RequestError as e:
             raise HTTPException(
@@ -45,11 +56,14 @@ async def signup(user: SignUpUser):
             )
             
             if response.status_code in (200, 201):
-                return response.json()
+                try:
+                    return response.json()
+                except Exception:
+                    return {"text": response.text or "Signup succeeded"}
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Signup failed")
+                    detail=_error_detail(response, "Signup failed")
                 )
         except httpx.RequestError as e:
             raise HTTPException(
@@ -71,7 +85,7 @@ async def logout(credentials: HTTPBasicCredentials = Depends(basic_auth)):
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Logout failed")
+                    detail=_error_detail(response, "Logout failed")
                 )
         except httpx.RequestError as e:
             raise HTTPException(
@@ -94,7 +108,7 @@ async def change_password(old_password_hash: str, new_password: str, credentials
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Password change failed")
+                    detail=_error_detail(response, "Password change failed")
                 )
         except httpx.RequestError as e:
             raise HTTPException(
@@ -116,7 +130,7 @@ async def forgot_password(email: str):
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Forgot password failed")
+                    detail=_error_detail(response, "Forgot password failed")
                 )
         except httpx.RequestError as e:
             raise HTTPException(

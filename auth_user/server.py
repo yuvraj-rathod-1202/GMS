@@ -25,7 +25,7 @@ def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
         
     cur = db.cursor()
     cur.execute(
-        "SELECT id, email, username, password_hash FROM users WHERE email = %s",
+        "SELECT id, email, password_hash FROM users WHERE email = %s",
         (credentials.username,)
     )
     row = cur.fetchone()
@@ -36,7 +36,7 @@ def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
             detail="Invalid credentials"
         )
         
-    id, email, username, password_hash = row
+    id, email, password_hash = row
     if not verify_password(credentials.password, password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -44,7 +44,7 @@ def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
         )
         
     token = create_jwt_token(
-        User(id=id, username=username, email=email),
+        User(id=id, email=email),
         os.getenv("JWT_SECRET_KEY") or "default",
     )
     
@@ -77,8 +77,8 @@ def signup(user: SignUpUser, credentials: HTTPBasicCredentials = Depends(basic_a
     password_hash = bcrypt.hashpw(credentials.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     cur.execute(
-        "INSERT INTO users (username, email, password_hash, last_login, created_at) VALUES (%s, %s, %s, %s, %s)",
-        (user.username, user.email, password_hash, None, datetime.datetime.now(tz=datetime.timezone.utc))
+        "INSERT INTO users (email, password_hash, last_login, created_at) VALUES (%s, %s, %s, %s)",
+        (user.email, password_hash, None, datetime.datetime.now(tz=datetime.timezone.utc))
     )
     db.commit()
     
