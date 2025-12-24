@@ -2,7 +2,7 @@ import datetime, os, bcrypt
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
-from models.schema import User, SignUpUser
+from models.schema import User, SignUpUser, ChangePasswordRequest, ForgotPasswordRequest
 from utils.security import create_jwt_token, verify_jwt_token, verify_password
 from utils.email import request_password_reset
 from utils.db import get_db
@@ -90,12 +90,7 @@ def logout(credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
     return {"text": "Logged out successfully"}
 
 @app.put("/change-password")
-def change_password(old_password_hash: str, new_password: str, credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
-    try:
-        payload = verify_jwt_token(credentials)
-    except HTTPException as e:
-        return {"text": "authentication_error"}
-    
+def change_password(data: ChangePasswordRequest):
     # macth old password with current password in db
     db = get_db()
     if not db:
@@ -107,27 +102,28 @@ def change_password(old_password_hash: str, new_password: str, credentials: HTTP
     cur = db.cursor()
     cur.execute(
         "SELECT password_hash FROM users WHERE email = %s",
-        (payload["email"],)
+        (data.email,)
     )
     row = cur.fetchone()
-    if not row or not verify_password(old_password_hash, row[0]):
+    print(row)
+    if not row or not verify_password(data.old_password, row[0]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid old password"
         )
         
-    password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    password_hash = bcrypt.hashpw(data.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     cur.execute(
         "UPDATE users SET password_hash = %s WHERE email = %s",
-        (password_hash, payload["email"],)
+        (password_hash, data.email,)
     )
     db.commit()
     
     return {"text": "Password changed successfully"}
 
 @app.post("/forgot-password")
-def forgot_password(email: str):
+def forgot_password(data: ForgotPasswordRequest):
     db = get_db()
     if not db:
         raise HTTPException(
@@ -138,7 +134,7 @@ def forgot_password(email: str):
     cur = db.cursor()
     cur.execute(
         "SELECT id FROM users WHERE email = %s",
-        (email,)
+        (data.email,)
     )
     if not cur.fetchone():
         raise HTTPException(
@@ -146,7 +142,7 @@ def forgot_password(email: str):
             detail="Email not registered"
         )
         
-    err = request_password_reset(email)
+    err = request_password_reset(data.email)
     
     if err:
         raise HTTPException(

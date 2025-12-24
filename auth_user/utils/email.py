@@ -23,4 +23,4 @@ def request_password_reset(email: str):
     
     # send request to /notify/email endpoint
     
-    return {"text": "Password reset email sent"}
+    return None

@@ -14,7 +14,7 @@ def create_jwt_token(user: User, secret: str):
             "exp": datetime.datetime.utcnow() + datetime.timedelta(days=1)
         },
         secret,
-        algorithm="SHA256"
+        algorithm="HS256"
     )
     
 def verify_jwt_token(credentials: HTTPAuthorizationCredentials):
@@ -23,7 +23,7 @@ def verify_jwt_token(credentials: HTTPAuthorizationCredentials):
         payload = jwt.decode(
             token,
             os.getenv("JWT_SECRET_KEY") or "default",
-            algorithms=["SHA256"]
+            algorithms=["HS256"]
         )
         return payload
     except jwt.ExpiredSignatureError:
