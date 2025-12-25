@@ -1,5 +1,4 @@
 from fastapi import APIRouter, status, HTTPException
-from utils.auth import verifyAdmin, verifyInstructor, verifyInstructorOrTa
 from models.schemas.users import GetCourseRoleRequest, GetAllCourseRoleRequest
 from services.users import fetch_course_roles_from_db, fetch_all_course_from_db
 
