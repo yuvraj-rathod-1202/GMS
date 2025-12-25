@@ -7,7 +7,7 @@ load_dotenv()
 
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:5000")
 
-async def verify_token(authorization: Optional[str] = Header(None)) -> str:
+async def verify_token(authorization: Optional[str] = Header(None)) -> dict:
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing authorization header")
     
@@ -19,5 +19,6 @@ async def verify_token(authorization: Optional[str] = Header(None)) -> str:
         )
         if response.status_code != 200:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
-    return token
+        
+        payload = response.json()
+        return payload
