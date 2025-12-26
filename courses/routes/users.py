@@ -5,7 +5,7 @@ from services.users import fetch_course_roles_from_db, fetch_all_course_from_db
 
 router = APIRouter()
 
-@router.get("user/{course_id}/roles")
+@router.get("/user/{course_id}/roles")
 def get_course_roles(course_id: int, user_email: EmailStr = Query(...)):
     
     role = fetch_course_roles_from_db(course_id, user_email)

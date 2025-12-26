@@ -119,6 +119,7 @@ async def get_course_role(course_id: str, role: str, user_info: dict = Depends(v
             params = {}
             if role:
                 params["role"] = role
+            params["email"] = user_info.get("email", "")
             
             response = await client.get(
                 f"{COURSES_SERVICE_URL}/id/{course_id}/roles/{role}",
