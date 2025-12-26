@@ -13,10 +13,13 @@ class AddCourseRequest(BaseModel):
     
 class UpdateCourseStatusRequest(BaseModel):
     email: EmailStr
-    status: Optional[str]
-    course_code: Optional[str]
-    name: Optional[str]
-    credits: Optional[int]
+    status: Optional[str] = None
+    course_code: Optional[str] = None
+    name: Optional[str] = None
+    credits: Optional[int] = None
+    
+    class Config:
+        extra = "forbid"
     
 class DeleteCourseRequest(BaseModel):
     email: EmailStr

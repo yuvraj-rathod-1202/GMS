@@ -140,7 +140,7 @@ def fetch_course_roles_from_db(course_id: int, role: str):
     
     cursor = db.cursor()
     cursor.execute(
-        "SELECT email FROM course_role WHERE course_id = %s AND role = %s",
+        "SELECT email FROM courses_role WHERE course_id = %s AND role = %s",
         (course_id, role)
     )
     roles = cursor.fetchall()

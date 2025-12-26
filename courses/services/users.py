@@ -13,7 +13,7 @@ def fetch_course_roles_from_db(course_id: int, user_email: str):
     
     query = """
         SELECT role
-        FROM course_roles
+        FROM courses_roles
         WHERE course_id = %s AND user_email = %s
     """
     cursor = db.cursor()
@@ -37,7 +37,7 @@ def fetch_all_course_from_db(user_email: str, course_status: str | None = None, 
     query = """
         SELECT c.id, c.course_code, c.name, c.semester, c.credits, c.status, c.created_at, cr.role
         FROM courses c
-        JOIN course_roles cr ON c.id = cr.course_id
+        JOIN courses_roles cr ON c.id = cr.course_id
         WHERE cr.user_email = %s AND c.status = COALESCE(%s, c.status) AND cr.role = COALESCE(%s, cr.role)
     """
     cursor = db.cursor()

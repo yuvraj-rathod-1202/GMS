@@ -1,13 +1,14 @@
-from fastapi import APIRouter, HTTPException, status
-from utils.auth import verifyAdmin, verifyInstructor, verifyInstructorOrTa
-from models.schemas.courses import GetAllCourseRequest, AddCourseRequest, UpdateCourseStatusRequest, DeleteCourseRequest, GetAllRolesRequest
+from fastapi import APIRouter, HTTPException, status, Query
+from utils.auth import verifyAdmin, verifyInstructorOrTa
+from models.schemas.courses import AddCourseRequest, UpdateCourseStatusRequest
 from services.courses import fetch_all_courses_from_db, add_course_to_db, fetch_course_by_id_from_db, update_course_status_in_db, delete_course_from_db, fetch_course_roles_from_db
+from pydantic import EmailStr
 
 router = APIRouter()
 
-@router.get("/")
-def get_courses(data: GetAllCourseRequest):
-    verified = verifyAdmin(data.email)
+@router.get("/all")
+def get_courses(email: EmailStr = Query(...)):
+    verified = verifyAdmin(email)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -48,7 +49,7 @@ def add_course(data: AddCourseRequest):
         
     return {"course_id": course_id}
 
-@router.get("/{course_id}")
+@router.get("/id/{course_id}")
 def get_course_by_id(course_id: int):
     
     course = fetch_course_by_id_from_db(course_id)
@@ -61,14 +62,14 @@ def get_course_by_id(course_id: int):
         
     return {"course": course}
 
-@router.put("/{course_id}")
+@router.put("/id/{course_id}")
 def update_course(course_id: int, data: UpdateCourseStatusRequest):
-    verified = verifyInstructor(data.email, course_id)
+    verified = verifyAdmin(data.email)
     
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Instructor privileges required"
+            detail="Admin privileges required"
         )
         
     success = update_course_status_in_db(course_id=course_id, update_data=data)
@@ -81,9 +82,9 @@ def update_course(course_id: int, data: UpdateCourseStatusRequest):
         
     return {"message": "Course updated successfully"}
 
-@router.delete("/{course_id}")
-def delete_course(course_id: int, data: DeleteCourseRequest):
-    verified = verifyAdmin(data.email)
+@router.delete("/id/{course_id}")
+def delete_course(course_id: int, email: EmailStr = Query(...)):
+    verified = verifyAdmin(email)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -100,9 +101,9 @@ def delete_course(course_id: int, data: DeleteCourseRequest):
         
     return {"message": "Course deleted successfully"}
 
-@router.get("/{course_id}/roles?role={role}")
-def get_course_roles(course_id: int, role: str, data: GetAllRolesRequest):
-    verified = verifyInstructorOrTa(data.email, course_id)
+@router.get("/id/{course_id}/roles")
+def get_course_roles(course_id: int, role: str, email: EmailStr = Query(...)):
+    verified = verifyInstructorOrTa(email, course_id)
     
     if not verified:
         raise HTTPException(

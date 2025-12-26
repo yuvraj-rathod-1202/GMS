@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from db import get_db
+from utils.db import get_db
 
 def verifyAdmin(email: str):
     db = get_db()
@@ -29,7 +29,7 @@ def verifyInstructor(email: str, course_id: int):
     
     cursor = db.cursor()
     cursor.execute(
-        "SELECT id FROM course_role WHERE email = %s AND course_id = %s AND role = 'instructor'",
+        "SELECT id FROM courses_role WHERE email = %s AND course_id = %s AND role = 'instructor'",
         (email, course_id)
     )
     instructor = cursor.fetchone()
@@ -50,7 +50,7 @@ def verifyInstructorOrTa(email: str, course_id: int):
     
     cursor = db.cursor()
     cursor.execute(
-        "SELECT id FROM course_role WHERE email = %s AND course_id = %s AND role IN ('instructor', 'ta')",
+        "SELECT id FROM courses_role WHERE email = %s AND course_id = %s AND role IN ('instructor', 'ta')",
         (email, course_id)
     )
     role = cursor.fetchone()
