@@ -101,7 +101,7 @@ def delete_course(course_id: int, email: EmailStr = Query(...)):
         
     return {"message": "Course deleted successfully"}
 
-@router.get("/id/{course_id}/roles")
+@router.get("/id/{course_id}/roles/{role}")
 def get_course_roles(course_id: int, role: str, email: EmailStr = Query(...)):
     verified = verifyInstructorOrTa(email, course_id)
     

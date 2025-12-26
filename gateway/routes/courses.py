@@ -112,15 +112,17 @@ async def delete_course(course_id: str, user_info: dict = Depends(verify_token))
                 detail=f"Courses service unavailable: {str(e)}"
             )
             
-@router.get("/{course_id}/roles?role={role}")
+@router.get("/{course_id}/roles/{role}")
 async def get_course_role(course_id: str, role: str, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
+            params = {}
+            if role:
+                params["role"] = role
+            
             response = await client.get(
-                f"{COURSES_SERVICE_URL}/{course_id}/roles?role={role}",
-                params={
-                    "email": user_info.get("email", "")
-                } 
+                f"{COURSES_SERVICE_URL}/id/{course_id}/roles/{role}",
+                params=params
             )
             if response.status_code != 200:
                 raise HTTPException(
