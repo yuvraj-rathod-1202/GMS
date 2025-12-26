@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: courses
+  labels:
+    app: courses
+spec:
+  selector:
+    matchLabels:
+      app: courses
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 3
+  template:
+    metadata:
+      labels:
+        app: courses
+    spec:
+      containers:
+        - name: courses
+          image: yrrathod/mms_courses
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: courses-config
+            - secretRef:
+                name: courses-secret
