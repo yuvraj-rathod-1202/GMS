@@ -4,3 +4,4 @@ metadata:
   name: gateway-config
 data:
   AUTH_SERVICE_URL: "http://auth:5000"
+  COURSES_SERVICE_URL: "http://courses:8080"
