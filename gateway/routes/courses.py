@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi import APIRouter, Depends, HTTPException, Query
 import httpx, os
 from dotenv import load_dotenv
+from pydantic import EmailStr
 from utils.auth import verify_token
 from models.schema import AddCourseRequest, UpdateCourseStatusRequest, EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest
 
@@ -16,15 +16,15 @@ async def get_courses(user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
-                f"{COURSES_SERVICE_URL}/",
+                f"{COURSES_SERVICE_URL}/all",
                 params={
                     "email": user_info.get("email", "")
-                } 
+                }
             )
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error fetching courses",
+                    detail=response.json().get("detail", "Error fetching courses"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -44,7 +44,7 @@ async def create_course(course: AddCourseRequest, user_info: dict = Depends(veri
             if response.status_code not in (200, 201):
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error creating course",
+                    detail=response.json().get("detail", "Error creating course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -58,12 +58,12 @@ async def get_course(course_id: str, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
-                f"{COURSES_SERVICE_URL}/{course_id}",
+                f"{COURSES_SERVICE_URL}/id/{course_id}",
             )
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error fetching course",
+                    detail=response.json().get("detail", "Error fetching course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -77,13 +77,13 @@ async def update_course(course_id: str, data: UpdateCourseStatusRequest, user_in
     async with httpx.AsyncClient() as client:
         try:
             response = await client.put(
-                f"{COURSES_SERVICE_URL}/{course_id}",
+                f"{COURSES_SERVICE_URL}/id/{course_id}",
                 json={**data.dict(exclude_unset=True), "email": user_info.get("email", "")},
             )
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error updating course",
+                    detail=response.json().get("detail", "Error updating course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -97,13 +97,13 @@ async def delete_course(course_id: str, user_info: dict = Depends(verify_token))
     async with httpx.AsyncClient() as client:
         try:
             response = await client.delete(
-                f"{COURSES_SERVICE_URL}/{course_id}",
+                f"{COURSES_SERVICE_URL}/id/{course_id}",
                 params={"email": user_info.get("email", "")},
             )
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error deleting course",
+                    detail=response.json().get("detail", "Error deleting course"),
                 )
             return {"detail": "Course deleted successfully"}
         except httpx.RequestError as e:
@@ -125,7 +125,7 @@ async def get_course_role(course_id: str, role: str, user_info: dict = Depends(v
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error fetching course roles",
+                    detail=response.json().get("detail", "Error fetching course role"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -145,7 +145,7 @@ async def enroll_in_course(course_id: str, data: EnrollStudentRequest, user_info
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error enrolling in course",
+                    detail=response.json().get("detail", "Error enrolling in course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -155,17 +155,17 @@ async def enroll_in_course(course_id: str, data: EnrollStudentRequest, user_info
             )
             
 @router.delete("/{course_id}/enroll")
-async def unenroll_from_course(course_id: str, data: EnrollStudentRequest, user_info: dict = Depends(verify_token)):
+async def unenroll_from_course(course_id: str, student_email: EmailStr = Query(...), user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.delete(
                 f"{COURSES_SERVICE_URL}/{course_id}/enroll",
-                params={**data.dict(), "email": user_info.get("email", "")},
+                params={"student_email": student_email, "email": user_info.get("email", "")},
             )
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error unenrolling from course",
+                    detail=response.json().get("detail", "Error unenrolling from course"),
                 )
             return {"detail": "Unenrolled from course successfully"}
         except httpx.RequestError as e:
@@ -185,7 +185,7 @@ async def add_ta_to_course(course_id: str, data: EnrollTaRequest, user_info: dic
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error adding TA to course",
+                    detail=response.json().get("detail", "Error adding TA to course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -195,17 +195,17 @@ async def add_ta_to_course(course_id: str, data: EnrollTaRequest, user_info: dic
             )
             
 @router.delete("/{course_id}/tas")
-async def remove_ta_from_course(course_id: str, data: EnrollTaRequest, user_info: dict = Depends(verify_token)):
+async def remove_ta_from_course(course_id: str, ta_email: EmailStr = Query(...), user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.delete(
                 f"{COURSES_SERVICE_URL}/{course_id}/tas",
-                params={**data.dict(), "email": user_info.get("email", "")},
+                params={"ta_email": ta_email, "email": user_info.get("email", "")},
             )
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error removing TA from course",
+                    detail=response.json().get("detail", "Error removing TA from course"),
                 )
             return {"detail": "TA removed from course successfully"}
         except httpx.RequestError as e:
@@ -225,7 +225,7 @@ async def add_instructor_to_course(course_id: str, data: EnrollInstructorRequest
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error adding instructor to course",
+                    detail=response.json().get("detail", "Error adding instructor to course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -235,17 +235,17 @@ async def add_instructor_to_course(course_id: str, data: EnrollInstructorRequest
             )
             
 @router.delete("/{course_id}/instructors")
-async def remove_instructor_from_course(course_id: str, data: EnrollInstructorRequest, user_info: dict = Depends(verify_token)):
+async def remove_instructor_from_course(course_id: str, instructor_email: EmailStr = Query(...), user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.delete(
                 f"{COURSES_SERVICE_URL}/{course_id}/instructors",
-                params={**data.dict(), "email": user_info.get("email", "")},
+                params={"instructor_email": instructor_email, "email": user_info.get("email", "")},
             )
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error removing instructor from course",
+                    detail=response.json().get("detail", "Error removing instructor from course"),
                 )
             return {"detail": "Instructor removed from course successfully"}
         except httpx.RequestError as e:

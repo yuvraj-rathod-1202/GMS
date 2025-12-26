@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import httpx, os
 from dotenv import load_dotenv
 from utils.auth import verify_token

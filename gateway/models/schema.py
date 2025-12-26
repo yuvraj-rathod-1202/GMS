@@ -20,10 +20,13 @@ class AddCourseRequest(BaseModel):
     credits: int
     
 class UpdateCourseStatusRequest(BaseModel):
-    status: Optional[str]
-    course_code: Optional[str]
-    name: Optional[str]
-    credits: Optional[int]
+    status: Optional[str] = None
+    course_code: Optional[str] = None
+    name: Optional[str] = None
+    credits: Optional[int] = None
+    
+    class Config:
+        extra = "forbid"
     
 class EnrollStudentRequest(BaseModel):
     student_email: EmailStr
@@ -35,4 +38,4 @@ class EnrollInstructorRequest(BaseModel):
     instructor_email: EmailStr
     
 class GetAllCourseRoleRequest(BaseModel):
-    status: Optional[str] = None
+    course_status: Optional[str] = None
