@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 
 class CourseDBObject(BaseModel):
@@ -7,5 +8,5 @@ class CourseDBObject(BaseModel):
     semester: str
     credits: int
     status: str
-    created_at: str
+    created_at: datetime
     role: str
