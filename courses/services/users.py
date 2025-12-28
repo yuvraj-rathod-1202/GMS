@@ -46,6 +46,7 @@ def fetch_all_course_from_db(user_email: str, course_status: str | None = None, 
             FROM courses c
             JOIN courses_role cr ON c.id = cr.course_id
             WHERE cr.email = %s AND c.status = COALESCE(%s, c.status) AND cr.role = COALESCE(%s, cr.role)
+            ORDER BY c.created_at DESC
         """
         cursor = db.cursor()
         cursor.execute(query, (user_email, course_status, course_role))
@@ -64,8 +65,6 @@ def fetch_all_course_from_db(user_email: str, course_status: str | None = None, 
                 created_at=row[6],
                 role=row[7]
             ))
-            
-        courses.sort(key=lambda x: x.created_at, reverse=True)
         
         return courses
     except Exception as e:
