@@ -27,7 +27,10 @@ CREATE TABLE IF NOT EXISTS marks (
     recorded_by_email VARCHAR(128) NOT NULL,
     recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (assessment_id) REFERENCES assessments(id)
+    UNIQUE KEY unique_assessment_student (assessment_id, student_email),
+    FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE,
+    CREATE INDEX idx_student_email ON marks(student_email),
+    CREATE INDEX idx_assessment_id ON marks(assessment_id)
 )
 
 CREATE TABLE IF NOT EXISTS challenges (
