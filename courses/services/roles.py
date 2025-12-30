@@ -8,13 +8,19 @@ def enroll_student_in_course_in_db(course_id: int, student_email: str, enroll: b
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error"
         )
-    cursor = db.cursor()
-    
-    cursor.execute(
-        "SELECT id FROM courses_role WHERE email = %s AND course_id = %s AND role = %s",
-        (student_email, course_id, 'instructor' if assign_instructor else ('ta' if assign_ta else 'student'))
-    )
-    role_id = cursor.fetchone()
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute(
+            "SELECT id FROM courses_role WHERE email = %s AND course_id = %s AND role = %s",
+            (student_email, course_id, 'instructor' if assign_instructor else ('ta' if assign_ta else 'student'))
+        )
+        role_id = cursor.fetchone()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database query error"
+        )
     if role_id:
         if enroll:
             return None  # Student already enrolled
