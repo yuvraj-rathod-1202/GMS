@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 class AssessmentsBDObj(BaseModel):
     id: int
@@ -9,6 +9,6 @@ class AssessmentsBDObj(BaseModel):
     max_marks: int
     is_marks_published: bool
     assessment_date: str
-    created_by_email: EmailStr
+    created_by_id: int
     created_at: datetime
     updated_at: datetime

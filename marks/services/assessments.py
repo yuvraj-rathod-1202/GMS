@@ -14,7 +14,7 @@ def add_assessment_to_db(course_id: int, data: CreateAssessmentRequest):
     try:
         cursor = db.cursor()
         insert_query = """
-            INSERT INTO assessments (course_id, name, assessment_type, max_marks, is_marks_published, assessment_date, created_by_email)
+            INSERT INTO assessments (course_id, name, assessment_type, max_marks, is_marks_published, assessment_date, created_by_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id
         """
         
@@ -25,7 +25,7 @@ def add_assessment_to_db(course_id: int, data: CreateAssessmentRequest):
             data.max_marks,
             data.is_marks_published,
             data.assessment_date,
-            data.email
+            data.user_id
         ))
         db.commit()
         assessment_id = cursor.fetchone()[0]
@@ -49,7 +49,7 @@ def get_all_assessments_from_db(course_id: int, assessment_id: int | None = None
         cursor = db.cursor()
         select_query = """
             SELECT id, course_id, name, assessment_type, max_marks,
-                is_marks_published, assessment_date, created_by_email,
+                is_marks_published, assessment_date, created_by_id,
                 created_at, updated_at
             FROM assessments
             WHERE course_id = %s
@@ -74,7 +74,7 @@ def get_all_assessments_from_db(course_id: int, assessment_id: int | None = None
                 max_marks=row[4],
                 is_marks_published=row[5],
                 assessment_date=row[6],
-                created_by_email=row[7],
+                created_by_id=row[7],
                 created_at=row[8],
                 updated_at=row[9]
             ))

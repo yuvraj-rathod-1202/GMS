@@ -1,83 +1,82 @@
+import os
 from fastapi import HTTPException, status
 from utils.db import get_db
+import httpx
+from dotenv import load_dotenv
 
-def verifyInstructor(email: str, course_id: int):
-    db = get_db()
-    if db is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error"
-        )
-    
-    try:
-        cursor = db.cursor()
-        cursor.execute(
-            "SELECT id FROM courses_role WHERE email = %s AND course_id = %s AND role = 'instructor'",
-            (email, course_id)
-        )
-        instructor = cursor.fetchone()
-        if instructor is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Instructor privileges required"
+load_dotenv()
+
+async def verifyInstructor(user_id: int, course_id: int):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{os.getenv('COURSE_SERVICE_URL')}/verifyinstructor",
+                params={"user_id": user_id, "course_id": course_id}
+            )
+            if response.status_code == 200:
+                return True
+            elif response.status_code == 404:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Instructor privileges required"
                 )
-        return True
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
-        )
-
-def verifyInstructorOrTa(email: str, course_id: int):
-    db = get_db()
-    if db is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error"
-        )
-    
-    try:
-        cursor = db.cursor()
-        cursor.execute(
-            "SELECT id FROM courses_role WHERE email = %s AND course_id = %s AND role IN ('instructor', 'ta')",
-            (email, course_id)
-        )
-        role = cursor.fetchone()
-        if role is None:
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail="Error verifying instructor status"
+                )
+        except httpx.RequestError as e:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Instructor or TA privileges required"
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Course service unavailable: {str(e)}"
             )
-        return True
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
-        )
 
-def verifyRoleInCourse(email: str, course_id: int):
-    db = get_db()
-    if db is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error"
-        )
-    
-    try:
-        cursor = db.cursor()
-        cursor.execute(
-            "SELECT id FROM courses_role WHERE email = %s AND course_id = %s",
-            (email, course_id)
-        )
-        role = cursor.fetchone()
-        if role is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User does not have a role in this course"
+async def verifyInstructorOrTa(user_id: int, course_id: int):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{os.getenv('COURSE_SERVICE_URL')}/verifyinstructororta",
+                params={"user_id": user_id, "course_id": course_id}
             )
-        return True
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
-        )
+            if response.status_code == 200:
+                return True
+            elif response.status_code == 404:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Instructor or TA privileges required"
+                )
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail="Error verifying instructor/TA status"
+                )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Course service unavailable: {str(e)}"
+            )
+
+async def verifyRoleInCourse(user_id: int, course_id: int):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{os.getenv('COURSE_SERVICE_URL')}/verifyroleincourse",
+                params={"user_id": user_id, "course_id": course_id}
+            )
+            if response.status_code == 200:
+                return True
+            elif response.status_code == 404:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User does not have a role in the course"
+                )
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail="Error verifying role in course"
+                )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Course service unavailable: {str(e)}"
+            )

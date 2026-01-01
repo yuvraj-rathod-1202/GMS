@@ -1,16 +1,16 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime
 
 class MarksDBObj(BaseModel):
-    student_email: EmailStr
+    student_id: int
     marks_obtained: float
-    recorded_by_email: EmailStr
+    recorded_by_id: int
     updated_at: datetime
     
 class AllMarksDBObj(BaseModel):
     assessment_id: int
     marks_obtained: float
-    recorded_by_email: EmailStr
+    recorded_by_id: int
     updated_at: datetime
     assessment_name: str
     assessment_type: str

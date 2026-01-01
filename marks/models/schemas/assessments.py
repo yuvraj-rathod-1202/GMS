@@ -1,9 +1,9 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
 class CreateAssessmentRequest(BaseModel):
-    email: EmailStr
+    user_id: int
     name: str
     assessment_type: str
     max_marks: int
@@ -11,7 +11,7 @@ class CreateAssessmentRequest(BaseModel):
     assessment_date: datetime
     
 class UpdateAssessmentRequest(BaseModel):
-    email: EmailStr
+    user_id: int
     name: Optional[str] = None
     assessment_type: Optional[str] = None
     max_marks: Optional[int] = None
