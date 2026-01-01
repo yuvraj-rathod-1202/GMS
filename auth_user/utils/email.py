@@ -2,7 +2,7 @@ from faker import Faker
 import bcrypt
 from utils.db import get_db
 
-def request_password_reset(email: str):
+def request_password_reset(id: int):
     
     # generate random strong password
     fake = Faker()
@@ -16,8 +16,8 @@ def request_password_reset(email: str):
     cur = db.cursor()
     
     cur.execute(
-        "UPDATE users SET password_hash = %s WHERE email = %s",
-        (password_hash, email,)
+        "UPDATE users SET password_hash = %s WHERE id = %s",
+        (password_hash, id,)
     )
     db.commit()
     

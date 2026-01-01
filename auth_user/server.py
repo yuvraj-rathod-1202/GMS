@@ -25,7 +25,7 @@ def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
         
     cur = db.cursor()
     cur.execute(
-        "SELECT id, email, password_hash FROM users WHERE email = %s",
+        "SELECT id, email, password_hash FROM users WHERE id = %s",
         (credentials.username,)
     )
     row = cur.fetchone()
@@ -65,8 +65,8 @@ def signup(user: SignUpUser, credentials: HTTPBasicCredentials = Depends(basic_a
         
     cur = db.cursor()
     cur.execute(
-        "SELECT id FROM users WHERE email = %s",
-        (user.email,)
+        "SELECT id FROM users WHERE id = %s",
+        (user.id,)
     )
     if cur.fetchone():
         raise HTTPException(
@@ -77,8 +77,8 @@ def signup(user: SignUpUser, credentials: HTTPBasicCredentials = Depends(basic_a
     password_hash = bcrypt.hashpw(credentials.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     cur.execute(
-        "INSERT INTO users (email, password_hash, last_login, created_at) VALUES (%s, %s, %s, %s)",
-        (user.email, password_hash, None, datetime.datetime.now(tz=datetime.timezone.utc))
+        "INSERT INTO users (id, email, password_hash, last_login, created_at) VALUES (%s, %s, %s, %s, %s)",
+        (user.id, user.email, password_hash, None, datetime.datetime.now(tz=datetime.timezone.utc))
     )
     db.commit()
     
@@ -101,8 +101,8 @@ def change_password(data: ChangePasswordRequest):
         
     cur = db.cursor()
     cur.execute(
-        "SELECT password_hash FROM users WHERE email = %s",
-        (data.email,)
+        "SELECT password_hash FROM users WHERE id = %s",
+        (data.id,)
     )
     row = cur.fetchone()
     print(row)
@@ -115,8 +115,8 @@ def change_password(data: ChangePasswordRequest):
     password_hash = bcrypt.hashpw(data.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     cur.execute(
-        "UPDATE users SET password_hash = %s WHERE email = %s",
-        (password_hash, data.email,)
+        "UPDATE users SET password_hash = %s WHERE id = %s",
+        (password_hash, data.id,)
     )
     db.commit()
     
@@ -133,8 +133,8 @@ def forgot_password(data: ForgotPasswordRequest):
         
     cur = db.cursor()
     cur.execute(
-        "SELECT id FROM users WHERE email = %s",
-        (data.email,)
+        "SELECT id FROM users WHERE id = %s",
+        (data.id,)
     )
     if not cur.fetchone():
         raise HTTPException(
@@ -142,7 +142,7 @@ def forgot_password(data: ForgotPasswordRequest):
             detail="Email not registered"
         )
         
-    err = request_password_reset(data.email)
+    err = request_password_reset(data.id)
     
     if err:
         raise HTTPException(

@@ -5,13 +5,14 @@ class User(BaseModel):
     email: EmailStr
     
 class SignUpUser(BaseModel):
+    id: int
     email: EmailStr
     password: str
     
 class ChangePasswordRequest(BaseModel):
+    id: int
     old_password: str
     new_password: str
-    email: EmailStr
     
 class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+    id: int
