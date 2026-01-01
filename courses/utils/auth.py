@@ -60,3 +60,30 @@ def verifyInstructorOrTa(user_id: int, course_id: int):
             detail="Instructor or TA privileges required"
         )
     return True
+
+def verifyRoleInCourse(user_id: int, course_id: int):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+    
+    try:
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT id FROM courses_role WHERE user_id = %s AND course_id = %s",
+            (user_id, course_id)
+        )
+        role = cursor.fetchone()
+        if role is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User does not have a role in this course"
+            )
+        return True
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
