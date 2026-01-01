@@ -1,6 +1,5 @@
 import os
 from fastapi import HTTPException, status
-from utils.db import get_db
 import httpx
 from dotenv import load_dotenv
 
