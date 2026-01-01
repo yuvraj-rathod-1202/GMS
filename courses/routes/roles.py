@@ -1,14 +1,13 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from utils.auth import verifyAdmin, verifyInstructor, verifyInstructorOrTa
 from models.schemas.roles import EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest
 from services.roles import enroll_student_in_course_in_db
-from pydantic import EmailStr
 
 router = APIRouter()
 
 @router.post("/{course_id}/enroll")
 def enroll_student(course_id: int, data: EnrollStudentRequest):
-    verified = verifyInstructorOrTa(data.email, course_id)
+    verified = verifyInstructorOrTa(data.user_id, course_id)
     
     if not verified:
         raise HTTPException(
@@ -16,7 +15,7 @@ def enroll_student(course_id: int, data: EnrollStudentRequest):
             detail="Instructor or TA privileges required"
         )
         
-    enrolled_id = enroll_student_in_course_in_db(course_id, data.student_email)
+    enrolled_id = enroll_student_in_course_in_db(course_id, data.student_id)
     
     if not enrolled_id:
         raise HTTPException(
@@ -27,8 +26,8 @@ def enroll_student(course_id: int, data: EnrollStudentRequest):
     return {"enrolled_id": enrolled_id}
 
 @router.delete("/{course_id}/enroll")
-def unenroll_student(course_id: int, email: EmailStr, student_email: EmailStr):
-    verified = verifyInstructorOrTa(email, course_id)
+def unenroll_student(course_id: int, user_id: int = Query(...), student_id: int = Query(...)):
+    verified = verifyInstructorOrTa(user_id, course_id)
     
     if not verified:
         raise HTTPException(
@@ -36,7 +35,7 @@ def unenroll_student(course_id: int, email: EmailStr, student_email: EmailStr):
             detail="Instructor or TA privileges required"
         )
         
-    unenrolled_id = enroll_student_in_course_in_db(course_id, student_email, enroll=False)
+    unenrolled_id = enroll_student_in_course_in_db(course_id, student_id, enroll=False)
     
     if not unenrolled_id:
         raise HTTPException(
@@ -48,7 +47,7 @@ def unenroll_student(course_id: int, email: EmailStr, student_email: EmailStr):
 
 @router.post("/{course_id}/tas")
 def assign_ta(course_id: int, data: EnrollTaRequest):
-    verified = verifyInstructor(data.email, course_id)
+    verified = verifyInstructor(data.user_id, course_id)
     
     if not verified:
         raise HTTPException(
@@ -56,7 +55,7 @@ def assign_ta(course_id: int, data: EnrollTaRequest):
             detail="Instructor privileges required"
         )
         
-    assigned_id = enroll_student_in_course_in_db(course_id, data.ta_email, assign_ta=True)
+    assigned_id = enroll_student_in_course_in_db(course_id, data.ta_id, assign_ta=True)
     
     if not assigned_id:
         raise HTTPException(
@@ -67,8 +66,8 @@ def assign_ta(course_id: int, data: EnrollTaRequest):
     return {"assigned_id": assigned_id}
 
 @router.delete("/{course_id}/tas")
-def remove_ta(course_id: int, email: EmailStr, ta_email: EmailStr):
-    verified = verifyInstructor(email, course_id)
+def remove_ta(course_id: int, user_id: int = Query(...), ta_id: int = Query(...)):
+    verified = verifyInstructor(user_id, course_id)
     
     if not verified:
         raise HTTPException(
@@ -76,7 +75,7 @@ def remove_ta(course_id: int, email: EmailStr, ta_email: EmailStr):
             detail="Instructor privileges required"
         )
         
-    removed_id = enroll_student_in_course_in_db(course_id, ta_email, enroll=False, assign_ta=True)
+    removed_id = enroll_student_in_course_in_db(course_id, ta_id, enroll=False, assign_ta=True)
     
     if not removed_id:
         raise HTTPException(
@@ -88,7 +87,7 @@ def remove_ta(course_id: int, email: EmailStr, ta_email: EmailStr):
 
 @router.post("/{course_id}/instructors")
 def assign_instructor(course_id: int, data: EnrollInstructorRequest):
-    verified = verifyAdmin(data.email)
+    verified = verifyAdmin(data.user_id)
     
     if not verified:
         raise HTTPException(
@@ -96,7 +95,7 @@ def assign_instructor(course_id: int, data: EnrollInstructorRequest):
             detail="Admin privileges required"
         )
         
-    assigned_id = enroll_student_in_course_in_db(course_id, data.instructor_email, assign_instructor=True)
+    assigned_id = enroll_student_in_course_in_db(course_id, data.instructor_id, assign_instructor=True)
     
     if not assigned_id:
         raise HTTPException(
@@ -107,8 +106,8 @@ def assign_instructor(course_id: int, data: EnrollInstructorRequest):
     return {"assigned_id": assigned_id}
 
 @router.delete("/{course_id}/instructors")
-def remove_instructor(course_id: int, email: EmailStr, instructor_email: EmailStr):
-    verified = verifyAdmin(email)
+def remove_instructor(course_id: int, user_id: int = Query(...), instructor_id: int = Query(...)):
+    verified = verifyAdmin(user_id)
     
     if not verified:
         raise HTTPException(
@@ -116,7 +115,7 @@ def remove_instructor(course_id: int, email: EmailStr, instructor_email: EmailSt
             detail="Admin privileges required"
         )
         
-    removed_id = enroll_student_in_course_in_db(course_id, instructor_email, enroll=False, assign_instructor=True)
+    removed_id = enroll_student_in_course_in_db(course_id, instructor_id, enroll=False, assign_instructor=True)
     
     if not removed_id:
         raise HTTPException(

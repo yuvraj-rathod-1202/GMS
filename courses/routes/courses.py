@@ -2,13 +2,12 @@ from fastapi import APIRouter, HTTPException, status, Query
 from utils.auth import verifyAdmin, verifyInstructorOrTa
 from models.schemas.courses import AddCourseRequest, UpdateCourseStatusRequest
 from services.courses import fetch_all_courses_from_db, add_course_to_db, fetch_course_by_id_from_db, update_course_status_in_db, delete_course_from_db, fetch_course_roles_from_db
-from pydantic import EmailStr
 
 router = APIRouter()
 
 @router.get("/all")
-def get_courses(email: EmailStr = Query(...)):
-    verified = verifyAdmin(email)
+def get_courses(user_id: int = Query(...)):
+    verified = verifyAdmin(user_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -27,7 +26,7 @@ def get_courses(email: EmailStr = Query(...)):
 
 @router.post("/")
 def add_course(data: AddCourseRequest):
-    verified = verifyAdmin(data.email)
+    verified = verifyAdmin(data.user_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -64,7 +63,7 @@ def get_course_by_id(course_id: int):
 
 @router.put("/id/{course_id}")
 def update_course(course_id: int, data: UpdateCourseStatusRequest):
-    verified = verifyAdmin(data.email)
+    verified = verifyAdmin(data.user_id)
     
     if not verified:
         raise HTTPException(
@@ -83,8 +82,8 @@ def update_course(course_id: int, data: UpdateCourseStatusRequest):
     return {"message": "Course updated successfully"}
 
 @router.delete("/id/{course_id}")
-def delete_course(course_id: int, email: EmailStr = Query(...)):
-    verified = verifyAdmin(email)
+def delete_course(course_id: int, user_id: int = Query(...)):
+    verified = verifyAdmin(user_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -102,8 +101,8 @@ def delete_course(course_id: int, email: EmailStr = Query(...)):
     return {"message": "Course deleted successfully"}
 
 @router.get("/id/{course_id}/roles/{role}")
-def get_course_roles(course_id: int, role: str, email: EmailStr = Query(...)):
-    verified = verifyInstructorOrTa(email, course_id)
+def get_course_roles(course_id: int, role: str, user_id: int = Query(...)):
+    verified = verifyInstructorOrTa(user_id, course_id)
     
     if not verified:
         raise HTTPException(
@@ -111,12 +110,12 @@ def get_course_roles(course_id: int, role: str, email: EmailStr = Query(...)):
             detail="Instructor privileges required"
         )
         
-    role_emails = fetch_course_roles_from_db(course_id=course_id, role=role)
+    role_user_ids = fetch_course_roles_from_db(course_id=course_id, role=role)
     
-    if not role_emails:
+    if not role_user_ids:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No roles found for the specified course"
         )
     
-    return {"roles": role_emails}
+    return {"roles": role_user_ids}

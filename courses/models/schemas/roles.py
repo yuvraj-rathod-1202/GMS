@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 
 class EnrollStudentRequest(BaseModel):
-    email: str
-    student_email: str
+    user_id: int
+    student_id: int
     
 class EnrollTaRequest(BaseModel):
-    email: str
-    ta_email: str
+    user_id: int
+    ta_id: int
     
 class EnrollInstructorRequest(BaseModel):
-    email: str
-    instructor_email: str
+    user_id: int
+    instructor_id: int

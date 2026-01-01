@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS courses (
 CREATE TABLE IF NOT EXISTS courses_role (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
-    email VARCHAR(128) NOT NULL,
+    user_id INT NOT NULL,
     role VARCHAR(20) NOT NULL,
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS courses_role (
 
 CREATE TABLE IF NOT EXISTS admin (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(128) NOT NULL UNIQUE,
+    user_id INT NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO admin (email) VALUES ('yuvraj.rathod@iitgn.ac.in');
+INSERT INTO admin (user_id) VALUES (24110293);

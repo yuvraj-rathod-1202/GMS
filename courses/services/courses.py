@@ -171,7 +171,7 @@ def fetch_course_roles_from_db(course_id: int, role: str):
     try:
         cursor = db.cursor()
         cursor.execute(
-            "SELECT email FROM courses_role WHERE course_id = %s AND role = %s",
+            "SELECT user_id FROM courses_role WHERE course_id = %s AND role = %s",
             (course_id, role)
         )
         roles = cursor.fetchall()
@@ -182,9 +182,9 @@ def fetch_course_roles_from_db(course_id: int, role: str):
                 detail="No roles found for the specified course"
             )
             
-        role_emails = [r[0] for r in roles]
+        role_user_ids = [r[0] for r in roles]
         
-        return role_emails
+        return role_user_ids
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -1,18 +1,16 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
 
-class GetAllCourseRequest(BaseModel):
-    email: EmailStr
     
 class AddCourseRequest(BaseModel):
-    email: EmailStr
+    user_id: int
     course_code: str
     name: str
     semester: str
     credits: int
     
 class UpdateCourseStatusRequest(BaseModel):
-    email: EmailStr
+    user_id: int
     status: Optional[str] = None
     course_code: Optional[str] = None
     name: Optional[str] = None
@@ -20,9 +18,3 @@ class UpdateCourseStatusRequest(BaseModel):
     
     class Config:
         extra = "forbid"
-    
-class DeleteCourseRequest(BaseModel):
-    email: EmailStr
-    
-class GetAllRolesRequest(BaseModel):
-    email: EmailStr

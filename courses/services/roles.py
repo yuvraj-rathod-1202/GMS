@@ -1,7 +1,7 @@
 from fastapi import status, HTTPException
 from utils.db import get_db
 
-def enroll_student_in_course_in_db(course_id: int, student_email: str, enroll: bool = True, assign_ta: bool = False, assign_instructor: bool = False) -> int | None:
+def enroll_student_in_course_in_db(course_id: int, student_id: int, enroll: bool = True, assign_ta: bool = False, assign_instructor: bool = False) -> int | None:
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -12,8 +12,8 @@ def enroll_student_in_course_in_db(course_id: int, student_email: str, enroll: b
         cursor = db.cursor()
         
         cursor.execute(
-            "SELECT id FROM courses_role WHERE email = %s AND course_id = %s AND role = %s",
-            (student_email, course_id, 'instructor' if assign_instructor else ('ta' if assign_ta else 'student'))
+            "SELECT id FROM courses_role WHERE user_id = %s AND course_id = %s AND role = %s",
+            (student_id, course_id, 'instructor' if assign_instructor else ('ta' if assign_ta else 'student'))
         )
         role_id = cursor.fetchone()
     except Exception as e:
@@ -41,9 +41,9 @@ def enroll_student_in_course_in_db(course_id: int, student_email: str, enroll: b
     
     try:
         cursor.execute(
-            "INSERT INTO courses_role (course_id, email, role, assigned_at) "
+            "INSERT INTO courses_role (course_id, user_id, role, assigned_at) "
             "VALUES (%s, %s, %s, NOW())",
-            (course_id, student_email, 'instructor' if assign_instructor else ('ta' if assign_ta else 'student'))
+            (course_id, student_id, 'instructor' if assign_instructor else ('ta' if assign_ta else 'student'))
         )
         db.commit()
         return cursor.lastrowid

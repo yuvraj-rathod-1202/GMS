@@ -2,7 +2,7 @@ from fastapi import status, HTTPException
 from utils.db import get_db
 from models.dbobj.users import CourseDBObject
 
-def fetch_course_roles_from_db(course_id: int, user_email: str):
+def fetch_course_roles_from_db(course_id: int, user_id: int):
     db = get_db()
     
     if not db:
@@ -15,10 +15,10 @@ def fetch_course_roles_from_db(course_id: int, user_email: str):
         query = """
             SELECT role
             FROM courses_role
-            WHERE course_id = %s AND email = %s
+            WHERE course_id = %s AND user_id = %s
         """
         cursor = db.cursor()
-        cursor.execute(query, (course_id, user_email))
+        cursor.execute(query, (course_id, user_id))
         result = cursor.fetchone()
         cursor.close()
         
@@ -31,7 +31,7 @@ def fetch_course_roles_from_db(course_id: int, user_email: str):
             detail=f"Error fetching course roles: {e}"
         ) from e
 
-def fetch_all_course_from_db(user_email: str, course_status: str | None = None, course_role: str | None = None):
+def fetch_all_course_from_db(user_id: int, course_status: str | None = None, course_role: str | None = None):
     db = get_db()
     
     if not db:
@@ -45,11 +45,11 @@ def fetch_all_course_from_db(user_email: str, course_status: str | None = None, 
             SELECT c.id, c.course_code, c.name, c.semester, c.credits, c.status, c.created_at, cr.role
             FROM courses c
             JOIN courses_role cr ON c.id = cr.course_id
-            WHERE cr.email = %s AND c.status = COALESCE(%s, c.status) AND cr.role = COALESCE(%s, cr.role)
+            WHERE cr.user_id = %s AND c.status = COALESCE(%s, c.status) AND cr.role = COALESCE(%s, cr.role)
             ORDER BY c.created_at DESC
         """
         cursor = db.cursor()
-        cursor.execute(query, (user_email, course_status, course_role))
+        cursor.execute(query, (user_id, course_status, course_role))
         results = cursor.fetchall()
         cursor.close()
         
