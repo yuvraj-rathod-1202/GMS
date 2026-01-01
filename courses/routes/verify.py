@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from courses.utils.auth import verifyAdmin, verifyRoleInCourse
+from utils.auth import verifyAdmin, verifyRoleInCourse
 
 router = APIRouter()
 
