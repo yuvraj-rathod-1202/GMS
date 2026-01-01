@@ -17,7 +17,7 @@ async def get_user_roles(course_id: str, user_info: dict = Depends(verify_token)
         response = await client.get(
             f"{COURSES_SERVICE_URL}/user/{course_id}/roles",
             params={
-                "user_email": user_info.get("email"),
+                "user_id": user_info.get("user_id", 0),
             }
         )
         if response.status_code != 200:
@@ -43,7 +43,7 @@ async def get_user_courses(course_status: Optional[str] = None, user_info: dict 
         params = {}
         if course_status:
             params["course_status"] = course_status
-        params["user_email"] = user_info.get("email")
+        params["user_id"] = user_info.get("user_id", 0)
         response = await client.get(
             f"{COURSES_SERVICE_URL}/me/courses",
             params=params
@@ -69,7 +69,7 @@ async def get_user_courses_by_role(role: str, data: GetAllCourseRoleRequest, use
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{COURSES_SERVICE_URL}/me/courses?roles={role}",
-            params={**data.dict(), "user_email": user_info.get("email")},
+            params={**data.dict(), "user_id": user_info.get("user_id", 0)},
         )
         if response.status_code != 200:
             detail = "Failed to fetch user courses by role"

@@ -2,16 +2,17 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 class SignUpUser(BaseModel):
+    id: int
     email: EmailStr
     password: str
     
 class ChangePasswordRequest(BaseModel):
     old_password: str
     new_password: str
-    email: EmailStr
+    id: int
     
 class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+    id: int
     
 class AddCourseRequest(BaseModel):
     course_code: str
@@ -29,13 +30,13 @@ class UpdateCourseStatusRequest(BaseModel):
         extra = "forbid"
     
 class EnrollStudentRequest(BaseModel):
-    student_email: EmailStr
+    student_id: int
     
 class EnrollTaRequest(BaseModel):
-    ta_email: EmailStr
+    ta_id: int
     
 class EnrollInstructorRequest(BaseModel):
-    instructor_email: EmailStr
+    instructor_id: int
     
 class GetAllCourseRoleRequest(BaseModel):
     course_status: Optional[str] = None

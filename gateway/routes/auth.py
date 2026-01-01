@@ -52,7 +52,7 @@ async def signup(user: SignUpUser):
             response = await client.post(
                 f"{AUTH_SERVICE_URL}/signup",
                 json=user.dict(),
-                auth=(user.email, user.password)
+                auth=(str(user.id), user.password)
             )
             
             if response.status_code in (200, 201):
@@ -99,7 +99,7 @@ async def change_password(data: ChangePasswordRequest):
         try:
             response = await client.put(
                 f"{AUTH_SERVICE_URL}/change-password",
-                json={"old_password": data.old_password, "new_password": data.new_password, "email": data.email},
+                json={"old_password": data.old_password, "new_password": data.new_password, "id": data.id},
             )
             
             if response.status_code == 200:
@@ -121,7 +121,7 @@ async def forgot_password(data: ForgotPasswordRequest):
         try:
             response = await client.post(
                 f"{AUTH_SERVICE_URL}/forgot-password",
-                json={"email": data.email}
+                json={"id": data.id}
             )
             
             if response.status_code == 200:
