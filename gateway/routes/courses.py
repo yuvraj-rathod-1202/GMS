@@ -11,6 +11,14 @@ router = APIRouter()
 COURSES_SERVICE_URL = os.getenv("COURSES_SERVICE_URL", "http://localhost:8080")
 MARKS_SERVICE_URL = os.getenv("MARKS_SERVICE_URL", "http://localhost:6000")
 
+def _error_detail(response, default_msg: str) -> str:
+    try:
+        data = response.json()
+        return data.get("detail", default_msg)
+    except Exception:
+        text = (response.text or "").strip()
+        return text or default_msg
+
 @router.get("/")
 async def get_courses(user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
@@ -24,7 +32,7 @@ async def get_courses(user_info: dict = Depends(verify_token)):
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error fetching courses"),
+                    detail=_error_detail(response, "Error fetching courses"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -44,7 +52,7 @@ async def create_course(course: AddCourseRequest, user_info: dict = Depends(veri
             if response.status_code not in (200, 201):
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error creating course"),
+                    detail=_error_detail(response, "Error creating course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -63,7 +71,7 @@ async def get_course(course_id: str, user_info: dict = Depends(verify_token)):
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error fetching course"),
+                    detail=_error_detail(response, "Error fetching course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -83,7 +91,7 @@ async def update_course(course_id: str, data: UpdateCourseStatusRequest, user_in
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error updating course"),
+                    detail=_error_detail(response, "Error updating course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -103,7 +111,7 @@ async def delete_course(course_id: str, user_info: dict = Depends(verify_token))
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error deleting course"),
+                    detail=_error_detail(response, "Error deleting course"),
                 )
             return {"detail": "Course deleted successfully"}
         except httpx.RequestError as e:
@@ -128,7 +136,7 @@ async def get_course_role(course_id: str, role: str, user_info: dict = Depends(v
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error fetching course role"),
+                    detail=_error_detail(response, "Error fetching course role"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -148,7 +156,7 @@ async def enroll_in_course(course_id: str, data: EnrollStudentRequest, user_info
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error enrolling in course"),
+                    detail=_error_detail(response, "Error enrolling in course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -168,7 +176,7 @@ async def unenroll_from_course(course_id: str, student_id: int = Query(...), use
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error unenrolling from course"),
+                    detail=_error_detail(response, "Error unenrolling from course"),
                 )
             return {"detail": "Unenrolled from course successfully"}
         except httpx.RequestError as e:
@@ -188,7 +196,7 @@ async def add_ta_to_course(course_id: str, data: EnrollTaRequest, user_info: dic
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error adding TA to course"),
+                    detail=_error_detail(response, "Error adding TA to course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -208,7 +216,7 @@ async def remove_ta_from_course(course_id: str, ta_id: int = Query(...), user_in
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error removing TA from course"),
+                    detail=_error_detail(response, "Error removing TA from course"),
                 )
             return {"detail": "TA removed from course successfully"}
         except httpx.RequestError as e:
@@ -228,7 +236,7 @@ async def add_instructor_to_course(course_id: str, data: EnrollInstructorRequest
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error adding instructor to course"),
+                    detail=_error_detail(response, "Error adding instructor to course"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -248,7 +256,7 @@ async def remove_instructor_from_course(course_id: str, instructor_id: int = Que
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error removing instructor from course"),
+                    detail=_error_detail(response, "Error removing instructor from course"),
                 )
             return {"detail": "Instructor removed from course successfully"}
         except httpx.RequestError as e:
@@ -268,7 +276,7 @@ async def create_assessment(course_id: str, data: CreateAssessmentRequest, user_
             if response.status_code not in (200, 201):
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error creating assessment"),
+                    detail=_error_detail(response, "Error creating assessment"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -288,7 +296,7 @@ async def get_all_assessments(course_id: str, user_info: dict = Depends(verify_t
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error fetching assessments"),
+                    detail=_error_detail(response, "Error fetching assessments"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -308,7 +316,7 @@ async def get_student_marks(course_id: str, student_id: str, user_info: dict = D
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error fetching student marks"),
+                    detail=_error_detail(response, "Error fetching student marks"),
                 )
             return response.json()
         except httpx.RequestError as e:

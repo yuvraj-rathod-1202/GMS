@@ -11,6 +11,14 @@ router = APIRouter()
 
 COURSES_SERVICE_URL = os.getenv("COURSES_SERVICE_URL", "http://localhost:8080")
 
+def _error_detail(response, default_msg: str) -> str:
+    try:
+        data = response.json()
+        return data.get("detail", default_msg)
+    except Exception:
+        text = (response.text or "").strip()
+        return text or default_msg
+
 @router.get("/user/{course_id}/roles")
 async def get_user_roles(course_id: str, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
@@ -21,16 +29,9 @@ async def get_user_roles(course_id: str, user_info: dict = Depends(verify_token)
             }
         )
         if response.status_code != 200:
-            detail = "Failed to fetch user roles"
-
-            if response.headers.get("content-type", "").startswith("application/json"):
-                detail = response.json().get("detail", detail)
-            elif response.text:
-                detail = response.text
-
             raise HTTPException(
                 status_code=response.status_code,
-                detail=detail
+                detail=_error_detail(response, "Failed to fetch user roles")
             )
 
         
@@ -49,16 +50,9 @@ async def get_user_courses(course_status: Optional[str] = None, user_info: dict 
             params=params
         )
         if response.status_code != 200:
-            detail = "Failed to fetch user courses"
-            
-            if response.headers.get("content-type", "").startswith("application/json"):
-                detail = response.json().get("detail", detail)
-            elif response.text:
-                detail = response.text
-
             raise HTTPException(
                 status_code=response.status_code,
-                detail=detail
+                detail=_error_detail(response, "Failed to fetch user courses")
             )
         
         courses = response.json()
@@ -72,17 +66,11 @@ async def get_user_courses_by_role(role: str, data: GetAllCourseRoleRequest, use
             params={**data.dict(), "user_id": user_info.get("user_id", 0)},
         )
         if response.status_code != 200:
-            detail = "Failed to fetch user courses by role"
-            
-            if response.headers.get("content-type", "").startswith("application/json"):
-                detail = response.json().get("detail", detail)
-            elif response.text:
-                detail = response.text
-
             raise HTTPException(
                 status_code=response.status_code,
-                detail=detail
+                detail=_error_detail(response, "Failed to fetch user courses by role")
             )
         
         courses = response.json()
         return courses
+    

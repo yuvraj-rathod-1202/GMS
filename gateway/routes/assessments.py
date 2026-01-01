@@ -10,6 +10,14 @@ MARKS_SERVICE_URL = os.getenv("MARKS_SERVICE_URL", "http://localhost:6000")
 
 router = APIRouter()
 
+def _error_detail(response, default_msg: str) -> str:
+    try:
+        data = response.json()
+        return data.get("detail", default_msg)
+    except Exception:
+        text = (response.text or "").strip()
+        return text or default_msg
+
 @router.get("/{course_id}/{assessment_id}")
 async def get_assessment(course_id: str, assessment_id: str, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
@@ -21,7 +29,7 @@ async def get_assessment(course_id: str, assessment_id: str, user_info: dict = D
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error fetching assessment"),
+                    detail=_error_detail(response, "Error fetching assessment"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -42,7 +50,7 @@ async def update_assessment(course_id: str, assessment_id: str, data: UpdateAsse
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error updating assessment"),
+                    detail=_error_detail(response, "Error updating assessment"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -62,7 +70,7 @@ async def delete_assessment(course_id: str, assessment_id: str, user_info: dict 
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error deleting assessment"),
+                    detail=_error_detail(response, "Error deleting assessment"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -82,7 +90,7 @@ async def add_marks(course_id: str, assessment_id: str, data: AddMarksRequest, u
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error adding marks"),
+                    detail=_error_detail(response, "Error adding marks"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -102,7 +110,7 @@ async def get_marks(course_id: str, assessment_id: str, user_info: dict = Depend
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error fetching marks"),
+                    detail=_error_detail(response, "Error fetching marks"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -122,7 +130,7 @@ async def get_student_marks(course_id: str, assessment_id: str, student_id: str,
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error fetching student marks"),
+                    detail=_error_detail(response, "Error fetching student marks"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -142,7 +150,7 @@ async def delete_student_marks(course_id: str, assessment_id: str, student_id: s
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error deleting student marks"),
+                    detail=_error_detail(response, "Error deleting student marks"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -162,7 +170,7 @@ async def publish_assessment_marks(course_id: str, assessment_id: str, user_info
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error publishing marks"),
+                    detail=_error_detail(response, "Error publishing marks"),
                 )
             return response.json()
         except httpx.RequestError as e:
@@ -182,7 +190,7 @@ async def unpublish_assessment_marks(course_id: str, assessment_id: str, user_in
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=response.json().get("detail", "Error unpublishing marks"),
+                    detail=_error_detail(response, "Error unpublishing marks"),
                 )
             return response.json()
         except httpx.RequestError as e:
