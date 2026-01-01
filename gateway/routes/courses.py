@@ -2,13 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 import httpx, os
 from dotenv import load_dotenv
 from utils.auth import verify_token
-from models.schema import AddCourseRequest, UpdateCourseStatusRequest, EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest
+from models.schema import AddCourseRequest, UpdateCourseStatusRequest, EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest, CreateAssessmentRequest
 
 load_dotenv()
 
 router = APIRouter()
 
 COURSES_SERVICE_URL = os.getenv("COURSES_SERVICE_URL", "http://localhost:8080")
+MARKS_SERVICE_URL = os.getenv("MARKS_SERVICE_URL", "http://localhost:6000")
 
 @router.get("/")
 async def get_courses(user_info: dict = Depends(verify_token)):
@@ -256,3 +257,63 @@ async def remove_instructor_from_course(course_id: str, instructor_id: int = Que
                 detail=f"Courses service unavailable: {str(e)}"
             )
 
+@router.post("/{course_id}/assessments")
+async def create_assessment(course_id: str, data: CreateAssessmentRequest, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                f"{MARKS_SERVICE_URL}/{course_id}/assessments",
+                json={**data.dict(), "user_id": user_info.get("user_id", 0)},
+            )
+            if response.status_code not in (200, 201):
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=response.json().get("detail", "Error creating assessment"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Marks service unavailable: {str(e)}"
+            )
+            
+@router.get("/{course_id}/assessments")
+async def get_all_assessments(course_id: str, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{MARKS_SERVICE_URL}/{course_id}/assessments",
+                params={"user_id": user_info.get("user_id", 0)},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=response.json().get("detail", "Error fetching assessments"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Marks service unavailable: {str(e)}"
+            )
+            
+@router.get("/{course_id}/marks/{student_id}")
+async def get_student_marks(course_id: str, student_id: str, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{MARKS_SERVICE_URL}/{course_id}/marks/all/{student_id}",
+                params={"user_id": user_info.get("user_id", 0)},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=response.json().get("detail", "Error fetching student marks"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Marks service unavailable: {str(e)}"
+            )
+            

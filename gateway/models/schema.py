@@ -1,5 +1,6 @@
+from datetime import datetime
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import List, Optional
 
 class SignUpUser(BaseModel):
     id: int
@@ -40,3 +41,26 @@ class EnrollInstructorRequest(BaseModel):
     
 class GetAllCourseRoleRequest(BaseModel):
     course_status: Optional[str] = None
+    
+class CreateAssessmentRequest(BaseModel):
+    name: str
+    assessment_type: str
+    max_marks: int
+    is_marks_published: bool
+    assessment_date: datetime
+    
+class UpdateAssessmentRequest(BaseModel):
+    name: Optional[str] = None
+    assessment_type: Optional[str] = None
+    max_marks: Optional[int] = None
+    is_marks_published: Optional[bool] = None
+    assessment_date: Optional[datetime] = None
+    
+    class Config:
+        extra = "forbid"
+        
+class StudentMark(BaseModel):
+    student_id: int
+    marks_obtained: float
+class AddMarksRequest(BaseModel):
+    marks: List[StudentMark]
