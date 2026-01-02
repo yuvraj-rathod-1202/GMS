@@ -53,13 +53,14 @@ def get_all_assessments_from_db(course_id: int, assessment_id: int | None = None
                 created_at, updated_at
             FROM assessments
             WHERE course_id = %s
-            ORDER BY updated_at DESC
         """
         params = [course_id]
 
         if assessment_id is not None:
             select_query += " AND id = %s"
             params.append(assessment_id)
+            
+        select_query += " ORDER BY created_at DESC"
 
         cursor.execute(select_query, tuple(params))
         rows = cursor.fetchall()

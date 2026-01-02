@@ -44,7 +44,7 @@ def add_marks_to_db(assessment_id: int, data: AddMarksRequest):
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to add marks to the database"
+            detail=f"Failed to add marks to the database : {e}"
         )
         
 def get_marks_from_db(assessment_id: int, student_id: int | None = None):
@@ -82,7 +82,7 @@ def get_marks_from_db(assessment_id: int, student_id: int | None = None):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve marks from the database"
+            detail=f"Failed to retrieve marks from the database : {e}"
         )
         
 def delete_marks_from_db(assessment_id: int, student_id: int):
@@ -110,7 +110,7 @@ def delete_marks_from_db(assessment_id: int, student_id: int):
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete marks from the database"
+            detail=f"Failed to delete marks from the database : {e}"
         )
         
 def publish_marks_in_db(assessment_id: int, publish: bool):
@@ -139,7 +139,7 @@ def publish_marks_in_db(assessment_id: int, publish: bool):
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update marks publication status in the database"
+            detail=f"Failed to update marks publication status in the database : {e}"
         )
         
 def get_all_marks_from_db(student_id: int, course_id: int):
@@ -183,5 +183,5 @@ def get_all_marks_from_db(student_id: int, course_id: int):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve all marks from the database"
+            detail=f"Failed to retrieve all marks from the database : {e}"
         )
