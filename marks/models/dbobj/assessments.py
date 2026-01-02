@@ -8,7 +8,7 @@ class AssessmentsBDObj(BaseModel):
     assessment_type: str
     max_marks: int
     is_marks_published: bool
-    assessment_date: str
+    assessment_date: datetime
     created_by_id: int
     created_at: datetime
     updated_at: datetime
