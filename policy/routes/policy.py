@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from models.schema.policy import CreatePolicyRequest
 from utils.auth import verifyInstructor, verifyRoleInCourse
-from services.policy import add_policy_to_db, get_policy_from_db
+from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db
 
 
 router = APIRouter()
@@ -43,3 +43,22 @@ def get_policy(course_id: int, user_id: int):
         )
         
     return {"policy": policy}
+
+@router.delete("/courses/{course_id}/policy")
+def delete_policy(course_id: int, user_id: int):
+    verified = verifyInstructor(user_id, course_id)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Instructor privileges required"
+        )
+        
+    success = delete_policy_from_db(course_id)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete policy"
+        )
+        
+    return {"detail": "Policy deleted successfully"}

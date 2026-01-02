@@ -88,4 +88,60 @@ def get_policy_from_db(course_id: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}"
-        )   
+        )
+        
+def delete_policy_from_db(course_id: int):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute(
+            "SELECT id FROM course_policy WHERE course_id = %s",
+            (course_id,)
+        )
+        
+        policy = cursor.fetchone()
+        if not policy:
+            return False
+        
+        policy_id = policy[0]
+        
+        cursor.execute(
+            "SELECT id FROM grading_components WHERE course_policy_id = %s",
+            (policy_id,)
+        )
+        
+        components = cursor.fetchall()
+        component_ids = [component[0] for component in components]
+        
+        if component_ids:
+            format_strings = ','.join(['%s'] * len(component_ids))
+            cursor.execute(
+                f"DELETE FROM grading_rule WHERE grading_component_id IN ({format_strings})",
+                tuple(component_ids)
+            )
+            
+            cursor.execute(
+                f"DELETE FROM grading_components WHERE id IN ({format_strings})",
+                tuple(component_ids)
+            )
+        
+        cursor.execute(
+            "DELETE FROM course_policy WHERE id = %s",
+            (policy_id,)
+        )
+        
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
