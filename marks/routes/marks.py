@@ -1,13 +1,13 @@
 from fastapi import APIRouter, HTTPException, status, Query
-from utils.auth import verifyInstructorOrTa, verifyRoleInCourse
+from utils.auth import verifyInstructorOrTa, verifyRoleInCourse, verifyRoleInCourseAndPublish
 from models.schemas.marks import AddMarksRequest
 from services.marks import add_marks_to_db, get_marks_from_db, delete_marks_from_db, publish_marks_in_db, get_all_marks_from_db
 
 router = APIRouter()
 
 @router.post("/{course_id}/{assessment_id}/marks")
-def add_marks(course_id: int, assessment_id: int, data: AddMarksRequest):
-    verified = verifyInstructorOrTa(data.recorded_by_id, course_id)
+async def add_marks(course_id: int, assessment_id: int, data: AddMarksRequest):
+    verified = await verifyInstructorOrTa(data.recorded_by_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -25,8 +25,8 @@ def add_marks(course_id: int, assessment_id: int, data: AddMarksRequest):
     return {"detail": "Marks added successfully"}
 
 @router.get("/{course_id}/{assessment_id}/marks")
-def get_marks(course_id: int, assessment_id: int, user_id: int = Query(...)):
-    verified = verifyInstructorOrTa(user_id, course_id)
+async def get_marks(course_id: int, assessment_id: int, user_id: int = Query(...)):
+    verified = await verifyInstructorOrTa(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -44,8 +44,8 @@ def get_marks(course_id: int, assessment_id: int, user_id: int = Query(...)):
     return {"marks": marks}
 
 @router.get("/{course_id}/{assessment_id}/marks/{student_id}")
-def get_student_marks(course_id: int, assessment_id: int, student_id: int, user_id: int = Query(...)):
-    verified = verifyRoleInCourse(user_id, course_id)
+async def get_student_marks(course_id: int, assessment_id: int, student_id: int, user_id: int = Query(...)):
+    verified = await verifyRoleInCourseAndPublish(user_id, course_id, assessment_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -63,8 +63,8 @@ def get_student_marks(course_id: int, assessment_id: int, student_id: int, user_
     return {"marks": marks}
 
 @router.delete("/{course_id}/{assessment_id}/marks/{student_id}")
-def delete_student_marks(course_id: int, assessment_id: int, student_id: int, user_id: int = Query(...)):
-    verified = verifyInstructorOrTa(user_id, course_id)
+async def delete_student_marks(course_id: int, assessment_id: int, student_id: int, user_id: int = Query(...)):
+    verified = await verifyInstructorOrTa(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -82,8 +82,8 @@ def delete_student_marks(course_id: int, assessment_id: int, student_id: int, us
     return {"detail": "Marks deleted successfully"}
 
 @router.put("/{course_id}/{assessment_id}/publish")
-def publish_marks(course_id: int, assessment_id: int, user_id: int = Query(...)):
-    verified = verifyInstructorOrTa(user_id, course_id)
+async def publish_marks(course_id: int, assessment_id: int, user_id: int = Query(...)):
+    verified = await verifyInstructorOrTa(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -101,8 +101,8 @@ def publish_marks(course_id: int, assessment_id: int, user_id: int = Query(...))
     return {"detail": "Marks published successfully"}
 
 @router.put("/{course_id}/{assessment_id}/unpublish")
-def unpublish_marks(course_id: int, assessment_id: int, user_id: int = Query(...)):
-    verified = verifyInstructorOrTa(user_id, course_id)
+async def unpublish_marks(course_id: int, assessment_id: int, user_id: int = Query(...)):
+    verified = await verifyInstructorOrTa(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -120,8 +120,8 @@ def unpublish_marks(course_id: int, assessment_id: int, user_id: int = Query(...
     return {"detail": "Marks unpublished successfully"}
 
 @router.get("/{course_id}/marks/all/{student_id}")
-def get_all_marks_for_student(course_id: int, student_id: int, user_id: int = Query(...)):
-    verified = verifyRoleInCourse(user_id, course_id)
+async def get_all_marks_for_student(course_id: int, student_id: int, user_id: int = Query(...)):
+    verified = await verifyRoleInCourse(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -36,7 +36,7 @@ async def get_user_roles(course_id: str, user_info: dict = Depends(verify_token)
 
         
         role = response.json()
-        return {"course_id": course_id, "role": role}
+        return {"course_id": course_id, "role": role.get("role", "")}
     
 @router.get("/me/courses")
 async def get_user_courses(course_status: Optional[str] = None, user_info: dict = Depends(verify_token)):

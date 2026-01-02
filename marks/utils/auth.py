@@ -1,15 +1,27 @@
-import os
+import os, logging
 from fastapi import HTTPException, status
 import httpx
 from dotenv import load_dotenv
+from services.marks import MarksPublished
 
 load_dotenv()
+
+COURSES_SERVICE_URL = os.getenv("COURSES_SERVICE_URL", "http://localhost:8080")
+logger = logging.getLogger(__name__)
+
+def _error_detail(response, default_msg: str) -> str:
+    try:
+        data = response.json()
+        return data.get("detail", default_msg)
+    except Exception:
+        text = (response.text or "").strip()
+        return text or default_msg
 
 async def verifyInstructor(user_id: int, course_id: int):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
-                f"{os.getenv('COURSE_SERVICE_URL')}/verifyinstructor",
+                f"{COURSES_SERVICE_URL}/verifyinstructor",
                 params={"user_id": user_id, "course_id": course_id}
             )
             if response.status_code == 200:
@@ -17,12 +29,12 @@ async def verifyInstructor(user_id: int, course_id: int):
             elif response.status_code == 404:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Instructor privileges required"
+                    detail=_error_detail(response, "Instructor privileges required")
                 )
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error verifying instructor status"
+                    detail=_error_detail(response, "Error verifying instructor status")
                 )
         except httpx.RequestError as e:
             raise HTTPException(
@@ -34,7 +46,7 @@ async def verifyInstructorOrTa(user_id: int, course_id: int):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
-                f"{os.getenv('COURSE_SERVICE_URL')}/verifyinstructororta",
+                f"{COURSES_SERVICE_URL}/verifyinstructororta",
                 params={"user_id": user_id, "course_id": course_id}
             )
             if response.status_code == 200:
@@ -42,12 +54,12 @@ async def verifyInstructorOrTa(user_id: int, course_id: int):
             elif response.status_code == 404:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Instructor or TA privileges required"
+                    detail=_error_detail(response, "Instructor or TA privileges required")
                 )
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error verifying instructor/TA status"
+                    detail=_error_detail(response, "Error verifying instructor/TA status")
                 )
         except httpx.RequestError as e:
             raise HTTPException(
@@ -59,7 +71,7 @@ async def verifyRoleInCourse(user_id: int, course_id: int):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
-                f"{os.getenv('COURSE_SERVICE_URL')}/verifyroleincourse",
+                f"{COURSES_SERVICE_URL}/verifyroleincourse",
                 params={"user_id": user_id, "course_id": course_id}
             )
             if response.status_code == 200:
@@ -67,13 +79,46 @@ async def verifyRoleInCourse(user_id: int, course_id: int):
             elif response.status_code == 404:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User does not have a role in the course"
+                    detail=_error_detail(response, "User does not have a role in the course")
                 )
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail="Error verifying role in course"
+                    detail=_error_detail(response, "Error verifying role in course")
                 )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Course service unavailable: {str(e)}"
+            )
+            
+async def verifyRoleInCourseAndPublish(user_id: int, course_id: int, assessment_id: int):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{COURSES_SERVICE_URL}/user/{course_id}/roles",
+                params={"user_id": user_id}
+            )
+            if response.status_code == 200:
+                role_data = response.json()
+                logger.info(f"Role data retrieved: {role_data}")
+                role = role_data.get("role", "")
+                logger.info(f"User role in course {course_id}: {role}")
+                if role in ["instructor", "ta"]:
+                    return True
+                elif role == "student" and MarksPublished(assessment_id):
+                    return True
+                else:
+                    if role == "student":
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Marks for this assessment are not published yet"
+                        )
+                    else:
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Instructor or TA privileges required"
+                        )
         except httpx.RequestError as e:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from utils.auth import verifyAdmin, verifyRoleInCourse
+from utils.auth import verifyAdmin, verifyRoleInCourse, verifyInstructorOrTa
 
 router = APIRouter()
 
@@ -22,7 +22,6 @@ async def verify_instructor_endpoint(user_id: int, course_id: int):
     
 @router.get("/verifyinstructororta")
 async def verify_instructor_or_ta_endpoint(user_id: int, course_id: int):
-    from courses.utils.auth import verifyInstructorOrTa
     try:
         verifyInstructorOrTa(user_id, course_id)
         return {"success": True}

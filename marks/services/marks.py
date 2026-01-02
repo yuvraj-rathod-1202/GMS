@@ -185,3 +185,30 @@ def get_all_marks_from_db(student_id: int, course_id: int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve all marks from the database : {e}"
         )
+        
+def MarksPublished(assessment_id: int) -> bool:
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+    
+    try:
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT is_marks_published FROM assessments WHERE id = %s",
+            (assessment_id,)
+        )
+        result = cursor.fetchone()
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Assessment not found"
+            )
+        return result[0]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
