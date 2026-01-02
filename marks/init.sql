@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS assessments (
     created_by_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)
+);
 
 CREATE TABLE IF NOT EXISTS marks (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,9 +29,9 @@ CREATE TABLE IF NOT EXISTS marks (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_assessment_student (assessment_id, student_id),
     FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE,
-    CREATE INDEX idx_student_id ON marks(student_id),
-    CREATE INDEX idx_assessment_id ON marks(assessment_id)
-)
+    INDEX idx_student_id (student_id),
+    INDEX idx_assessment_id (assessment_id)
+);
 
 CREATE TABLE IF NOT EXISTS challenges (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -46,4 +46,4 @@ CREATE TABLE IF NOT EXISTS challenges (
     raised_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     responded_at TIMESTAMP,
     FOREIGN KEY (assessment_id) REFERENCES assessments(id)
-)
+);

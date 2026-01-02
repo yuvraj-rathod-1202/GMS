@@ -15,7 +15,7 @@ def add_assessment_to_db(course_id: int, data: CreateAssessmentRequest):
         cursor = db.cursor()
         insert_query = """
             INSERT INTO assessments (course_id, name, assessment_type, max_marks, is_marks_published, assessment_date, created_by_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         
         cursor.execute(insert_query, (
@@ -28,7 +28,7 @@ def add_assessment_to_db(course_id: int, data: CreateAssessmentRequest):
             data.user_id
         ))
         db.commit()
-        assessment_id = cursor.fetchone()[0]
+        assessment_id = cursor.lastrowid
         return assessment_id
     except Exception as e:
         db.rollback()
