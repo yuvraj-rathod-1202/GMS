@@ -20,6 +20,7 @@ class PolicyDBObj(BaseModel):
     course_id: int
     total_weightage: float
     set_by_id: int
+    updated_by_id: int
     set_at: str
     updated_at: str
     components: List[GradingComponentDBObj]

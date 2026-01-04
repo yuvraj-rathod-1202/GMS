@@ -15,8 +15,8 @@ def add_policy_to_db(course_id: int, data: CreatePolicyRequest):
         cursor = db.cursor()
         
         cursor.execute(
-            "INSERT INTO course_policy (course_id, total_weightage, set_by_id) VALUES (%s, %s, %s)",
-            (course_id, data.total_weightage, data.set_by_id)
+            "INSERT INTO course_policy (course_id, total_weightage, set_by_id, updated_by_id) VALUES (%s, %s, %s, %s)",
+            (course_id, data.total_weightage, data.set_by_id, data.set_by_id)
         )
         
         policy_id = cursor.lastrowid
@@ -56,12 +56,12 @@ def get_policy_from_db(course_id: int):
         cursor = db.cursor()
         
         cursor.execute(
-            "SELECT id, total_weightage, set_by_id, created_at, updated_at FROM course_policy WHERE course_id = %s",
+            "SELECT id, total_weightage, set_by_id, updated_by_id, set_at, updated_at FROM course_policy WHERE course_id = %s",
             (course_id,)
         )
         
         policy = cursor.fetchone()
-        policy = PolicyDBObj(id=policy[0], course_id=course_id, total_weightage=policy[1], set_by_id=policy[2], set_at=policy[3], updated_at=policy[4], components=[]) if policy else None
+        policy = PolicyDBObj(id=policy[0], course_id=course_id, total_weightage=policy[1], set_by_id=policy[2], updated_by_id=policy[3], set_at=policy[4], updated_at=policy[5], components=[]) if policy else None
         
         if not policy:
             return None
