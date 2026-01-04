@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from models.schema.policy import CreatePolicyRequest
+from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest
 from utils.db import get_db
 from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj
 
@@ -31,7 +31,7 @@ def add_policy_to_db(course_id: int, data: CreatePolicyRequest):
             
             for rule in component.rules:
                 cursor.execute(
-                    "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params, priority) INTO (%s, %s, %s, %s)",
+                    "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params, priority) VALUES (%s, %s, %s, %s)",
                     (component_id, rule.rule_type, rule.rule_params, rule.priority)
                 )
                 
@@ -137,6 +137,108 @@ def delete_policy_from_db(course_id: int):
             (policy_id,)
         )
         
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
+        
+def update_policy_in_db(data: UpdatePolicyRequest):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute(
+            "UPDATE course_policy SET total_weightage = %s, updated_by_id = %s, updated_at = NOW() WHERE id = %s",
+            (data.total_weightage, data.updated_by_id, data.id)
+        )
+        
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
+        
+def delete_policy_component_from_db(course_id: int, component_id: int):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute(
+            "SELECT cp.id FROM course_policy cp JOIN grading_components gc ON cp.id = gc.course_policy_id WHERE cp.course_id = %s AND gc.id = %s",
+            (course_id, component_id)
+        )
+        
+        policy = cursor.fetchone()
+        if not policy:
+            return False
+        
+        cursor.execute(
+            "DELETE FROM grading_rule WHERE grading_component_id = %s",
+            (component_id,)
+        )
+        
+        cursor.execute(
+            "DELETE FROM grading_components WHERE id = %s",
+            (component_id,)
+        )
+        
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
+        
+def update_component_in_db(data: UpdatePolicyComponentRequest):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute(
+            "UPDATE grading_components SET weightage = %s, assessment_category_id = %s, updated_at = NOW() WHERE id = %s",
+            (data.weightage, data.assessment_category_id, data.id)
+        )
+        
+        for rule in data.rules:
+            if rule.id:
+                cursor.execute(
+                    "UPDATE grading_rule SET rule_type = %s, rule_params = %s, priority = %s WHERE id = %s",
+                    (rule.rule_type, rule.rule_params, rule.priority, rule.id)
+                )
+            else:
+                cursor.execute(
+                    "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params, priority) VALUES (%s, %s, %s, %s)",
+                    (data.id, rule.rule_type, rule.rule_params, rule.priority)
+                )
+                
+                
         db.commit()
         return True
     except Exception as e:
