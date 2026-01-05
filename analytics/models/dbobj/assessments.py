@@ -7,7 +7,6 @@ class CourseOverviewBDObj(BaseModel):
     course_id: int
     mean: float
     median: float
-    mode: float
     max: float
     min: float
     std: float
@@ -21,7 +20,6 @@ class AssessmentAnalyticsBDObj(BaseModel):
     assessment_id: int
     mean: float
     median: float
-    mode: float
     max: float
     min: float
     std: float
