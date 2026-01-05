@@ -28,7 +28,6 @@ class UpdateGradingRuleRequest(BaseModel):
     priority: int
     
 class UpdatePolicyComponentRequest(BaseModel):
-    id: int
     updated_by_id: int
     assessment_category_id: int
     weightage: float

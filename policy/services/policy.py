@@ -210,7 +210,7 @@ def delete_policy_component_from_db(course_id: int, component_id: int):
             detail=f"Database error: {str(e)}"
         )
         
-def update_component_in_db(data: UpdatePolicyComponentRequest):
+def update_component_in_db(data: UpdatePolicyComponentRequest, component_id: int):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -223,7 +223,7 @@ def update_component_in_db(data: UpdatePolicyComponentRequest):
         
         cursor.execute(
             "UPDATE grading_components SET weightage = %s, assessment_category_id = %s, updated_at = NOW() WHERE id = %s",
-            (data.weightage, data.assessment_category_id, data.id)
+            (data.weightage, data.assessment_category_id, component_id)
         )
         
         for rule in data.rules:
@@ -235,7 +235,7 @@ def update_component_in_db(data: UpdatePolicyComponentRequest):
             else:
                 cursor.execute(
                     "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params, priority) VALUES (%s, %s, %s, %s)",
-                    (data.id, rule.rule_type, rule.rule_params, rule.priority)
+                    (component_id, rule.rule_type, rule.rule_params, rule.priority)
                 )
                 
                 

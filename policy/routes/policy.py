@@ -110,7 +110,7 @@ def update_policy_component(course_id: int, component_id: int, data: UpdatePolic
             detail="Instructor privileges required"
         )
         
-    success = update_component_in_db(data)
+    success = update_component_in_db(data, component_id)
     
     if not success:
         raise HTTPException(
