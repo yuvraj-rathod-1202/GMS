@@ -43,7 +43,7 @@ def add_course_analytics_to_db(course_id: int, marks: np.array):
         db.rollback()
         raise Exception(f"Database error: {str(e)}")
     
-def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries: list, course_analytic_overview):
+def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries: list, deleted_entries: list, course_analytic_overview):
     db = get_db()
     if not db:
         raise Exception("Database connection error")
@@ -54,31 +54,79 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
     old_total_students = course_analytic_overview.total_students
     old_max = course_analytic_overview.max
     old_min = course_analytic_overview.min
-    m2 = (old_std**2  + old_mean**2) * old_total_students
     
-    new_total_students = old_total_students + len(new_entries) 
-    new_max = max(old_max, max(new_entries), max([old for old, new in old_entries] or [old_max]))
-    new_min = min(old_min, min(new_entries), min([old for old, new in old_entries] or [old_min]))
-    new_mean = (old_mean * old_total_students + sum(new_entries) + sum([new - old for old, new in old_entries])) / new_total_students
-    new_std = np.sqrt((m2 + sum([new**2 - old**2 for old, new in old_entries]) + sum([new**2 for new in new_entries])) / new_total_students - new_mean**2)
+    new_total_students = old_total_students + len(new_entries) - len(deleted_entries)
+    
+    recompute_needed = (
+        any(mark == old_max for mark in deleted_entries) or
+        any(mark == old_min for mark in deleted_entries)
+    )
+    
+    
+    old_s = old_mean*old_total_students
+    old_q = (old_std**2 + old_mean**2)*old_total_students
+    
+    new_s = old_s + sum(new_entries) - sum(deleted_entries)
+    new_q = old_q + sum([x*x for x in new_entries]) - sum([x*x for x in deleted_entries])
+    
+    for old, new in old_entries:
+        new_s += (new - old)
+        new_q += (new*new - old*old)
+    
+    new_mean = new_s / new_total_students
+    new_var = new_q/new_total_students - new_mean**2
+    new_std = np.sqrt(max(new_var, 0))
     
     try:
         cursor = db.cursor()
+        freq_update = [(course_id, new, 1) for new in new_entries]
+        for deleted_mark in deleted_entries:
+            freq_update.append((course_id, deleted_mark, -1))
+        for old_mark, new_mark in old_entries:
+            freq_update.append((course_id, old_mark, -1))
+            freq_update.append((course_id, new_mark, 1))
+        
+        cursor.executemany(
+            """
+            INSERT INTO course_mark_frequency (course_id, mark, frequency, version)
+            VALUES (%s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE frequency = GREATEST(frequency + VALUES(frequency), 0)
+            """,
+            freq_update
+        )
+        
+        if recompute_needed:
+            candidates = []
+            candidates += new_entries
+            candidates += [new for old, new in old_entries]
+            cursor = db.cursor()
+            cursor.execute(
+                "SELECT MAX(mark), MIN(mark) FROM course_mark_frequency WHERE course_id = %s",
+                (course_id,)
+            )
+            result = cursor.fetchone()
+            candidates.append(result[0])
+            candidates.append(result[1])
+            new_max = max(candidates)
+            new_min = min(candidates)
+        else:
+            new_max = max(old_max, max(new_entries), max([new for old, new in old_entries] or [old_max]))
+            new_min = min(old_min, min(new_entries), min([new for old, new in old_entries] or [old_min]))
+        
         cursor.execute(
             """
-            SET @total_rows := (SELECT SUM(frequency) FROM course_mark_frequency WHERE course_id = %s);
-            SET @target := @total_rows/2;
-            SET @cumulative := 0;
-            
+            WITH ordered AS (
+            SELECT mark,
+                    frequency,
+                    SUM(frequency) OVER (ORDER BY mark) AS cum_freq,
+                    SUM(frequency) OVER () AS total
+            FROM course_mark_frequency
+            WHERE course_id = %s
+            )
             SELECT AVG(mark) AS median
-            FROM (
-                SELECT MARK, (@cumulative := @cumulative + frequency) AS cumulative_frequency,
-                FROM course_mark_frequency
-                WHERE course_id = %s
-                ORDER BY mark ASC
-            ) AS sub
-            WHERE cumulative_frequency >= @target
-            AND (cumulative_frequency - frequency) < @target;
+            FROM ordered
+            WHERE cum_freq >= total/2
+            AND (cum_freq - frequency) < total/2;
             """,
             (course_id, course_id)
         )
@@ -92,20 +140,6 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
             WHERE course_id = %s
             """,
             (new_total_students, new_mean, new_std, new_median, new_max, new_min, course_id)
-        )
-        
-        freq_update = [(course_id, new, 1) for new in new_entries]
-        for old_mark, new_mark in old_entries:
-            freq_update.append((course_id, old_mark, -1))
-            freq_update.append((course_id, new_mark, 1))
-        
-        cursor.executemany(
-            """
-            INSERT INTO course_mark_frequency (course_id, mark, frequency, version)
-            VALUES (%s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE frequency = frequency + VALUES(frequency)
-            """,
-            freq_update
         )
         
         db.commit()
@@ -122,13 +156,16 @@ def update_course_analytics(data: AssessmentQueueMessage):
     else:
         new_entry = []
         old_entry = []
+        deleted_entry = []
         for change in data.changes:
             if change.old_marks is None:
                 new_entry.append(change.new_marks)
+            elif change.new_marks is None:
+                deleted_entry.append(change.old_marks)
             else:
                 old_entry.append((change.old_marks, change.new_marks))
                 
-        update_course_analytics_in_db(data.course_id, new_entry, old_entry, course_analytic_overview)
+        update_course_analytics_in_db(data.course_id, new_entry, old_entry, deleted_entry, course_analytic_overview)
 
 def add_assessment_analytics_to_db(course_id: int, assessment_id: int | None, marks: np.array):
     total_students = len(marks)

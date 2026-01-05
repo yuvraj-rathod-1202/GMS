@@ -1,9 +1,10 @@
+import json, pika
 from fastapi import status, HTTPException
 from utils.db import get_db
 from models.schemas.marks import AddMarksRequest
 from models.dbobj.marks import MarksDBObj, AllMarksDBObj
 
-def add_marks_to_db(assessment_id: int, data: AddMarksRequest):
+def add_marks_to_db(course_id: int, assessment_id: int, data: AddMarksRequest, channel):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -35,9 +36,35 @@ def add_marks_to_db(assessment_id: int, data: AddMarksRequest):
             )
             for mark in data.marks
         ]
-        
+        old_marks = get_marks_from_db(assessment_id)
+        old_marks_dict = {(mark.student_id): mark.marks_obtained for mark in old_marks}
         cursor.executemany(query, values)
         db.commit()
+        body = {
+            "course_id": course_id,
+            "assessment_id": assessment_id,
+            "changes": []
+        }
+        for marks in data.marks:
+            body["changes"].append({
+                "student_id": marks.student_id,
+                "old_marks": old_marks_dict.get(marks.student_id, None),
+                "new_marks": marks.marks_obtained
+            })
+            
+        try:
+            channel.basic_publish(
+                exchange='',
+                routing_key='marks_updates',
+                body=json.dumps(body),
+                properties=pika.BasicProperties(
+                    delivery_mode=pika.DeliveryMode.Persistent
+                )
+            )
+            
+        except Exception as e:
+            print(f"Failed to publish message to RabbitMQ: {e}")
+
         return True
         
     except Exception as e:
@@ -85,7 +112,7 @@ def get_marks_from_db(assessment_id: int, student_id: int | None = None):
             detail=f"Failed to retrieve marks from the database : {e}"
         )
         
-def delete_marks_from_db(assessment_id: int, student_id: int):
+def delete_marks_from_db(course_id: int, assessment_id: int, student_id: int, channel):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -101,8 +128,34 @@ def delete_marks_from_db(assessment_id: int, student_id: int):
             WHERE assessment_id = %s AND student_id = %s
         """
         
+        old_mark = get_marks_from_db(assessment_id, student_id)
+        if not old_mark:
+            return False
+        
+        body = {
+            "course_id": course_id,
+            "assessment_id": assessment_id,
+            "changes": [{
+                "student_id": student_id,
+                "old_marks": old_mark[0].marks_obtained,
+                "new_marks": None
+            }]
+        }
+        
         cursor.execute(query, (assessment_id, student_id))
         db.commit()
+        
+        try:
+            channel.basic_publish(
+                exchange='',
+                routing_key='marks_updates',
+                body=json.dumps(body),
+                properties=pika.BasicProperties(
+                    delivery_mode=pika.DeliveryMode.Persistent
+                )
+            )
+        except Exception as e:
+            print(f"Failed to publish message to RabbitMQ: {e}")
         
         return cursor.rowcount > 0
         
