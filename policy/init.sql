@@ -21,6 +21,12 @@ CREATE TABLE IF NOT EXISTS assessment_category (
     type VARCHAR(50) NOT NULL UNIQUE,
 );
 
+CREATE TYPE IF NOT EXISTS rule_type_enum AS ENUM (
+    'ALL',
+    'BEST_N',
+    'CUSTOM',
+);
+
 CREATE TABLE IF NOT EXISTS grading_components (
     id UUID PRIMARY KEY,
     course_policy_id UUID NOT NULL,
@@ -33,9 +39,8 @@ CREATE TABLE IF NOT EXISTS grading_components (
 CREATE TABLE IF NOT EXISTS grading_rule (
     id UUID PRIMARY KEY,
     grading_component_id UUID NOT NULL,
-    rule_type VARCHAR(50) NOT NULL,
+    rule_type rule_type_enum NOT NULL DEFAULT 'ALL',
     rule_params JSONB NOT NULL,
-    priority INT NOT NULL DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS computed_totals (

@@ -83,3 +83,41 @@ def get_assessment_range_from_db(course_id: int, assessment_id: int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}"
         )
+        
+def get_assessment_frequencies_from_db(course_id: int, assessment_id: int):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+    
+    try:
+        cursor = db.cursor()
+        query = """
+        SELECT id, course_id, assessment_id, score, student_count, percentage, computed_at, version FROM assessment_frequencies 
+        WHERE course_id = %s AND assessment_id = %s
+        ORDER BY score ASC
+        """
+        
+        cursor.execute(query, (course_id, assessment_id))
+        frequencies = cursor.fetchall()
+        
+        frequency_objs = []
+        for freq_record in frequencies:
+            frequency_objs.append({
+                "id": freq_record[0],
+                "course_id": freq_record[1],
+                "assessment_id": freq_record[2],
+                "score": freq_record[3],
+                "student_count": freq_record[4],
+                "computed_at": freq_record[6],
+                "version": freq_record[7]
+            })
+        
+        return frequency_objs
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
