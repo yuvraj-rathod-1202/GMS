@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS computed_totals (
     course_id INT NOT NULL,
     student_id INT NOT NULL,
     total_marks FLOAT NOT NULL,
-    final_grade VARCHAR(10) NOT NULL,
+    final_grade VARCHAR(10),
     computed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_course_student (course_id, student_id)

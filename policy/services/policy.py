@@ -29,12 +29,13 @@ def add_policy_to_db(course_id: int, data: CreatePolicyRequest):
             
             component_id = cursor.lastrowid
             
-            for rule in component.rules:
+            rule = component.rules
+            if rule:
                 cursor.execute(
-                    "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params, priority) VALUES (%s, %s, %s, %s)",
-                    (component_id, rule.rule_type, rule.rule_params, rule.priority)
+                    "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params) VALUES (%s, %s, %s)",
+                    (component_id, rule.rule_type, rule.rule_params)
                 )
-                
+            
         db.commit()
         return policy_id
     except Exception as e:
@@ -72,15 +73,15 @@ def get_policy_from_db(course_id: int):
         )
         
         components = cursor.fetchall()
-        components = [GradingComponentDBObj(id=component[0], assessment_category_id=component[1], weightage=component[2], created_at=component[3], updated_at=component[4], rules=[]) for component in components]
+        components = [GradingComponentDBObj(id=component[0], assessment_category_id=component[1], weightage=component[2], created_at=component[3], updated_at=component[4], rules=None) for component in components]
         
         for component in components:
             cursor.execute(
-                "SELECT id, rule_type, rule_params, priority FROM grading_rule WHERE grading_component_id = %s",
+                "SELECT id, rule_type, rule_params FROM grading_rule WHERE grading_component_id = %s",
                 (component.id,)
             )
-            rules = cursor.fetchall()
-            component.rules = [GradingRuleDBObj(id=rule[0], rule_type=rule[1], rule_params=rule[2], priority=rule[3]) for rule in rules]
+            rule = cursor.fetchone()
+            component.rules = GradingRuleDBObj(id=rule[0], rule_type=rule[1], rule_params=rule[2]) if rule else None
             
         policy.components = components
         return policy
@@ -226,17 +227,17 @@ def update_component_in_db(data: UpdatePolicyComponentRequest, component_id: int
             (data.weightage, data.assessment_category_id, component_id)
         )
         
-        for rule in data.rules:
-            if rule.id:
-                cursor.execute(
-                    "UPDATE grading_rule SET rule_type = %s, rule_params = %s, priority = %s WHERE id = %s",
-                    (rule.rule_type, rule.rule_params, rule.priority, rule.id)
-                )
-            else:
-                cursor.execute(
-                    "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params, priority) VALUES (%s, %s, %s, %s)",
-                    (component_id, rule.rule_type, rule.rule_params, rule.priority)
-                )
+        rule = data.rules
+        if rule and rule.id:
+            cursor.execute(
+                "UPDATE grading_rule SET rule_type = %s, rule_params = %s WHERE id = %s",
+                (rule.rule_type, rule.rule_params, rule.id)
+            )
+        elif rule and not rule.id:
+            cursor.execute(
+                "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params) VALUES (%s, %s, %s)",
+                (component_id, rule.rule_type, rule.rule_params)
+            )
                 
                 
         db.commit()
