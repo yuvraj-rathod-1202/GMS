@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: analytics-config
+data:
+  DB_HOST: host.minikube.internal
+  DB_USER: mms_user
+  DB_NAME: analytics
+  DB_PORT: "3306"
+  COURSES_SERVICE_URL: "courses:8080"
+  ANALYTICS_QUEUE: "marks_updates"

@@ -1,4 +1,4 @@
-from assessments import get_course_overview_from_db, get_assessment_analytics_from_db
+from services.assessments import get_course_overview_from_db, get_assessment_analytics_from_db
 from models.schema.queue import AssessmentQueueMessage
 import numpy as np
 from utils.db import get_db

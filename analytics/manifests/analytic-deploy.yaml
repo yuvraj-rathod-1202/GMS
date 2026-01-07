@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics
+  labels:
+    app: analytics
+spec:
+  selector:
+    matchLabels:
+      app: analytics
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 3
+  template:
+    metadata:
+      labels:
+        app: analytics
+    spec:
+      containers:
+        - name: analytics
+          image: yrrathod/mms_analytics
+          ports:
+            - containerPort: 7000
+          envFrom:
+            - configMapRef:
+                name: analytics-config
+            - secretRef:
+                name: analytics-secret
