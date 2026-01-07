@@ -7,7 +7,7 @@ GRANT ALL PRIVILEGES ON analytics.* TO 'mms_user'@'%';
 USE analytics;
 
 CREATE TABLE IF NOT EXISTS course_analytics (
-    id UUID PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
 
     mean DECIMAL(5,2) NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS course_analytics (
 );
 
 CREATE TABLE IF NOT EXISTS assessment_analytics (
-    id UUID PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     assessment_id INT NOT NULL,
 
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS assessment_analytics (
 );
 
 CREATE TABLE IF NOT EXISTS assessment_range (
-    id UUID PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     assessment_id INT NOT NULL,
     range_start DECIMAL(5,2) NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS assessment_range (
 );
 
 CREATE TABLE IF NOT EXISTS course_mark_frequency (
-    id UUID PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     mark DECIMAL(5,2) NOT NULL,
     frequency INT NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS course_mark_frequency (
 );
 
 CREATE TABLE IF NOT EXISTS assessment_mark_frequency (
-    id UUID PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     assessment_id INT NOT NULL,
     mark DECIMAL(5,2) NOT NULL,

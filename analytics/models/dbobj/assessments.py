@@ -1,9 +1,8 @@
 from pydantic import BaseModel
-import uuid
 from datetime import datetime
 
 class CourseOverviewBDObj(BaseModel):
-    id: uuid.UUID
+    id: int
     course_id: int
     mean: float
     median: float
@@ -15,7 +14,7 @@ class CourseOverviewBDObj(BaseModel):
     version: int
     
 class AssessmentAnalyticsBDObj(BaseModel):
-    id: uuid.UUID
+    id: int
     course_id: int
     assessment_id: int
     mean: float
@@ -27,7 +26,7 @@ class AssessmentAnalyticsBDObj(BaseModel):
     version: int
     
 class AssessmentRangeBDObj(BaseModel):
-    id: uuid.UUID
+    id: int
     course_id: int
     assessment_id: int
     range_start: float

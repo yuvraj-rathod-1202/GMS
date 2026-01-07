@@ -7,7 +7,7 @@ GRANT ALL PRIVILEGES ON notifications.* TO 'mms_user'@'%';
 USE notifications;
 
 CREATE TABLE IF NOT EXISTS notification_logs (
-    id UUID PRIMARY KEY DEFAULT (UUID()),
+    id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     type VARCHAR(10) NOT NULL,
     event VARCHAR(100) NOT NULL,
