@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest
 from utils.auth import verifyInstructor, verifyRoleInCourse
 from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db
+from services.policy import initialize_total_recalculation
 
 
 router = APIRouter()
@@ -120,3 +121,15 @@ def update_policy_component(course_id: int, component_id: int, data: UpdatePolic
         
     return {"detail": "Policy component updated successfully"}
 
+@router.post("/courses/{course_id}/policy/recalculate")
+async def recalculate_policy(course_id: int, user_id: int):
+    verified = verifyInstructor(user_id, course_id)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Instructor privileges required"
+        )
+        
+    await initialize_total_recalculation(course_id, user_id)
+    
+    return {"detail": "Policy recalculation initiated"}

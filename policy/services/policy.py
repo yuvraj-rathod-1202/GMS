@@ -1,7 +1,13 @@
+import json
+import os, pika
 from fastapi import HTTPException, status
 from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest
 from utils.db import get_db
 from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj
+import httpx
+
+connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+channel = connection.channel()
 
 def add_policy_to_db(course_id: int, data: CreatePolicyRequest):
     db = get_db()
@@ -248,3 +254,42 @@ def update_component_in_db(data: UpdatePolicyComponentRequest, component_id: int
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}"
         )
+        
+async def initialize_total_recalculation(course_id: int, user_id: int):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                f"{os.getenv('COURSES_SERVICE_URL')}/id/{course_id}/roles/student",
+                params = {"user_id": user_id}
+            )
+            response.raise_for_status()
+            students = response.json().get("roles", [])
+            
+            body = {
+                "course_id": course_id,
+                "changes": [{"student_id":student["user_id"]} for student in students],
+            }
+            
+            channel.basic_publish(
+                exchange='',
+                routing_key='compute_total',
+                body=json.dumps(body),
+                properties=pika.BasicProperties(
+                    delivery_mode=pika.DeliveryMode.Persistent
+                )
+            )
+            
+            
+        except httpx.HTTPError as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Compute service error: {str(e)}"
+            )
+        
