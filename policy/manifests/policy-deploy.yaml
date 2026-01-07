@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: policy
+  labels:
+    app: policy
+spec:
+  selector:
+    matchLabels:
+      app: policy
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 3
+  template:
+    metadata:
+      labels:
+        app: policy
+    spec:
+      containers:
+        - name: policy
+          image: yrrathod/mms_policy
+          ports:
+            - containerPort: 7070
+          envFrom:
+            - configMapRef:
+                name: policy-config
+            - secretRef:
+                name: policy-secret

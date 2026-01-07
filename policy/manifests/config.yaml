@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: policy-config
+data:
+  DB_HOST: host.minikube.internal
+  DB_USER: mms_user
+  DB_NAME: policy
+  DB_PORT: "3306"
+  MARKS_SERVICE_URL: "marks:6000"
+  COURSES_SERVICE_URL: "courses:8080"
+  COMPUTE_QUEUE: "compute_total"
