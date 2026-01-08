@@ -31,7 +31,7 @@ def execute_policy_calculation(student_marks: list[AllMarksDBObj], policy: Polic
         if component_rule_type == "ALL":
             for mark in marks_in_category:
                 component_score += mark.marks_obtained*100/mark.max_marks
-            total_score += (component_score * component_total_weightage) / 100
+            total_score += (component_score * component_total_weightage) / (100*len(marks_in_category)) if marks_in_category else 0
                 
         elif component_rule_type == "BEST_N":
             n = component_rule_params.get("n", 0)
@@ -39,7 +39,7 @@ def execute_policy_calculation(student_marks: list[AllMarksDBObj], policy: Polic
             best_n_marks = sorted_marks[:n]
             for mark in best_n_marks:
                 component_score += mark.marks_obtained*100/mark.max_marks
-            total_score += (component_score * component_total_weightage) / 100
+            total_score += (component_score * component_total_weightage) / (100*len(best_n_marks)) if best_n_marks else 0
                 
         elif component_rule_type == 'CUSTOM':
             logic = component_rule_params.get("logic", "")
