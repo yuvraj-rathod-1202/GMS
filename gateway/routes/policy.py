@@ -164,3 +164,45 @@ async def recalculate_policy(course_id: int, user_info: dict = Depends(verify_to
                 detail=f"Error connecting to Policy Service: {str(e)}",
             )
             
+@router.get("/{course_id}/total")
+async def get_total_scores_of_all_students(course_id: int, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/total",
+                params={"user_id": user_info["user_id"]},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to retrieve total scores"),
+                )
+                
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Policy Service: {str(e)}",
+            )
+            
+@router.get("/{course_id}/total/{student_id}")
+async def get_total_score_of_student(course_id: int, student_id: int, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/total/{student_id}",
+                params={"user_id": user_info["user_id"]},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to retrieve student's total score"),
+                )
+                
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Policy Service: {str(e)}",
+            )
+
