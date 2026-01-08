@@ -6,3 +6,5 @@ data:
   AUTH_SERVICE_URL: "http://auth:5000"
   COURSES_SERVICE_URL: "http://courses:8080"
   MARKS_SERVICE_URL: "http://marks:6000"
+  POLICY_SERVICE_URL: "http://policy:7070"
+  ANALYTICS_SERVICE_URL: "http://analytics:7000"
