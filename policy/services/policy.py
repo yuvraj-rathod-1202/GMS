@@ -303,14 +303,7 @@ def update_component_in_db(data: UpdatePolicyComponentRequest, component_id: int
             detail=f"Database error: {str(e)}"
         )
         
-async def initialize_total_recalculation(course_id: int, user_id: int):
-    db = get_db()
-    if db is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error"
-        )
-        
+async def initialize_total_recalculation(course_id: int, user_id: int):      
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
