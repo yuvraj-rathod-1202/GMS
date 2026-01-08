@@ -7,8 +7,8 @@ from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_
 router = APIRouter()
 
 @router.post("/courses/{course_id}/policy")
-def create_policy(course_id: int, data: CreatePolicyRequest):
-    verified = verifyInstructor(data.set_by_id, course_id)
+async def create_policy(course_id: int, data: CreatePolicyRequest):
+    verified = await verifyInstructor(data.set_by_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -26,8 +26,8 @@ def create_policy(course_id: int, data: CreatePolicyRequest):
     return {"policy_id": policy_id}
 
 @router.get("/courses/{course_id}/policy")
-def get_policy(course_id: int, user_id: int):
-    verified = verifyRoleInCourse(user_id, course_id)
+async def get_policy(course_id: int, user_id: int):
+    verified = await verifyRoleInCourse(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -45,8 +45,8 @@ def get_policy(course_id: int, user_id: int):
     return {"policy": policy}
 
 @router.delete("/courses/{course_id}/policy")
-def delete_policy(course_id: int, user_id: int):
-    verified = verifyInstructor(user_id, course_id)
+async def delete_policy(course_id: int, user_id: int):
+    verified = await verifyInstructor(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -64,8 +64,8 @@ def delete_policy(course_id: int, user_id: int):
     return {"detail": "Policy deleted successfully"}
 
 @router.put("/courses/{course_id}/policy")
-def update_policy(course_id: int, data: UpdatePolicyRequest):
-    verified = verifyInstructor(data.updated_by_id, course_id)
+async def update_policy(course_id: int, data: UpdatePolicyRequest):
+    verified = await verifyInstructor(data.updated_by_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -83,8 +83,8 @@ def update_policy(course_id: int, data: UpdatePolicyRequest):
     return {"detail": "Policy updated successfully"}
 
 @router.delete("/courses/{course_id}/policy/components/{component_id}")
-def delete_policy_component(course_id: int, component_id: int, user_id: int):
-    verified = verifyInstructor(user_id, course_id)
+async def delete_policy_component(course_id: int, component_id: int, user_id: int):
+    verified = await verifyInstructor(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -102,8 +102,8 @@ def delete_policy_component(course_id: int, component_id: int, user_id: int):
     return {"detail": "Policy component deleted successfully"}
 
 @router.post("/courses/{course_id}/policy/components")
-def create_policy_component(course_id: int, data: CreatePolicyComponentRequest):
-    verified = verifyInstructor(data.added_by_id, course_id)
+async def create_policy_component(course_id: int, data: CreatePolicyComponentRequest):
+    verified = await verifyInstructor(data.added_by_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -121,8 +121,8 @@ def create_policy_component(course_id: int, data: CreatePolicyComponentRequest):
     return {"component_id": component_id}
 
 @router.put("/courses/{course_id}/policy/components/{component_id}")
-def update_policy_component(course_id: int, component_id: int, data: UpdatePolicyComponentRequest):
-    verified = verifyInstructor(data.updated_by_id, course_id)
+async def update_policy_component(course_id: int, component_id: int, data: UpdatePolicyComponentRequest):
+    verified = await verifyInstructor(data.updated_by_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -141,7 +141,7 @@ def update_policy_component(course_id: int, component_id: int, data: UpdatePolic
 
 @router.post("/courses/{course_id}/policy/recalculate")
 async def recalculate_policy(course_id: int, user_id: int):
-    verified = verifyInstructor(user_id, course_id)
+    verified = await verifyInstructor(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -154,7 +154,7 @@ async def recalculate_policy(course_id: int, user_id: int):
 
 @router.get("/courses/{course_id}/total")
 async def get_total_scores_of_all_students(course_id: int, user_id: int):
-    verified = verifyInstructorOrTA(user_id, course_id)
+    verified = await verifyInstructorOrTA(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -173,7 +173,7 @@ async def get_total_scores_of_all_students(course_id: int, user_id: int):
 
 @router.get("/courses/{course_id}/total/{student_id}")
 async def get_total_score_for_studet(course_id: int, student_id: int, user_id: int):
-    verified = verifyRoleInCourse(user_id, course_id)
+    verified = await verifyRoleInCourse(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
