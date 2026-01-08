@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Dict
+from datetime import datetime
 
 class GradingRuleDBObj(BaseModel):
     id: int
@@ -23,3 +24,11 @@ class PolicyDBObj(BaseModel):
     set_at: str
     updated_at: str
     components: List[GradingComponentDBObj]
+    
+class TotalScoreDBObj(BaseModel):
+    id: int
+    student_id: int
+    total_marks: float
+    final_grade: str | None
+    computed_at: datetime
+    updated_at: datetime

@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest
-from utils.auth import verifyInstructor, verifyRoleInCourse
-from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db
-from services.policy import initialize_total_recalculation
+from utils.auth import verifyInstructor, verifyRoleInCourse, verifyInstructorOrTA
+from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db, initialize_total_recalculation, fetch_total_scores_from_db
 
 
 router = APIRouter()
@@ -133,3 +132,41 @@ async def recalculate_policy(course_id: int, user_id: int):
     await initialize_total_recalculation(course_id, user_id)
     
     return {"detail": "Policy recalculation initiated"}
+
+@router.get("/courses/{course_id}/total")
+async def get_total_scores_of_all_students(course_id: int, user_id: int):
+    verified = verifyInstructorOrTA(user_id, course_id)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Instructor or TA privileges required"
+        )
+        
+    totals = fetch_total_scores_from_db(course_id)
+    
+    if not totals:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No total scores found for the specified course"
+        )
+        
+    return {"totals": totals}
+
+@router.get("/courses/{course_id}/total/{student_id}")
+async def get_total_score_for_studet(course_id: int, student_id: int, user_id: int):
+    verified = verifyRoleInCourse(user_id, course_id)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Instructor, TA, or student privileges required"
+        )
+        
+    totals = fetch_total_scores_from_db(course_id, student_id)
+    
+    if not totals:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No total score found for the specified student in the course"
+        )
+        
+    return {"totals": totals}

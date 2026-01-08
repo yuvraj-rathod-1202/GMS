@@ -3,7 +3,7 @@ import os, pika
 from fastapi import HTTPException, status
 from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest
 from utils.db import get_db
-from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj
+from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj, TotalScoreDBObj
 import httpx
 
 connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
@@ -263,7 +263,7 @@ async def initialize_total_recalculation(course_id: int, user_id: int):
             detail="Database connection error"
         )
         
-    with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
                 f"{os.getenv('COURSES_SERVICE_URL')}/id/{course_id}/roles/student",
@@ -292,4 +292,40 @@ async def initialize_total_recalculation(course_id: int, user_id: int):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Compute service error: {str(e)}"
             )
+        
+def fetch_total_scores_from_db(course_id: int, student_id: int | None = None):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute(
+            "SELECT id, student_id, total_marks, final_grade, computed_at, updated_at FROM computed_totals WHERE course_id = %s AND student_id = COALESCE(%s, student_id)",
+            (course_id, student_id)
+        )
+        
+        rows = cursor.fetchall()
+        result = [
+            TotalScoreDBObj(
+                id=row[0],
+                student_id=row[1],
+                total_marks=row[2],
+                final_grade=row[3],
+                computed_at=row[4],
+                updated_at=row[5]
+            )
+            for row in rows
+        ]
+        
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
         
