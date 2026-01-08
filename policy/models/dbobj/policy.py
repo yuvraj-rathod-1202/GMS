@@ -21,8 +21,8 @@ class PolicyDBObj(BaseModel):
     total_weightage: float
     set_by_id: int
     updated_by_id: int
-    set_at: str
-    updated_at: str
+    set_at: datetime
+    updated_at: datetime
     components: List[GradingComponentDBObj]
     
 class TotalScoreDBObj(BaseModel):
