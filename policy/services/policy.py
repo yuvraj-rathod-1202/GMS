@@ -1,13 +1,52 @@
 import json
 import os, pika
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from fastapi import HTTPException, status
 from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest
 from utils.db import get_db
 from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj, TotalScoreDBObj
 import httpx
 
-connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
-channel = connection.channel()
+# Thread pool for blocking RabbitMQ operations
+executor = ThreadPoolExecutor(max_workers=5)
+
+def get_rabbitmq_connection():
+    """Create a new RabbitMQ connection"""
+    try:
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(
+                host='rabbitmq',
+                heartbeat=600,
+                blocked_connection_timeout=300
+            )
+        )
+        return connection
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"RabbitMQ connection error: {str(e)}"
+        )
+
+def publish_message(routing_key: str, body: dict):
+    """Publish message to RabbitMQ (blocking operation)"""
+    connection = None
+    try:
+        connection = get_rabbitmq_connection()
+        channel = connection.channel()
+        channel.queue_declare(queue=routing_key, durable=True)
+        
+        channel.basic_publish(
+            exchange='',
+            routing_key=routing_key,
+            body=json.dumps(body),
+            properties=pika.BasicProperties(
+                delivery_mode=pika.DeliveryMode.Persistent
+            )
+        )
+    finally:
+        if connection and not connection.is_closed:
+            connection.close()
 
 def add_policy_to_db(course_id: int, data: CreatePolicyRequest):
     db = get_db()
@@ -318,15 +357,14 @@ async def initialize_total_recalculation(course_id: int, user_id: int):
                 "changes": [{"student_id": student} for student in students],
             }
             
-            channel.basic_publish(
-                exchange='',
-                routing_key='compute_total',
-                body=json.dumps(body),
-                properties=pika.BasicProperties(
-                    delivery_mode=pika.DeliveryMode.Persistent
-                )
+            # Run blocking RabbitMQ operation in thread pool
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                executor,
+                publish_message,
+                'compute_total',
+                body
             )
-            
             
         except httpx.HTTPError as e:
             raise HTTPException(

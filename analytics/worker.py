@@ -1,4 +1,4 @@
-import pika, sys, os
+import pika, sys, os, json
 from dotenv import load_dotenv
 from models.schema.queue import AssessmentQueueMessage
 from services.queue import update_analytics_in_db
@@ -10,9 +10,11 @@ def main():
     
     channel = connection.channel()
     
-    def callback(ch, method, properties, body: AssessmentQueueMessage):
+    def callback(ch, method, properties, body: bytes):
         try:
-            update_analytics_in_db(body)
+            message = json.loads(body.decode())
+            message = AssessmentQueueMessage(**message)
+            update_analytics_in_db(message)
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except Exception as e:
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)

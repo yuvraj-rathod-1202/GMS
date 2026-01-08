@@ -11,6 +11,7 @@ async def get_all_marks_for_student_in_course(student_id: int, course_id: int) -
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{os.getenv('MARKS_SERVICE_URL')}/{course_id}/marks/all/{student_id}",
+            params={"user_id": student_id}
         )
         response.raise_for_status()
         data = response.json()

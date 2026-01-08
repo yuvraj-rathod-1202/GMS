@@ -1,10 +1,59 @@
 import json, pika
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from fastapi import status, HTTPException
 from utils.db import get_db
 from models.schemas.marks import AddMarksRequest
 from models.dbobj.marks import MarksDBObj, AllMarksDBObj
 
-def add_marks_to_db(course_id: int, assessment_id: int, data: AddMarksRequest, channel):
+# Thread pool for blocking RabbitMQ operations
+executor = ThreadPoolExecutor(max_workers=5)
+
+def get_rabbitmq_connection():
+    """Create a new RabbitMQ connection"""
+    try:
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(
+                host='rabbitmq',
+                heartbeat=600,
+                blocked_connection_timeout=300
+            )
+        )
+        return connection
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"RabbitMQ connection error: {str(e)}"
+        )
+
+def publish_message(routing_key: str, body: dict):
+    """Publish message to RabbitMQ (blocking operation)"""
+    connection = None
+    try:
+        connection = get_rabbitmq_connection()
+        channel = connection.channel()
+        channel.queue_declare(queue=routing_key, durable=True)
+        
+        channel.basic_publish(
+            exchange='',
+            routing_key=routing_key,
+            body=json.dumps(body),
+            properties=pika.BasicProperties(
+                delivery_mode=pika.DeliveryMode.Persistent
+            )
+        )
+    except Exception as e:
+        print(f"Failed to publish message to RabbitMQ: {e}")
+    finally:
+        if connection and not connection.is_closed:
+            connection.close()
+
+async def publish_message_async(routing_key: str, body: dict):
+    """Async wrapper for publishing messages to RabbitMQ"""
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(executor, publish_message, routing_key, body)
+
+async def add_marks_to_db(course_id: int, assessment_id: int, data: AddMarksRequest):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -52,18 +101,8 @@ def add_marks_to_db(course_id: int, assessment_id: int, data: AddMarksRequest, c
                 "new_marks": marks.marks_obtained
             })
             
-        try:
-            channel.basic_publish(
-                exchange='',
-                routing_key='marks_updates',
-                body=json.dumps(body),
-                properties=pika.BasicProperties(
-                    delivery_mode=pika.DeliveryMode.Persistent
-                )
-            )
-            
-        except Exception as e:
-            print(f"Failed to publish message to RabbitMQ: {e}")
+        # Publish message asynchronously
+        await publish_message_async('marks_updates', body)
 
         return True
         
@@ -112,7 +151,7 @@ def get_marks_from_db(assessment_id: int, student_id: int | None = None):
             detail=f"Failed to retrieve marks from the database : {e}"
         )
         
-def delete_marks_from_db(course_id: int, assessment_id: int, student_id: int, channel):
+async def delete_marks_from_db(course_id: int, assessment_id: int, student_id: int):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -145,17 +184,8 @@ def delete_marks_from_db(course_id: int, assessment_id: int, student_id: int, ch
         cursor.execute(query, (assessment_id, student_id))
         db.commit()
         
-        try:
-            channel.basic_publish(
-                exchange='',
-                routing_key='marks_updates',
-                body=json.dumps(body),
-                properties=pika.BasicProperties(
-                    delivery_mode=pika.DeliveryMode.Persistent
-                )
-            )
-        except Exception as e:
-            print(f"Failed to publish message to RabbitMQ: {e}")
+        # Publish message asynchronously
+        await publish_message_async('marks_updates', body)
         
         return cursor.rowcount > 0
         

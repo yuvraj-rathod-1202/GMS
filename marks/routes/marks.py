@@ -1,13 +1,9 @@
-import pika
 from fastapi import APIRouter, HTTPException, status, Query
 from utils.auth import verifyInstructorOrTa, verifyRoleInCourse, verifyRoleInCourseAndPublish
 from models.schemas.marks import AddMarksRequest
 from services.marks import add_marks_to_db, get_marks_from_db, delete_marks_from_db, publish_marks_in_db, get_all_marks_from_db
 
 router = APIRouter()
-
-connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
-channel = connection.channel()
 
 @router.post("/{course_id}/{assessment_id}/marks")
 async def add_marks(course_id: int, assessment_id: int, data: AddMarksRequest):
@@ -18,7 +14,7 @@ async def add_marks(course_id: int, assessment_id: int, data: AddMarksRequest):
             detail="Instructor or TA privileges required"
         )
     
-    success = add_marks_to_db(course_id, assessment_id, data, channel)
+    success = await add_marks_to_db(course_id, assessment_id, data)
     
     if not success:
         raise HTTPException(
@@ -75,7 +71,7 @@ async def delete_student_marks(course_id: int, assessment_id: int, student_id: i
             detail="Instructor or TA privileges required"
         )
         
-    success = delete_marks_from_db(course_id, assessment_id, student_id, channel)
+    success = await delete_marks_from_db(course_id, assessment_id, student_id)
     
     if not success:
         raise HTTPException(
