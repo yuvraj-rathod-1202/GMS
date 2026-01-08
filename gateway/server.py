@@ -4,6 +4,7 @@ from routes.courses import router as courses_router
 from routes.users import router as users_router
 from routes.assessments import router as assessments_router
 from routes.policy import router as policy_router
+from routes.analytics import router as analytics_router
 
 app = FastAPI()
 app.include_router(auth_router, prefix="/auth")
@@ -11,3 +12,4 @@ app.include_router(courses_router, prefix="/courses")
 app.include_router(users_router, prefix="/courses/users")
 app.include_router(assessments_router, prefix="/assessments")
 app.include_router(policy_router, prefix="/courses")
+app.include_router(analytics_router)
