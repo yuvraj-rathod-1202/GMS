@@ -17,6 +17,7 @@ def main():
             update_analytics_in_db(message)
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except Exception as e:
+            print(f"Error processing message: {e}")
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
     
     channel.basic_consume(

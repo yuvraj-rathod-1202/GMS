@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS assessment_analytics (
     max DECIMAL(5,2) NOT NULL,
     min DECIMAL(5,2) NOT NULL,
     std DECIMAL(5,2) NOT NULL,
+    total_students INT NOT NULL,
 
     computed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     version INT DEFAULT 1
