@@ -7,5 +7,5 @@ data:
   DB_USER: mms_user
   DB_NAME: analytics
   DB_PORT: "3306"
-  COURSES_SERVICE_URL: "courses:8080"
+  COURSES_SERVICE_URL: "http://courses:8080"
   ANALYTICS_QUEUE: "marks_updates"
