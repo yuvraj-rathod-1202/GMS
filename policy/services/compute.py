@@ -164,11 +164,11 @@ async def update_total_in_db(data: ComputeQueueMessage):
             update_total_score_in_db(student_id, course_id, total_score)
             body = {
                 "course_id": course_id,
-                "changes": {
+                "changes": [{
                     "student_id": student_id,
                     "old_marks": current_total,
                     "new_marks": total_score
-                }
+                }]
             }
             await publish_message_async('marks_updates', body)
         except Exception as e:
