@@ -154,6 +154,13 @@ async def update_total_in_db(data: ComputeQueueMessage):
         print(f"Error retrieving policy for course_id {data.course_id}: {e}")
         return
         
+    body = {
+        "course_id": data.course_id,
+        "assessment_id": None,
+        "changes": []
+    }
+    
+        
     for student in data.changes:
         student_id = student.student_id
         course_id = data.course_id
@@ -162,16 +169,13 @@ async def update_total_in_db(data: ComputeQueueMessage):
         
         try:
             update_total_score_in_db(student_id, course_id, total_score)
-            body = {
-                "course_id": course_id,
-                "changes": [{
-                    "student_id": student_id,
-                    "old_marks": current_total,
-                    "new_marks": total_score
-                }]
-            }
-            await publish_message_async('marks_updates', body)
+            body["changes"].append({
+                "student_id": student_id,
+                "old_marks": current_total,
+                "new_marks": total_score
+            })
+        
         except Exception as e:
             print(f"Error updating total score for student_id {student_id}, course_id {course_id}: {e}")
             
- 
+    await publish_message_async('marks_updates', body)

@@ -22,10 +22,10 @@ def add_course_analytics_to_db(course_id: int, marks: np.array):
         
         cursor.execute(
             """
-            INSERT INTO course_analytics (total_students, mean, std, median, max, min)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO course_analytics (course_id, total_students, mean, std, median, max, min)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
-            (total_students, mean, std, median, max, min)
+            (course_id, total_students, mean, std, median, max, min)
         )
         values = marks_frequency[0].tolist()
         frequencies = marks_frequency[1].tolist()
@@ -88,8 +88,8 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
         
         cursor.executemany(
             """
-            INSERT INTO course_mark_frequency (course_id, mark, frequency, version)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO course_mark_frequency (course_id, mark, frequency)
+            VALUES (%s, %s, %s)
             ON DUPLICATE KEY UPDATE frequency = GREATEST(frequency + VALUES(frequency), 0)
             """,
             freq_update
@@ -105,13 +105,23 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
                 (course_id,)
             )
             result = cursor.fetchone()
-            candidates.append(result[0])
-            candidates.append(result[1])
-            new_max = max(candidates)
-            new_min = min(candidates)
+            if result and result[0] is not None and result[1] is not None:
+                candidates.append(result[0])
+                candidates.append(result[1])
+            new_max = max(candidates) if candidates else 0
+            new_min = min(candidates) if candidates else 0
         else:
-            new_max = max(old_max, max(new_entries), max([new for old, new in old_entries] or [old_max]))
-            new_min = min(old_min, min(new_entries), min([new for old, new in old_entries] or [old_min]))
+            new_max_candidates = [old_max]
+            new_min_candidates = [old_min]
+            if new_entries:
+                new_max_candidates.append(max(new_entries))
+                new_min_candidates.append(min(new_entries))
+            if old_entries:
+                new_marks = [new for old, new in old_entries]
+                new_max_candidates.append(max(new_marks))
+                new_min_candidates.append(min(new_marks))
+            new_max = max(new_max_candidates)
+            new_min = min(new_min_candidates)
         
         cursor.execute(
             """
@@ -128,10 +138,11 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
             WHERE cum_freq >= total/2
             AND (cum_freq - frequency) < total/2;
             """,
-            (course_id, course_id)
+                (course_id,)
         )
         
-        new_median = cursor.fetchone()[0]
+        median_result = cursor.fetchone()
+        new_median = median_result[0] if median_result and median_result[0] is not None else 0
         
         cursor.execute(
             """
@@ -221,8 +232,17 @@ def update_assessment_analytics_in_db(course_id: int, assessment_id: int | None,
     m2 = (old_std**2  + old_mean**2) * old_total_students
     
     new_total_students = old_total_students + len(new_entries) 
-    new_max = max(old_max, max(new_entries), max([old for old, new in old_entries] or [old_max]))
-    new_min = min(old_min, min(new_entries), min([old for old, new in old_entries] or [old_min]))
+    new_max_candidates = [old_max]
+    new_min_candidates = [old_min]
+    if new_entries:
+        new_max_candidates.append(max(new_entries))
+        new_min_candidates.append(min(new_entries))
+    if old_entries:
+        old_marks = [old for old, new in old_entries]
+        new_max_candidates.append(max(old_marks))
+        new_min_candidates.append(min(old_marks))
+    new_max = max(new_max_candidates)
+    new_min = min(new_min_candidates)
     new_mean = (old_mean * old_total_students + sum(new_entries) + sum([new - old for old, new in old_entries])) / new_total_students
     new_std = np.sqrt((m2 + sum([new**2 - old**2 for old, new in old_entries]) + sum([new**2 for new in new_entries])) / new_total_students - new_mean**2)
     
@@ -247,7 +267,8 @@ def update_assessment_analytics_in_db(course_id: int, assessment_id: int | None,
             (course_id, assessment_id, course_id, assessment_id)
         )
         
-        new_median = cursor.fetchone()[0]
+        median_result = cursor.fetchone()
+        new_median = median_result[0] if median_result and median_result[0] is not None else 0
         
         cursor.execute(
             """

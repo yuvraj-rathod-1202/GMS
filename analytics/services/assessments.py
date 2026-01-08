@@ -15,7 +15,7 @@ def get_course_overview_from_db(course_id: int):
         query = "SELECT id, course_id, mean, median, max, min, std, total_students, computed_at, version FROM course_analytics WHERE course_id = %s"
         
         cursor.execute(query, (course_id,))
-        overview = cursor.fetchall()
+        overview = cursor.fetchone()
         return CourseOverviewBDObj(id=overview[0], course_id=overview[1], mean=overview[2], median=overview[3], max=overview[4], min=overview[5], std=overview[6], total_students=overview[7], computed_at=overview[8], version=overview[9]) if overview else None
     except Exception as e:
         raise HTTPException(
@@ -33,11 +33,11 @@ def get_assessment_analytics_from_db(course_id: int, assessment_id: int):
     
     try:
         cursor = db.cursor()
-        query = "SELECT id, course_id, assessment_id, mean, median, max, min, std, computed_at, version FROM assessment_analytics WHERE course_id = %s AND assessment_id = %s"
+        query = "SELECT id, course_id, assessment_id, mean, median, max, min, std, total_students, computed_at, version FROM assessment_analytics WHERE course_id = %s AND assessment_id = %s"
         
         cursor.execute(query, (course_id, assessment_id))
-        analytics = cursor.fetchall()
-        return AssessmentAnalyticsBDObj(id=analytics[0], course_id=analytics[1], assessment_id=analytics[2], mean=analytics[3], median=analytics[4], max=analytics[5], min=analytics[6], std=analytics[7], computed_at=analytics[8], version=analytics[9]) if analytics else None
+        analytics = cursor.fetchone()
+        return AssessmentAnalyticsBDObj(id=analytics[0], course_id=analytics[1], assessment_id=analytics[2], mean=analytics[3], median=analytics[4], max=analytics[5], min=analytics[6], std=analytics[7], total_students=analytics[8], computed_at=analytics[9], version=analytics[10]) if analytics else None
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
