@@ -39,7 +39,7 @@ def add_policy_to_db(course_id: int, data: CreatePolicyRequest):
             if rule:
                 cursor.execute(
                     "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params) VALUES (%s, %s, %s)",
-                    (component_id, rule.rule_type, rule.rule_params)
+                    (component_id, rule.rule_type, json.dumps(rule.rule_params))
                 )
             
         db.commit()
@@ -87,7 +87,7 @@ def get_policy_from_db(course_id: int):
                 (component.id,)
             )
             rule = cursor.fetchone()
-            component.rules = GradingRuleDBObj(id=rule[0], rule_type=rule[1], rule_params=rule[2]) if rule else None
+            component.rules = GradingRuleDBObj(id=rule[0], rule_type=rule[1], rule_params=json.loads(rule[2])) if rule else None
             
         policy.components = components
         return policy
@@ -237,12 +237,12 @@ def update_component_in_db(data: UpdatePolicyComponentRequest, component_id: int
         if rule and rule.id:
             cursor.execute(
                 "UPDATE grading_rule SET rule_type = %s, rule_params = %s WHERE id = %s",
-                (rule.rule_type, rule.rule_params, rule.id)
+                (rule.rule_type, json.dumps(rule.rule_params), rule.id)
             )
         elif rule and not rule.id:
             cursor.execute(
                 "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params) VALUES (%s, %s, %s)",
-                (component_id, rule.rule_type, rule.rule_params)
+                (component_id, rule.rule_type, json.dumps(rule.rule_params))
             )
                 
                 
