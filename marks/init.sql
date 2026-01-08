@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS assessments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    assessment_type VARCHAR(50) NOT NULL,
+    assessment_type_id INT NOT NULL,
     max_marks INT NOT NULL,
     is_marks_published BOOLEAN DEFAULT FALSE,
     assessment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

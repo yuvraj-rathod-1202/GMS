@@ -5,7 +5,7 @@ from typing import Optional
 class CreateAssessmentRequest(BaseModel):
     user_id: int
     name: str
-    assessment_type: str
+    assessment_type_id: int
     max_marks: int
     is_marks_published: bool
     assessment_date: datetime
@@ -13,7 +13,7 @@ class CreateAssessmentRequest(BaseModel):
 class UpdateAssessmentRequest(BaseModel):
     user_id: int
     name: Optional[str] = None
-    assessment_type: Optional[str] = None
+    assessment_type_id: Optional[int] = None
     max_marks: Optional[int] = None
     is_marks_published: Optional[bool] = None
     assessment_date: Optional[datetime] = None

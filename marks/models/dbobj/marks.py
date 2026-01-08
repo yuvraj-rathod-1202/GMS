@@ -13,6 +13,6 @@ class AllMarksDBObj(BaseModel):
     recorded_by_id: int
     updated_at: datetime
     assessment_name: str
-    assessment_type: str
+    assessment_type_id: int
     max_marks: float
     assessment_date: datetime

@@ -14,14 +14,14 @@ def add_assessment_to_db(course_id: int, data: CreateAssessmentRequest):
     try:
         cursor = db.cursor()
         insert_query = """
-            INSERT INTO assessments (course_id, name, assessment_type, max_marks, is_marks_published, assessment_date, created_by_id)
+            INSERT INTO assessments (course_id, name, assessment_type_id, max_marks, is_marks_published, assessment_date, created_by_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         
         cursor.execute(insert_query, (
             course_id,
             data.name,
-            data.assessment_type,
+            data.assessment_type_id,
             data.max_marks,
             data.is_marks_published,
             data.assessment_date,
@@ -48,7 +48,7 @@ def get_all_assessments_from_db(course_id: int, assessment_id: int | None = None
     try:
         cursor = db.cursor()
         select_query = """
-            SELECT id, course_id, name, assessment_type, max_marks,
+            SELECT id, course_id, name, assessment_type_id, max_marks,
                 is_marks_published, assessment_date, created_by_id,
                 created_at, updated_at
             FROM assessments
@@ -71,7 +71,7 @@ def get_all_assessments_from_db(course_id: int, assessment_id: int | None = None
                 id=row[0],
                 course_id=row[1],
                 name=row[2],
-                assessment_type=row[3],
+                assessment_type_id=row[3],
                 max_marks=row[4],
                 is_marks_published=row[5],
                 assessment_date=row[6],
@@ -101,9 +101,9 @@ def update_assessment_in_db(course_id: int, assessment_id: int, data: UpdateAsse
         if data.name is not None:
             fields.append("name = %s")
             values.append(data.name)
-        if data.assessment_type is not None:
-            fields.append("assessment_type = %s")
-            values.append(data.assessment_type)
+        if data.assessment_type_id is not None:
+            fields.append("assessment_type_id = %s")
+            values.append(data.assessment_type_id)
         if data.max_marks is not None:
             fields.append("max_marks = %s")
             values.append(data.max_marks)

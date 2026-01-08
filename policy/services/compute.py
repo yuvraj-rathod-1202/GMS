@@ -26,7 +26,7 @@ def execute_policy_calculation(student_marks: list[AllMarksDBObj], policy: Polic
         component_rule_type = component.rules.rule_type if component.rules else None
         component_rule_params = component.rules.rule_params if component.rules else {}
         
-        marks_in_category = [mark for mark in student_marks if mark.assessment_type == component.assessment_category_id]
+        marks_in_category = [mark for mark in student_marks if mark.assessment_type_id == component.assessment_category_id]
         
         if component_rule_type == "ALL":
             for mark in marks_in_category:

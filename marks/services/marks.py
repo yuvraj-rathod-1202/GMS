@@ -237,7 +237,7 @@ def get_all_marks_from_db(student_id: int, course_id: int):
         cursor = db.cursor()
         
         query = """
-            SELECT m.assessment_id, m.marks_obtained, m.recorded_by_id, m.updated_at, a.name, a.assessment_type, a.max_marks, a.assessment_date
+            SELECT m.assessment_id, m.marks_obtained, m.recorded_by_id, m.updated_at, a.name, a.assessment_type_id, a.max_marks, a.assessment_date
             FROM marks m
             JOIN assessments a ON m.assessment_id = a.id
             WHERE a.course_id = %s AND m.student_id = %s AND a.is_marks_published = TRUE
@@ -254,7 +254,7 @@ def get_all_marks_from_db(student_id: int, course_id: int):
                 recorded_by_id=row[2],
                 updated_at=row[3],
                 assessment_name=row[4],
-                assessment_type=row[5],
+                assessment_type_id=row[5],
                 max_marks=row[6],
                 assessment_date=row[7]
             )
