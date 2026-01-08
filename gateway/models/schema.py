@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 class SignUpUser(BaseModel):
     id: int
@@ -64,3 +64,30 @@ class StudentMark(BaseModel):
     marks_obtained: float
 class AddMarksRequest(BaseModel):
     marks: List[StudentMark]
+    
+class GradingRuleRequest(BaseModel):
+    rule_type: str
+    rule_params: Dict
+
+class GradingComponentRequest(BaseModel):
+    assessment_category_id: int
+    weightage: float
+    rules: GradingRuleRequest | None
+
+class CreatePolicyRequest(BaseModel):
+    total_weightage: float
+    components: List[GradingComponentRequest]
+    
+class UpdatePolicyRequest(BaseModel):
+    id: int
+    total_weightage: float
+    
+class UpdateGradingRuleRequest(BaseModel):
+    id: Optional[int]
+    rule_type: str
+    rule_params: Dict
+    
+class UpdatePolicyComponentRequest(BaseModel):
+    assessment_category_id: int
+    weightage: float
+    rules: UpdateGradingRuleRequest | None
