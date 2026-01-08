@@ -30,3 +30,9 @@ class UpdatePolicyComponentRequest(BaseModel):
     assessment_category_id: int
     weightage: float
     rules: UpdateGradingRuleRequest | None
+    
+class CreatePolicyComponentRequest(BaseModel):
+    added_by_id: int
+    assessment_category_id: int
+    weightage: float
+    rules: GradingRuleRequest | None

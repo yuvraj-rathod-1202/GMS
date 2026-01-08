@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
-from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest
+from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest
 from utils.auth import verifyInstructor, verifyRoleInCourse, verifyInstructorOrTA
-from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db, initialize_total_recalculation, fetch_total_scores_from_db
+from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db, initialize_total_recalculation, fetch_total_scores_from_db, add_policy_component_to_db
 
 
 router = APIRouter()
@@ -100,6 +100,25 @@ def delete_policy_component(course_id: int, component_id: int, user_id: int):
         )
         
     return {"detail": "Policy component deleted successfully"}
+
+@router.post("/courses/{course_id}/policy/components")
+def create_policy_component(course_id: int, data: CreatePolicyComponentRequest):
+    verified = verifyInstructor(data.added_by_id, course_id)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Instructor privileges required"
+        )
+        
+    component_id = add_policy_component_to_db(course_id, data)
+    
+    if not component_id:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create policy component"
+        )
+        
+    return {"component_id": component_id}
 
 @router.put("/courses/{course_id}/policy/components/{component_id}")
 def update_policy_component(course_id: int, component_id: int, data: UpdatePolicyComponentRequest):

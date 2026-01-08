@@ -1,7 +1,7 @@
 import json
 import os, pika
 from fastapi import HTTPException, status
-from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest
+from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest
 from utils.db import get_db
 from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj, TotalScoreDBObj
 import httpx
@@ -210,6 +210,54 @@ def delete_policy_component_from_db(course_id: int, component_id: int):
         
         db.commit()
         return True
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
+
+def add_policy_component_to_db(course_id: int, data: CreatePolicyComponentRequest):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute(
+            "SELECT id FROM course_policy WHERE course_id = %s",
+            (course_id,)
+        )
+        
+        policy = cursor.fetchone()
+        if not policy:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course policy not found"
+            )
+        
+        policy_id = policy[0]
+        
+        cursor.execute(
+            "INSERT INTO grading_components (course_policy_id, assessment_category_id, weightage) VALUES (%s, %s, %s)",
+            (policy_id, data.assessment_category_id, data.weightage)
+        )
+        
+        component_id = cursor.lastrowid
+        
+        rule = data.rules
+        if rule:
+            cursor.execute(
+                "INSERT INTO grading_rule (grading_component_id, rule_type, rule_params) VALUES (%s, %s, %s)",
+                (component_id, rule.rule_type, json.dumps(rule.rule_params))
+            )
+            
+        db.commit()
+        return component_id
     except Exception as e:
         db.rollback()
         raise HTTPException(
