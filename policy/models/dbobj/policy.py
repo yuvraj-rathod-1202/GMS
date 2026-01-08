@@ -11,8 +11,8 @@ class GradingComponentDBObj(BaseModel):
     id: int
     assessment_category_id: int
     weightage: float
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
     rules: GradingRuleDBObj | None
 
 class PolicyDBObj(BaseModel):
