@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS marks (
     UNIQUE KEY unique_assessment_student (assessment_id, student_id),
     FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE,
     INDEX idx_student_id (student_id),
-    INDEX idx_assessment_id (assessment_id)
+    INDEX idx_assessment_id (assessment_id),
+    
 );
 
 CREATE TABLE IF NOT EXISTS challenges (
@@ -47,3 +48,24 @@ CREATE TABLE IF NOT EXISTS challenges (
     responded_at TIMESTAMP,
     FOREIGN KEY (assessment_id) REFERENCES assessments(id)
 );
+
+DELIMITER $$
+
+CREATE TRIGGER before_marks_insert
+BEFORE INSERT ON marks
+FOR EACH ROW
+BEGIN
+    DECLARE max_m INT;
+
+    SELECT max_marks
+    INTO max_m
+    FROM assessments
+    WHERE id = NEW.assessment_id;
+
+    IF NEW.marks_obtained > max_m THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Marks exceed maximum allowed';
+    END IF;
+END$$
+
+DELIMITER ;
