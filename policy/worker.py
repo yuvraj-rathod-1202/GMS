@@ -1,4 +1,4 @@
-import pika, sys, os
+import pika, sys, os, asyncio
 from dotenv import load_dotenv
 from models.schema.compute import ComputeQueueMessage
 from services.compute import update_total_in_db
@@ -10,9 +10,9 @@ def main():
     
     channel = connection.channel()
     
-    async def callback(ch, method, properties, body: ComputeQueueMessage):
+    def callback(ch, method, properties, body: ComputeQueueMessage):
         try:
-            await update_total_in_db(body)
+            asyncio.run(update_total_in_db(body))
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except Exception as e:
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)

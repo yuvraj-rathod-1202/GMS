@@ -306,7 +306,7 @@ def update_component_in_db(data: UpdatePolicyComponentRequest, component_id: int
 async def initialize_total_recalculation(course_id: int, user_id: int):      
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(
+            response = await client.get(
                 f"{os.getenv('COURSES_SERVICE_URL')}/id/{course_id}/roles/student",
                 params = {"user_id": user_id}
             )
@@ -315,7 +315,7 @@ async def initialize_total_recalculation(course_id: int, user_id: int):
             
             body = {
                 "course_id": course_id,
-                "changes": [{"student_id":student["user_id"]} for student in students],
+                "changes": [{"student_id": student} for student in students],
             }
             
             channel.basic_publish(
