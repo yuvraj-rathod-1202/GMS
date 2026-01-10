@@ -55,8 +55,8 @@ def get_assessment_range_from_db(course_id: int, assessment_id: int):
     try:
         cursor = db.cursor()
         query = """
-        SELECT id, course_id, assessment_id, range_start, range_end, student_count, computed_at, version FROM assessment_range 
-        WHERE course_id = %s AND assessment_id = %s
+        SELECT id, course_id, assessment_id, range_start, range_end, student_count, computed_at FROM assessment_range 
+        WHERE course_id = %s AND assessment_id = %s AND student_count > 0
         ORDER BY range_start ASC
         """
         
@@ -72,8 +72,7 @@ def get_assessment_range_from_db(course_id: int, assessment_id: int):
                 range_start=range_record[3],
                 range_end=range_record[4],
                 student_count=range_record[5],
-                computed_at=range_record[6],
-                version=range_record[7]
+                computed_at=range_record[6]
             ))
         
         return range_objs
@@ -94,9 +93,9 @@ def get_assessment_frequencies_from_db(course_id: int, assessment_id: int):
     try:
         cursor = db.cursor()
         query = """
-        SELECT id, course_id, assessment_id, marks, frequency, computed_at FROM assessment_mark_frequency 
-        WHERE course_id = %s AND assessment_id = %s
-        ORDER BY marks ASC
+        SELECT id, course_id, assessment_id, mark, frequency, computed_at FROM assessment_mark_frequency 
+        WHERE course_id = %s AND assessment_id = %s AND frequency > 0
+        ORDER BY mark ASC
         """
         
         cursor.execute(query, (course_id, assessment_id))
@@ -109,7 +108,7 @@ def get_assessment_frequencies_from_db(course_id: int, assessment_id: int):
                     id=freq_record[0],
                     course_id=freq_record[1],
                     assessment_id=freq_record[2],
-                    marks=freq_record[3],
+                    mark=freq_record[3],
                     frequency=freq_record[4],
                     computed_at=freq_record[5]
                 )
