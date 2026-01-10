@@ -15,7 +15,7 @@ print_blue "Starting deployment process..."
 
 print_yellow "Auth Service Deployment"
 
-cd ../auth_user
+cd auth_user
 
 docker build -t yrrathod/mms_auth:latest .
 docker push yrrathod/mms_auth:latest

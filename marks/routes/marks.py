@@ -130,10 +130,4 @@ async def get_all_marks_for_student(course_id: int, student_id: int, user_id: in
         
     marks = get_all_marks_from_db(student_id, course_id, check_published=verified.get('role', 'student') == 'student')
     
-    if not marks:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No marks found for the specified student in this course"
-        )
-        
     return {"marks": marks}

@@ -56,11 +56,11 @@ async def publish_message_async(routing_key: str, body: dict):
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(executor, publish_message, routing_key, body)
 
-async def get_all_marks_for_student_in_course(student_id: int, course_id: int) -> list[AllMarksDBObj]:
+async def get_all_marks_for_student_in_course(student_id: int, course_id: int, initiated_by: int) -> list[AllMarksDBObj]:
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{os.getenv('MARKS_SERVICE_URL')}/{course_id}/marks/all/{student_id}",
-            params={"user_id": student_id}
+            params={"user_id": initiated_by}
         )
         response.raise_for_status()
         data = response.json()
@@ -99,9 +99,9 @@ def execute_policy_calculation(student_marks: list[AllMarksDBObj], policy: Polic
         
     return total_score
 
-async def calculate_total_score(student_id: int, course_id: int, policy: PolicyDBObj) -> float:
+async def calculate_total_score(student_id: int, course_id: int, policy: PolicyDBObj, initiated_by: int) -> float:
     
-    student_marks = await get_all_marks_for_student_in_course(student_id, course_id)
+    student_marks = await get_all_marks_for_student_in_course(student_id, course_id, initiated_by)
     
     total_score = execute_policy_calculation(student_marks, policy)
     return total_score
@@ -164,7 +164,7 @@ async def update_total_in_db(data: ComputeQueueMessage):
         student_id = student.student_id
         course_id = data.course_id
         current_total = get_current_total_from_db(student_id, course_id)
-        total_score = await calculate_total_score(student_id, course_id, policy)
+        total_score = await calculate_total_score(student_id, course_id, policy, initiated_by=data.initiated_by)
         
         try:
             update_total_score_in_db(student_id, course_id, total_score)

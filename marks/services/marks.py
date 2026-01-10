@@ -62,14 +62,17 @@ def get_marks_of_students_from_db(assessment_id: int, studentids: list[int]):
         )
         
     try:
+        if not studentids:
+            return []
+
         cursor = db.cursor()
-        query = """
+        placeholders = ",".join(["%s"] * len(studentids))
+        query = f"""
             SELECT student_id, marks_obtained, recorded_by_id, updated_at
             FROM marks
             WHERE assessment_id = %s AND student_id IN ({placeholders})
         """
-        
-        cursor.execute(query, (assessment_id, *studentids))
+        cursor.execute(query, [assessment_id, *studentids])
         results = cursor.fetchall()
         
         marks = [

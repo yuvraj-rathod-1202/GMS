@@ -52,7 +52,9 @@ CREATE TABLE IF NOT EXISTS course_mark_frequency (
     course_id INT NOT NULL,
     mark DECIMAL(5,2) NOT NULL,
     frequency INT NOT NULL,
-    computed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    computed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_course_mark (course_id, mark)
 );
 
 CREATE TABLE IF NOT EXISTS assessment_mark_frequency (
@@ -61,7 +63,9 @@ CREATE TABLE IF NOT EXISTS assessment_mark_frequency (
     assessment_id INT NOT NULL,
     mark DECIMAL(5,2) NOT NULL,
     frequency INT NOT NULL,
-    computed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    computed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_assessment_mark (assessment_id, mark)
 );
 
 CREATE INDEX idx_course_assessment ON assessment_analytics (course_id, assessment_id);

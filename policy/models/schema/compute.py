@@ -8,6 +8,7 @@ class ChangeItem(BaseModel):
 class ComputeQueueMessage(BaseModel):
     course_id: int
     changes: List[ChangeItem]
+    initiated_by: int
     
 class AllMarksDBObj(BaseModel):
     assessment_id: int
