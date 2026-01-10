@@ -33,6 +33,13 @@ class AssessmentRangeBDObj(BaseModel):
     range_start: float
     range_end: float
     student_count: int
-    percentage: float
     computed_at: datetime
     version: int
+    
+class AssessmentMarkFrequencyBDObj(BaseModel):
+    id: int
+    course_id: int
+    assessment_id: int
+    marks: float
+    frequency: int
+    computed_at: datetime

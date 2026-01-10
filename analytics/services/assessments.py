@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
 from utils.db import get_db
-from models.dbobj.assessments import AssessmentRangeBDObj, CourseOverviewBDObj, AssessmentAnalyticsBDObj
+from models.dbobj.assessments import AssessmentRangeBDObj, CourseOverviewBDObj, AssessmentAnalyticsBDObj, AssessmentMarkFrequencyBDObj
 
 def get_course_overview_from_db(course_id: int):
     db = get_db()
@@ -55,7 +55,7 @@ def get_assessment_range_from_db(course_id: int, assessment_id: int):
     try:
         cursor = db.cursor()
         query = """
-        SELECT id, course_id, assessment_id, range_start, range_end, student_count, percentage, computed_at, version FROM assessment_range 
+        SELECT id, course_id, assessment_id, range_start, range_end, student_count, computed_at, version FROM assessment_range 
         WHERE course_id = %s AND assessment_id = %s
         ORDER BY range_start ASC
         """
@@ -72,9 +72,8 @@ def get_assessment_range_from_db(course_id: int, assessment_id: int):
                 range_start=range_record[3],
                 range_end=range_record[4],
                 student_count=range_record[5],
-                percentage=range_record[6],
-                computed_at=range_record[7],
-                version=range_record[8]
+                computed_at=range_record[6],
+                version=range_record[7]
             ))
         
         return range_objs
@@ -95,9 +94,9 @@ def get_assessment_frequencies_from_db(course_id: int, assessment_id: int):
     try:
         cursor = db.cursor()
         query = """
-        SELECT id, course_id, assessment_id, score, student_count, percentage, computed_at, version FROM assessment_frequencies 
+        SELECT id, course_id, assessment_id, marks, frequency, computed_at FROM assessment_mark_frequency 
         WHERE course_id = %s AND assessment_id = %s
-        ORDER BY score ASC
+        ORDER BY marks ASC
         """
         
         cursor.execute(query, (course_id, assessment_id))
@@ -105,15 +104,16 @@ def get_assessment_frequencies_from_db(course_id: int, assessment_id: int):
         
         frequency_objs = []
         for freq_record in frequencies:
-            frequency_objs.append({
-                "id": freq_record[0],
-                "course_id": freq_record[1],
-                "assessment_id": freq_record[2],
-                "score": freq_record[3],
-                "student_count": freq_record[4],
-                "computed_at": freq_record[6],
-                "version": freq_record[7]
-            })
+            frequency_objs.append(
+                AssessmentMarkFrequencyBDObj(
+                    id=freq_record[0],
+                    course_id=freq_record[1],
+                    assessment_id=freq_record[2],
+                    marks=freq_record[3],
+                    frequency=freq_record[4],
+                    computed_at=freq_record[5]
+                )
+            )
         
         return frequency_objs
     except Exception as e:
