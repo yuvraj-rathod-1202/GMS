@@ -63,7 +63,7 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
         any(mark == old_max for mark in affected) or
         any(mark == old_min for mark in affected)
     )
-    
+    # recompute_needed = True
     
     old_s = old_mean*old_total_students
     old_q = (old_std**2 + old_mean**2)*old_total_students
@@ -107,7 +107,7 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
             candidates += [new for old, new in old_entries]
             cursor = db.cursor()
             cursor.execute(
-                "SELECT MAX(mark), MIN(mark) FROM course_mark_frequency WHERE course_id = %s",
+                "SELECT MAX(mark), MIN(mark) FROM course_mark_frequency WHERE course_id = %s AND frequency > 0",
                 (course_id,)
             )
             result = cursor.fetchone()
@@ -244,6 +244,8 @@ def update_assessment_analytics_in_db(course_id: int, assessment_id: int | None,
         any(mark == old_max for mark in affected) or
         any(mark == old_min for mark in affected)
     )
+     
+    # recompute_needed = True
     
     
     old_s = old_mean*old_total_students
@@ -288,7 +290,7 @@ def update_assessment_analytics_in_db(course_id: int, assessment_id: int | None,
             candidates += [new for old, new in old_entries]
             cursor = db.cursor()
             cursor.execute(
-                "SELECT MAX(mark), MIN(mark) FROM assessment_mark_frequency WHERE assessment_id = %s",
+                "SELECT MAX(mark), MIN(mark) FROM assessment_mark_frequency WHERE assessment_id = %s AND frequency > 0",
                 (assessment_id,)
             )
             result = cursor.fetchone()
