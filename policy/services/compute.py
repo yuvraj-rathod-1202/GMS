@@ -105,7 +105,6 @@ async def calculate_total_score(student_id: int, course_id: int, policy: PolicyD
     
     total_score = execute_policy_calculation(student_marks, policy)
     return total_score
-    
 
 def update_total_score_in_db(student_id: int, course_id: int, total_score: float):
     db = get_db()

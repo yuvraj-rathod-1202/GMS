@@ -30,7 +30,7 @@ async def verify_instructor_or_ta_endpoint(user_id: int, course_id: int):
 @router.get("/verifyroleincourse")
 async def verify_role_in_course_endpoint(user_id: int, course_id: int):
     try:
-        verifyRoleInCourse(user_id, course_id)
-        return {"success": True}
+        role = verifyRoleInCourse(user_id, course_id)
+        return {"success": True, "role": f"{role}"}
     except HTTPException as e:
         raise e

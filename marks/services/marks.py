@@ -52,6 +52,43 @@ async def publish_message_async(routing_key: str, body: dict):
     """Async wrapper for publishing messages to RabbitMQ"""
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(executor, publish_message, routing_key, body)
+    
+def get_marks_of_students_from_db(assessment_id: int, studentids: list[int]):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        query = """
+            SELECT student_id, marks_obtained, recorded_by_id, updated_at
+            FROM marks
+            WHERE assessment_id = %s AND student_id IN ({placeholders})
+        """
+        
+        cursor.execute(query, (assessment_id, *studentids))
+        results = cursor.fetchall()
+        
+        marks = [
+            MarksDBObj(
+                student_id=row[0],
+                marks_obtained=row[1],
+                recorded_by_id=row[2],
+                updated_at=row[3]
+            )
+            for row in results
+        ]
+        
+        return marks
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve marks from the database : {e}"
+        )
 
 async def add_marks_to_db(course_id: int, assessment_id: int, data: AddMarksRequest):
     db = get_db()
@@ -85,7 +122,8 @@ async def add_marks_to_db(course_id: int, assessment_id: int, data: AddMarksRequ
             )
             for mark in data.marks
         ]
-        old_marks = get_marks_from_db(assessment_id)
+        student_ids = [mark.student_id for mark in data.marks]
+        old_marks = get_marks_of_students_from_db(assessment_id, student_ids)
         old_marks_dict = {(mark.student_id): mark.marks_obtained for mark in old_marks}
         cursor.executemany(query, values)
         db.commit()
@@ -225,7 +263,7 @@ def publish_marks_in_db(assessment_id: int, publish: bool):
             detail=f"Failed to update marks publication status in the database : {e}"
         )
         
-def get_all_marks_from_db(student_id: int, course_id: int):
+def get_all_marks_from_db(student_id: int, course_id: int, check_published: bool = True):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -240,11 +278,11 @@ def get_all_marks_from_db(student_id: int, course_id: int):
             SELECT m.assessment_id, m.marks_obtained, m.recorded_by_id, m.updated_at, a.name, a.assessment_type_id, a.max_marks, a.assessment_date
             FROM marks m
             JOIN assessments a ON m.assessment_id = a.id
-            WHERE a.course_id = %s AND m.student_id = %s AND a.is_marks_published = TRUE
+            WHERE a.course_id = %s AND m.student_id = %s AND a.is_marks_published = COALESCE(%s, a.is_marks_published)
             ORDER BY a.assessment_date DESC
         """
         
-        cursor.execute(query, (course_id, student_id))
+        cursor.execute(query, (course_id, student_id, None if check_published == False else True))
         results = cursor.fetchall()
         
         marks = [

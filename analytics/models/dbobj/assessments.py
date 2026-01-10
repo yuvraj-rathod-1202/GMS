@@ -22,6 +22,7 @@ class AssessmentAnalyticsBDObj(BaseModel):
     max: float
     min: float
     std: float
+    total_students: int
     computed_at: datetime
     version: int
     
