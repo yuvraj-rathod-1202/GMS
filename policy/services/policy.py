@@ -102,12 +102,12 @@ def get_policy_from_db(course_id: int, policy_id: int | None = None):
         cursor = db.cursor()
         
         cursor.execute(
-            "SELECT id, total_weightage, policy_name, set_by_id, updated_by_id, set_at, updated_at FROM course_policy WHERE course_id = %s AND id = COALESCE(%s, id)",
+            "SELECT id, total_weightage, policy_name, set_by_id, updated_by_id, set_at, updated_at, is_default FROM course_policy WHERE course_id = %s AND id = COALESCE(%s, id)",
             (course_id, policy_id)
         )
         
         policies = cursor.fetchall()
-        policies = [PolicyDBObj(id=policy[0], course_id=course_id, total_weightage=policy[1], policy_name=policy[2], set_by_id=policy[3], updated_by_id=policy[4], set_at=policy[5], updated_at=policy[6], components=[]) for policy in policies if policies]
+        policies = [PolicyDBObj(id=policy[0], course_id=course_id, total_weightage=policy[1], policy_name=policy[2], set_by_id=policy[3], updated_by_id=policy[4], set_at=policy[5], updated_at=policy[6], is_default=policy[7], components=[]) for policy in policies if policies]
         
         if not policies:
             return None
@@ -414,7 +414,7 @@ def get_student_policy_mapping_from_db(course_id: int):
         )
         
         rows = cursor.fetchall()
-        mapping = [{"student_id": row[0], "course_policy_id": row[1]} for row in rows]
+        mapping = [{row[0]: row[1]} for row in rows]
         
         return mapping
     except Exception as e:

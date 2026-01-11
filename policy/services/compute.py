@@ -160,12 +160,15 @@ async def update_total_in_db(data: ComputeQueueMessage):
         "changes": []
     }
     
-        
+    default_policy = next((policy for policy in policies if policy.is_default), None)
     for student in data.changes:
         student_id = student.student_id
         course_id = data.course_id
         current_total = get_current_total_from_db(student_id, course_id)
-        total_score = await calculate_total_score(student_id, course_id, policies, initiated_by=data.initiated_by)
+        student_policy = next((policy for policy in policies if policy.id == student_policy_mapping.get(student_id)), default_policy) # type: ignore
+        if not student_policy:
+            continue
+        total_score = await calculate_total_score(student_id, course_id, student_policy, initiated_by=data.initiated_by)
         
         try:
             update_total_score_in_db(student_id, course_id, total_score)

@@ -24,6 +24,7 @@ class PolicyDBObj(BaseModel):
     updated_by_id: int
     set_at: datetime
     updated_at: datetime
+    is_default: bool
     components: List[GradingComponentDBObj]
     
 class TotalScoreDBObj(BaseModel):
