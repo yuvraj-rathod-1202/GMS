@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict
 from datetime import datetime
 
@@ -19,6 +19,7 @@ class PolicyDBObj(BaseModel):
     id: int
     course_id: int
     total_weightage: float
+    policy_name: str = Field(..., max_length=100)
     set_by_id: int
     updated_by_id: int
     set_at: datetime

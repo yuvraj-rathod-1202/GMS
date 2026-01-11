@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 
 class GradingRuleRequest(BaseModel):
@@ -11,12 +11,14 @@ class GradingComponentRequest(BaseModel):
     rules: GradingRuleRequest | None
 
 class CreatePolicyRequest(BaseModel):
+    policy_name: str = Field(..., max_length=100)
     total_weightage: float
     set_by_id: int
     components: List[GradingComponentRequest]
     
 class UpdatePolicyRequest(BaseModel):
     id: int
+    policy_name: str = Field(..., max_length=100)
     total_weightage: float
     updated_by_id: int
     
@@ -36,3 +38,10 @@ class CreatePolicyComponentRequest(BaseModel):
     assessment_category_id: int
     weightage: float
     rules: GradingRuleRequest | None
+    
+class StuentPolicyMapping(BaseModel):
+    student_id: int
+    course_policy_id: int
+class AssignPolicyRequest(BaseModel):
+    assigned_by_id: int
+    mapping: List[StuentPolicyMapping]

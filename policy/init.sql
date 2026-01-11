@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS course_policy (
     course_id INT NOT NULL UNIQUE,
     policy_name VARCHAR(100) NOT NULL,
     total_weightage DECIMAL(5,2) NOT NULL DEFAULT 100.00,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
     set_by_id INT NOT NULL,
     updated_by_id INT NOT NULL,
     set_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -3,7 +3,7 @@ import os, pika
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from fastapi import HTTPException, status
-from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest
+from models.schema.policy import AssignPolicyRequest, CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest
 from utils.db import get_db
 from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj, TotalScoreDBObj
 import httpx
@@ -60,8 +60,8 @@ def add_policy_to_db(course_id: int, data: CreatePolicyRequest):
         cursor = db.cursor()
         
         cursor.execute(
-            "INSERT INTO course_policy (course_id, total_weightage, set_by_id, updated_by_id) VALUES (%s, %s, %s, %s)",
-            (course_id, data.total_weightage, data.set_by_id, data.set_by_id)
+            "INSERT INTO course_policy (course_id, total_weightage, policy_name, set_by_id, updated_by_id) VALUES (%s, %s, %s, %s, %s)",
+            (course_id, data.total_weightage, data.policy_name, data.set_by_id, data.set_by_id)
         )
         
         policy_id = cursor.lastrowid
@@ -90,7 +90,7 @@ def add_policy_to_db(course_id: int, data: CreatePolicyRequest):
             detail=f"Database error: {str(e)}"
         )
             
-def get_policy_from_db(course_id: int):
+def get_policy_from_db(course_id: int, policy_id: int | None = None):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -102,41 +102,42 @@ def get_policy_from_db(course_id: int):
         cursor = db.cursor()
         
         cursor.execute(
-            "SELECT id, total_weightage, set_by_id, updated_by_id, set_at, updated_at FROM course_policy WHERE course_id = %s",
-            (course_id,)
+            "SELECT id, total_weightage, policy_name, set_by_id, updated_by_id, set_at, updated_at FROM course_policy WHERE course_id = %s AND id = COALESCE(%s, id)",
+            (course_id, policy_id)
         )
         
-        policy = cursor.fetchone()
-        policy = PolicyDBObj(id=policy[0], course_id=course_id, total_weightage=policy[1], set_by_id=policy[2], updated_by_id=policy[3], set_at=policy[4], updated_at=policy[5], components=[]) if policy else None
+        policies = cursor.fetchall()
+        policies = [PolicyDBObj(id=policy[0], course_id=course_id, total_weightage=policy[1], policy_name=policy[2], set_by_id=policy[3], updated_by_id=policy[4], set_at=policy[5], updated_at=policy[6], components=[]) for policy in policies if policies]
         
-        if not policy:
+        if not policies:
             return None
         
-        cursor.execute(
-            "SELECT id, assessment_category_id, weightage, created_at, updated_at FROM grading_components WHERE course_policy_id = %s",
-            (policy.id,)
-        )
-        
-        components = cursor.fetchall()
-        components = [GradingComponentDBObj(id=component[0], assessment_category_id=component[1], weightage=component[2], created_at=component[3], updated_at=component[4], rules=None) for component in components]
-        
-        for component in components:
+        for policy in policies:
             cursor.execute(
-                "SELECT id, rule_type, rule_params FROM grading_rule WHERE grading_component_id = %s",
-                (component.id,)
+                "SELECT id, assessment_category_id, weightage, created_at, updated_at FROM grading_components WHERE course_policy_id = %s",
+                (policy.id,)
             )
-            rule = cursor.fetchone()
-            component.rules = GradingRuleDBObj(id=rule[0], rule_type=rule[1], rule_params=json.loads(rule[2])) if rule else None
             
-        policy.components = components
-        return policy
+            components = cursor.fetchall()
+            components = [GradingComponentDBObj(id=component[0], assessment_category_id=component[1], weightage=component[2], created_at=component[3], updated_at=component[4], rules=None) for component in components]
+            
+            for component in components:
+                cursor.execute(
+                    "SELECT id, rule_type, rule_params FROM grading_rule WHERE grading_component_id = %s",
+                    (component.id,)
+                )
+                rule = cursor.fetchone()
+                component.rules = GradingRuleDBObj(id=rule[0], rule_type=rule[1], rule_params=json.loads(rule[2])) if rule else None
+                
+            policy.components = components
+        return policies
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}"
         )
         
-def delete_policy_from_db(course_id: int):
+def delete_policy_from_db(course_id: int, policy_id: int):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -148,8 +149,8 @@ def delete_policy_from_db(course_id: int):
         cursor = db.cursor()
         
         cursor.execute(
-            "SELECT id FROM course_policy WHERE course_id = %s",
-            (course_id,)
+            "SELECT id FROM course_policy WHERE course_id = %s AND id = %s",
+            (course_id, policy_id)
         )
         
         policy = cursor.fetchone()
@@ -204,8 +205,8 @@ def update_policy_in_db(data: UpdatePolicyRequest):
         cursor = db.cursor()
         
         cursor.execute(
-            "UPDATE course_policy SET total_weightage = %s, updated_by_id = %s, updated_at = NOW() WHERE id = %s",
-            (data.total_weightage, data.updated_by_id, data.id)
+            "UPDATE course_policy SET total_weightage = %s, updated_by_id = %s, policy_name = %s, updated_at = NOW() WHERE id = %s",
+            (data.total_weightage, data.updated_by_id, data.policy_name, data.id)
         )
         
         db.commit()
@@ -217,7 +218,36 @@ def update_policy_in_db(data: UpdatePolicyRequest):
             detail=f"Database error: {str(e)}"
         )
         
-def delete_policy_component_from_db(course_id: int, component_id: int):
+def set_policy_as_default_in_db(course_id: int, policy_id: int):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute(
+            "UPDATE course_policy SET is_default = FALSE WHERE course_id = %s",
+            (course_id,)
+        )
+        
+        cursor.execute(
+            "UPDATE course_policy SET is_default = TRUE WHERE id = %s AND course_id = %s",
+            (policy_id, course_id)
+        )
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
+        
+def delete_policy_component_from_db(course_id: int, policy_id: int, component_id: int):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -256,7 +286,7 @@ def delete_policy_component_from_db(course_id: int, component_id: int):
             detail=f"Database error: {str(e)}"
         )
 
-def add_policy_component_to_db(course_id: int, data: CreatePolicyComponentRequest):
+def add_policy_component_to_db(course_id: int, policy_id: int, data: CreatePolicyComponentRequest):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -268,8 +298,8 @@ def add_policy_component_to_db(course_id: int, data: CreatePolicyComponentReques
         cursor = db.cursor()
         
         cursor.execute(
-            "SELECT id FROM course_policy WHERE course_id = %s",
-            (course_id,)
+            "SELECT id FROM course_policy WHERE course_id = %s AND id = %s",
+            (course_id, policy_id)
         )
         
         policy = cursor.fetchone()
@@ -304,7 +334,7 @@ def add_policy_component_to_db(course_id: int, data: CreatePolicyComponentReques
             detail=f"Database error: {str(e)}"
         )
         
-def update_component_in_db(data: UpdatePolicyComponentRequest, component_id: int):
+def update_component_in_db(data: UpdatePolicyComponentRequest, policy_id: int, component_id: int):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -333,6 +363,31 @@ def update_component_in_db(data: UpdatePolicyComponentRequest, component_id: int
             )
                 
                 
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
+        
+def assign_policy_to_student_in_db(course_id: int, data: AssignPolicyRequest):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        
+        for mapping in data.mapping:
+            cursor.execute(
+                "INSERT INTO student_policy_mapping (student_id, course_id, course_policy_id, assigned_by_id, assigned_at) VALUES (%s, %s, %s, %s, NOW()) ON DUPLICATE KEY UPDATE course_policy_id = %s, assigned_by_id = %s, assigned_at = NOW()",
+                (mapping.student_id, course_id, mapping.course_policy_id, data.assigned_by_id, mapping.course_policy_id, data.assigned_by_id)
+            )
         db.commit()
         return True
     except Exception as e:
