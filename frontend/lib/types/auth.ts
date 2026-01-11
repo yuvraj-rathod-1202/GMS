@@ -13,3 +13,16 @@ export interface ChangePasswordRequest {
 export interface ForgotPasswordRequest {
     id: number;
 };
+
+export interface User {
+    id: number;
+    email: string;
+    last_login: Date | null;
+};
+
+export interface AuthState {
+    user: User | null;
+    token: string | null;
+    setAuth : (user: User, token: string) => void;
+    logout: () => void;
+}
