@@ -1,7 +1,6 @@
 import { apiClient } from "./client";
 import { handleRequest } from "./utils";
 import {AddCourseRequest, UpdateCourseRequest} from "@/lib/types/courses";
-import {CreateAssessmentRequest} from "@/lib/types/assessments";
 
 export const CoursesApi = {
     CreateCourse: async (CourseData: AddCourseRequest) => {
@@ -75,22 +74,4 @@ export const CoursesApi = {
             apiClient.delete(`/courses/${courseId}/instructors`, { data: { "instructor_id": instructorId } })
         )
     },
-
-    CreateAssessment: async (courseId: number, AssessmentData: CreateAssessmentRequest) => {
-        return handleRequest(
-            apiClient.post(`/courses/${courseId}/assessments`, AssessmentData)
-        );
-    },
-
-    GetAllAssessments: async (courseId: number) => {
-        return handleRequest(
-            apiClient.get(`/courses/${courseId}/assessments`)
-        );
-    },
-
-    GetStudentMarks: async (courseId: number, studentId: number) => {
-        return handleRequest(
-            apiClient.get(`/courses/${courseId}/marks/${studentId}`)
-        );
-    }
 }
