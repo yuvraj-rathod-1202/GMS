@@ -18,8 +18,8 @@ class CreatePolicyRequest(BaseModel):
     
 class UpdatePolicyRequest(BaseModel):
     id: int
-    policy_name: str = Field(..., max_length=100)
-    total_weightage: float
+    policy_name: Optional[str] = Field(None, max_length=100)
+    total_weightage: Optional[float] = None
     updated_by_id: int
     
 class UpdateGradingRuleRequest(BaseModel):

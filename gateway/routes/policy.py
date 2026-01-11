@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 import httpx, os
 from dotenv import load_dotenv
 from utils.auth import verify_token
-from models.schema import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest
+from models.schema import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, AssignPolicyRequest
 
 load_dotenv()
 router = APIRouter()
@@ -58,13 +58,34 @@ async def get_policy(course_id: int, user_info: dict = Depends(verify_token)):
                 status_code=500,
                 detail=f"Error connecting to Policy Service: {str(e)}",
             )
-            
-@router.delete("/{course_id}/policy")
-async def delete_policy(course_id: int, user_info: dict = Depends(verify_token)):
+           
+@router.get("/{course_id}/policy/{policy_id}")
+async def get_policy_by_id(course_id: int, policy_id: int, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/{policy_id}",
+                params={"user_id": user_info["user_id"]},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to retrieve policy by ID"),
+                )
+                
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Policy Service: {str(e)}",
+            )
+ 
+@router.delete("/{course_id}/policy/{policy_id}")
+async def delete_policy(course_id: int, policy_id: int, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.delete(
-                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy",
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/{policy_id}",
                 params={"user_id": user_info["user_id"]},
             )
             if response.status_code != 200:
@@ -101,12 +122,12 @@ async def update_policy(course_id: int, data: UpdatePolicyRequest, user_info: di
                 detail=f"Error connecting to Policy Service: {str(e)}",
             )
             
-@router.delete("/{course_id}/policy/components/{component_id}")
-async def delete_policy_component(course_id: int, component_id: int, user_info: dict = Depends(verify_token)):
+@router.delete("/{course_id}/policy/{policy_id}/components/{component_id}")
+async def delete_policy_component(course_id: int, policy_id: int, component_id: int, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.delete(
-                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/components/{component_id}",
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/{policy_id}/components/{component_id}",
                 params={"user_id": user_info["user_id"]},
             )
             if response.status_code != 200:
@@ -122,12 +143,12 @@ async def delete_policy_component(course_id: int, component_id: int, user_info: 
                 detail=f"Error connecting to Policy Service: {str(e)}",
             )
 
-@router.post("/{course_id}/policy/components")
-async def add_policy_component(course_id: int, data: UpdatePolicyComponentRequest, user_info: dict = Depends(verify_token)):
+@router.post("/{course_id}/policy/{policy_id}/components")
+async def add_policy_component(course_id: int, policy_id: int, data: UpdatePolicyComponentRequest, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/components",
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/{policy_id}/components",
                 json={**data.dict(), "added_by_id": user_info["user_id"]},
             )
             if response.status_code != 200:
@@ -143,12 +164,12 @@ async def add_policy_component(course_id: int, data: UpdatePolicyComponentReques
                 detail=f"Error connecting to Policy Service: {str(e)}",
             )                  
           
-@router.put("/{course_id}/policy/components/{component_id}")
-async def update_policy_component(course_id: int, component_id: int, data: UpdatePolicyComponentRequest, user_info: dict = Depends(verify_token)):
+@router.put("/{course_id}/policy/{policy_id}/components/{component_id}")
+async def update_policy_component(course_id: int, policy_id: int, component_id: int, data: UpdatePolicyComponentRequest, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.put(
-                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/components/{component_id}",
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/{policy_id}/components/{component_id}",
                 json={**data.dict(), "updated_by_id": user_info["user_id"]},
             )
             if response.status_code != 200:
@@ -163,7 +184,28 @@ async def update_policy_component(course_id: int, component_id: int, data: Updat
                 status_code=500,
                 detail=f"Error connecting to Policy Service: {str(e)}",
             )
-            
+
+@router.post("/{course_id}/policy-assignments")
+async def assign_policy_to_students(course_id: int, data: AssignPolicyRequest, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy-assignments",
+                json={**data.dict(), "assigned_by_id": user_info["user_id"]},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to assign policy to students"),
+                )
+                
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Policy Service: {str(e)}",
+            )
+
 @router.post("/{course_id}/policy/recalculate")
 async def recalculate_policy(course_id: int, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:

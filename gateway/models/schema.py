@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Dict, List, Optional
 
 class SignUpUser(BaseModel):
@@ -75,12 +75,14 @@ class GradingComponentRequest(BaseModel):
     rules: GradingRuleRequest | None
 
 class CreatePolicyRequest(BaseModel):
+    policy_name: str = Field(..., max_length=100)
     total_weightage: float
     components: List[GradingComponentRequest]
     
 class UpdatePolicyRequest(BaseModel):
     id: int
-    total_weightage: float
+    policy_name: Optional[str] = Field(None, max_length=100)
+    total_weightage: Optional[float] = None
     
 class UpdateGradingRuleRequest(BaseModel):
     id: Optional[int]
@@ -91,3 +93,9 @@ class UpdatePolicyComponentRequest(BaseModel):
     assessment_category_id: int
     weightage: float
     rules: UpdateGradingRuleRequest | None
+    
+class StudentPolicyMapping(BaseModel):
+    student_id: int
+    policy_id: int
+class AssignPolicyRequest(BaseModel):
+    mapping: List[StudentPolicyMapping]
