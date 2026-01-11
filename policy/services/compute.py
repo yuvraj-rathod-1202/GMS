@@ -1,7 +1,7 @@
 from utils.db import get_db
 from models.schema.compute import ComputeQueueMessage, AllMarksDBObj
 from models.dbobj.policy import PolicyDBObj
-from services.policy import get_policy_from_db
+from services.policy import get_policy_from_db, get_student_policy_mapping_from_db
 import httpx, os, pika, asyncio, json
 from concurrent.futures import ThreadPoolExecutor
 from fastapi import status, HTTPException
@@ -145,8 +145,9 @@ def get_current_total_from_db(student_id: int, course_id: int) -> float | None:
 
 async def update_total_in_db(data: ComputeQueueMessage):
     try:
-        policy = get_policy_from_db(data.course_id)
-        if not policy:
+        policies = get_policy_from_db(data.course_id)
+        student_policy_mapping = get_student_policy_mapping_from_db(data.course_id)            
+        if not policies:
             print(f"Policy not found for course_id: {data.course_id}")
             return
     except Exception as e:
@@ -164,7 +165,7 @@ async def update_total_in_db(data: ComputeQueueMessage):
         student_id = student.student_id
         course_id = data.course_id
         current_total = get_current_total_from_db(student_id, course_id)
-        total_score = await calculate_total_score(student_id, course_id, policy, initiated_by=data.initiated_by)
+        total_score = await calculate_total_score(student_id, course_id, policies, initiated_by=data.initiated_by)
         
         try:
             update_total_score_in_db(student_id, course_id, total_score)

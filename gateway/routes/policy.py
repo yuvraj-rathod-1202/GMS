@@ -206,6 +206,27 @@ async def assign_policy_to_students(course_id: int, data: AssignPolicyRequest, u
                 detail=f"Error connecting to Policy Service: {str(e)}",
             )
 
+@router.get("/{course_id}/policy-assignments")
+async def get_policy_assignments(course_id: int, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy-assignments",
+                params={"user_id": user_info["user_id"]},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to retrieve policy assignments"),
+                )
+                
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Policy Service: {str(e)}",
+            )
+
 @router.post("/{course_id}/policy/recalculate")
 async def recalculate_policy(course_id: int, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:

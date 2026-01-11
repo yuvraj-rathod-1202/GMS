@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest, AssignPolicyRequest
 from utils.auth import verifyInstructor, verifyRoleInCourse, verifyInstructorOrTA
-from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db, initialize_total_recalculation, fetch_total_scores_from_db, add_policy_component_to_db, set_policy_as_default_in_db, assign_policy_to_student_in_db
+from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db, initialize_total_recalculation, fetch_total_scores_from_db, add_policy_component_to_db, set_policy_as_default_in_db, assign_policy_to_student_in_db, get_student_policy_mapping_from_db
 
 
 router = APIRouter()
@@ -195,6 +195,19 @@ async def assign_policy_to_student(course_id: int, data: AssignPolicyRequest):
         )
         
     return {"detail": "Policy assigned to student successfully"}
+
+@router.get("/courses/{course_id}/policy-assignments")
+async def get_policy_assignments(course_id: int, user_id: int):
+    verified = await verifyInstructor(user_id, course_id)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Instructor privileges required"
+        )
+        
+    assignments = get_student_policy_mapping_from_db(course_id)
+    
+    return {"assignments": assignments}
 
 @router.post("/courses/{course_id}/policy/recalculate")
 async def recalculate_policy(course_id: int, user_id: int):

@@ -396,6 +396,32 @@ def assign_policy_to_student_in_db(course_id: int, data: AssignPolicyRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}"
         )
+     
+def get_student_policy_mapping_from_db(course_id: int):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        
+        cursor.execute(
+            "SELECT student_id, course_policy_id FROM student_policy_mapping WHERE course_id = %s",
+            (course_id,)
+        )
+        
+        rows = cursor.fetchall()
+        mapping = [{"student_id": row[0], "course_policy_id": row[1]} for row in rows]
+        
+        return mapping
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
         
 async def initialize_total_recalculation(course_id: int, user_id: int):      
     async with httpx.AsyncClient() as client:
