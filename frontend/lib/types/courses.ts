@@ -1,0 +1,68 @@
+export interface CourseDBObject {
+    id: number;
+    course_code: string;
+    name: string;
+    semester: string;
+    credits: number;
+    status: 'Ongoing' | 'Completed';
+    created_at: Date;
+    updated_at: Date;
+};
+
+export interface AddCourseRequest {
+    course_code: string;
+    name: string;
+    semester: string;
+    credits: number;
+};
+
+export interface UpdateCourseRequest {
+    status?: 'Ongoing' | 'Completed';
+    course_code?: string;
+    name?: string;
+    credits?: number;
+};
+
+export interface EnrollStudentRequest {
+    student_id: number;
+};
+
+export interface EnrollTaRequest {
+    ta_id: number;
+};
+
+export interface EnrollInstructorRequest {
+    instructor_id: number;
+}
+
+export interface CreateAssessmentRequest {
+    name: string;
+    assessment_type_id: number;
+    max_marks: number;
+    is_marks_published: boolean;
+    assessment_date: Date;
+};
+
+export interface AssessmentDBObject {
+    id: number;
+    course_id: number;
+    name: string;
+    assessment_type_id: number;
+    max_marks: number;
+    is_marks_published: boolean;
+    assessment_date: Date;
+    created_by_id: number;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface AllMarksDBObject {
+    assessment_id: number;
+    marks_obtained: number;
+    recorded_by_id: number;
+    updated_at: Date;
+    assessment_name: string;
+    assessment_type_id: number;
+    max_marks: number;
+    assessment_date: Date;
+}
