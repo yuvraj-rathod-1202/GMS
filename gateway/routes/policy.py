@@ -227,6 +227,27 @@ async def get_policy_assignments(course_id: int, user_info: dict = Depends(verif
                 detail=f"Error connecting to Policy Service: {str(e)}",
             )
 
+@router.put("/{course_id}/policy/{policy_id}/default")
+async def set_policy_as_default(course_id: int, policy_id: int, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.put(
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/{policy_id}/default",
+                params={"user_id": user_info["user_id"]},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to set policy as default"),
+                )
+                
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Policy Service: {str(e)}",
+            )
+
 @router.post("/{course_id}/policy/recalculate")
 async def recalculate_policy(course_id: int, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:

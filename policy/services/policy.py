@@ -385,7 +385,7 @@ def assign_policy_to_student_in_db(course_id: int, data: AssignPolicyRequest):
         
         for mapping in data.mapping:
             cursor.execute(
-                "INSERT INTO student_policy_mapping (student_id, course_id, course_policy_id, assigned_by_id, assigned_at) VALUES (%s, %s, %s, %s, NOW()) ON DUPLICATE KEY UPDATE course_policy_id = %s, assigned_by_id = %s, assigned_at = NOW()",
+                "INSERT INTO student_course_policy (student_id, course_id, course_policy_id, assigned_by_id, assigned_at) VALUES (%s, %s, %s, %s, NOW()) ON DUPLICATE KEY UPDATE course_policy_id = %s, assigned_by_id = %s, assigned_at = NOW()",
                 (mapping.student_id, course_id, mapping.course_policy_id, data.assigned_by_id, mapping.course_policy_id, data.assigned_by_id)
             )
         db.commit()
@@ -409,12 +409,12 @@ def get_student_policy_mapping_from_db(course_id: int):
         cursor = db.cursor()
         
         cursor.execute(
-            "SELECT student_id, course_policy_id FROM student_policy_mapping WHERE course_id = %s",
+            "SELECT student_id, course_policy_id FROM student_course_policy WHERE course_id = %s",
             (course_id,)
         )
         
         rows = cursor.fetchall()
-        mapping = [{row[0]: row[1]} for row in rows]
+        mapping = {row[0]: row[1] for row in rows}
         
         return mapping
     except Exception as e:

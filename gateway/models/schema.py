@@ -96,6 +96,6 @@ class UpdatePolicyComponentRequest(BaseModel):
     
 class StudentPolicyMapping(BaseModel):
     student_id: int
-    policy_id: int
+    course_policy_id: int
 class AssignPolicyRequest(BaseModel):
     mapping: List[StudentPolicyMapping]

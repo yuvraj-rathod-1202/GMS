@@ -8,7 +8,7 @@ USE policy;
 
 CREATE TABLE IF NOT EXISTS course_policy (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    course_id INT NOT NULL UNIQUE,
+    course_id INT NOT NULL,
     policy_name VARCHAR(100) NOT NULL,
     total_weightage DECIMAL(5,2) NOT NULL DEFAULT 100.00,
     is_default BOOLEAN NOT NULL DEFAULT FALSE,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS grading_components (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_course_assessment (course_policy_id, assessment_category_id),
-    FOREIGN KEY (course_policy_id) REFERENCES course_policy(id),
+    FOREIGN KEY (course_policy_id) REFERENCES course_policy(id)
 );
 
 CREATE TABLE IF NOT EXISTS grading_rule (
