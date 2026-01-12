@@ -42,7 +42,7 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
           onChange={(e) => setId(e.target.value)}
           placeholder="Enter user id"
           inputMode="numeric"
-          className="w-full px-3 py-2 rounded-md border border-zinc-300 bg-gray-100 outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-md border border-zinc-300 bg-mms-grayLight outline-none focus:ring-2 focus:ring-mms-blue"
         />
       </div>
 
@@ -53,7 +53,7 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
           onChange={(e) => setPassword(e.target.value)}
           type="password"
           placeholder="Enter password"
-          className="w-full px-3 py-2 rounded-md border border-zinc-300 bg-gray-100 outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-md border border-zinc-300 bg-mms-grayLight outline-none focus:ring-2 focus:ring-mms-blue"
         />
       </div>
 
@@ -63,7 +63,7 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-2.5 rounded-md bg-blue-600 text-white disabled:opacity-60 hover:bg-blue-700 transition-colors"
+        className="w-full py-2.5 rounded-md bg-mms-blue text-white disabled:opacity-60 hover:bg-mms-indigo transition-colors"
       >
         {loading ? 'Logging in...' : 'Login'}
       </button>
