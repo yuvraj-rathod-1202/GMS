@@ -38,7 +38,11 @@ def enroll_student_in_course_in_db(course_id: int, student_id: int, enroll: bool
                 return role_id[0]
             except Exception as e:
                 db.rollback()
-                return None
+                print(f"Error unenrolling student: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to unenroll student: {str(e)}"
+                )
             
     if not enroll:
         return None # Student not enrolled, cannot unenroll
@@ -49,13 +53,18 @@ def enroll_student_in_course_in_db(course_id: int, student_id: int, enroll: bool
             "VALUES (%s, %s, %s, NOW())",
             (course_id, student_id, 'instructor' if assign_instructor else ('ta' if assign_ta else 'student'))
         )
+        id = cursor.lastrowid
         if not assign_ta and not assign_instructor:
             cursor.execute(
                 "UPDATE courses SET total_students = total_students + 1 WHERE id = %s",
                 (course_id,)
             )
         db.commit()
-        return cursor.lastrowid
+        return id
     except Exception as e:
         db.rollback()
-        return None
+        print(f"Error enrolling student: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to enroll: {str(e)}"
+        )
