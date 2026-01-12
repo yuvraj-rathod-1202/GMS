@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import CoursesStatusSelection from "./ui/CoursesStatusSelection";
+import CoursesStatusSelection from "../ui/CoursesStatusSelection";
 import { useCoursesStore } from "@/lib/store/courses";
 import { useAuthStore } from "@/lib/store/auth";
 import { useCourses } from "@/hooks/useCourses";

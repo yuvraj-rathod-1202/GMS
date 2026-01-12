@@ -2,9 +2,9 @@
 import ProtectedLayout from "@/components/ProtectedLayout";
 import { useAuthStore } from "@/lib/store/auth";
 import { useAuth } from "@/hooks/useAuth";
-import DashboardSidebar from "@/components/DashboardSidebar";
+import DashboardSidebar from "@/components/Dashboard/DashboardSidebar";
 import Navbar from "@/components/NavBar";
-import DashboardCourses from "@/components/DshboardCourses";
+import DashboardCourses from "@/components/Dashboard/DshboardCourses";
 
 export default function Home() {
   const user = useAuthStore((s) => s.user);
