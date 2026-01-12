@@ -1,10 +1,10 @@
 import { useCoursesStore } from "@/lib/store/courses";
 import { usePathname } from "next/dist/client/components/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 
 export default function Navbar() {
     const pathname = usePathname();
-    const courseMatch = pathname.match(/^\/c\/(\d+)/);
+    const courseMatch = useMemo(() => pathname.match(/^\/c\/(\d+)/), [pathname]);
     const courses = useCoursesStore((s) => s.courses);
     const [couresName, setCourseName] = React.useState<string | null>(null);
     useEffect(() => {

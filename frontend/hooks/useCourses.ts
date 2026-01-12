@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { CoursesApi } from "@/lib/api/courses";
 import { useCoursesStore } from "@/lib/store/courses";
 
@@ -9,9 +9,10 @@ export function useCourses() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    async function fetchCourses() {
+    const fetchCourses = useCallback(async () => {
         setLoading(true);
         setError(null);
+        clearCourses();
         try {
             const data = await CoursesApi.FetchMyCourses();
             console.log('Fetched courses data:', data);
@@ -25,7 +26,7 @@ export function useCourses() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [setCourses, clearCourses]);
 
     return {
         fetchCourses,

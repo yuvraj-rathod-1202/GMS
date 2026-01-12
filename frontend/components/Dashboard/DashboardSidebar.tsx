@@ -11,26 +11,19 @@ import { AiOutlineHome } from "react-icons/ai";
 import { FaUserCheck } from "react-icons/fa";
 import { MdGroups } from "react-icons/md";
 import UserMenu from "./UserMenu";
+import Link from "next/link";
 
 
 export default function DashboardSidebar() {
 	const { fetchCourses, loading, error } = useCourses();
 	const courses = useCoursesStore((s) => s.courses);
-	const user = useAuthStore((s) => s.user);
 	const [teachOpen, setTeachOpen] = useState(true);
 	const [enrolledOpen, setEnrolledOpen] = useState(true);
-    const [hasFetched, setHasFetched] = useState(false);
 	const pathname = usePathname();
 
-	// Fetch courses when user changes (reload, login, logout)
 	useEffect(() => {
-		if (user?.id) {
-            setHasFetched(true);
-			if (!hasFetched){
-                fetchCourses().catch(() => {});
-            }
-		}
-	}, [user?.id, fetchCourses, hasFetched]);
+        fetchCourses().catch(() => {});
+	}, [fetchCourses]);
 
 	const { teaching, enrolled } = useMemo(() => {
 		const coursesList = Array.isArray(courses) ? courses : [];
@@ -46,12 +39,12 @@ export default function DashboardSidebar() {
 			<div className="space-y-4">
 				<UserMenu />
                 <div className="px-4 space-y-2">
-                    <button className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-900 hover:bg-mms-indigoLight rounded-xl text-sm font-medium transition-colors ${
+                    <Link href="/" className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-900 hover:bg-mms-indigoLight rounded-xl text-sm font-medium transition-colors ${
                         pathname === '/' ? 'bg-mms-grayLight' : ''
                     }`}>
                         <AiOutlineHome className="size-5" />
                         <span>Home</span>
-                    </button>
+                    </Link>
 
                     <div className="bg-white py-2">
                         <SectionHeader
@@ -68,7 +61,7 @@ export default function DashboardSidebar() {
                                     <div className="px-4 text-sm text-gray-500">No teaching courses</div>
                                 )}
                                 {teaching.map((course) => (
-                                    <CourseItem key={course.id} name={course.name} />
+                                    <CourseItem key={course.id} name={course.name} id={course.id} />
                                 ))}
                             </div>
                         )}
@@ -89,7 +82,7 @@ export default function DashboardSidebar() {
                                     <div className="px-4 text-sm text-gray-500">No enrolled courses</div>
                                 )}
                                 {enrolled.map((course) => (
-                                    <CourseItem key={course.id} name={course.name} />
+                                    <CourseItem key={course.id} name={course.name} id={course.id} />
                                 ))}
                             </div>
                         )}
