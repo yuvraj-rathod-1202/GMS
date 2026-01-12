@@ -12,8 +12,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Special handling for login page: if already authenticated and not expired, redirect to home
+  if (pathname.startsWith('/login')) {
+    const msInDay = 24 * 60 * 60 * 1000;
+    const last = lastLogin ? Date.parse(lastLogin) : NaN;
+    const expired = Number.isFinite(last) ? (Date.now() - last > msInDay) : true;
+    if (token && !expired) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    return NextResponse.next();
+  }
+
   // If user is on a public route, allow access
-  if (publicRoutes.includes(pathname) || pathname.startsWith('/login')) {
+  if (publicRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 

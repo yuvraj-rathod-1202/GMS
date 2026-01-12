@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LoginForm from "@/components/LoginForm";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,24 @@ import { useAuth } from "@/hooks/useAuth";
 export default function LoginPage() {
   const router = useRouter();
   const { login, loading, error } = useAuth();
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  // If already logged in and not expired, redirect away from login
+  useEffect(() => {
+    if (!hydrated) return;
+    const cookie = typeof document !== 'undefined' ? document.cookie : '';
+    const hasToken = /(?:^|;\s*)authToken=/.test(cookie);
+    const last = typeof window !== 'undefined' ? localStorage.getItem('lastLogin') : null;
+    const msInDay = 24 * 60 * 60 * 1000;
+    const expired = last ? (Date.now() - Date.parse(last)) > msInDay : true;
+    if (hasToken && !expired) {
+      router.replace('/');
+    }
+  }, [hydrated, router]);
 
   async function handleSubmit(id: number, password: string) {
     try {
