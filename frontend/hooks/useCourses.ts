@@ -13,9 +13,10 @@ export function useCourses() {
         setLoading(true);
         setError(null);
         try {
-            const data = await CoursesApi.FetchMyCourses() as CourseDBObject[];
-            setCourses(data);
-            return data;
+            const data = await CoursesApi.FetchMyCourses();
+            const coursesList = Array.isArray(data) ? data : (data as any)?.courses || [];
+            setCourses(coursesList);
+            return coursesList;
         } catch (err: any) {
             setError(err?.message || "Failed to fetch courses");
             throw err;

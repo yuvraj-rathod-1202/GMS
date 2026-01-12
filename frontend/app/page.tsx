@@ -2,6 +2,7 @@
 import ProtectedLayout from "@/components/ProtectedLayout";
 import { useAuthStore } from "@/lib/store/auth";
 import { useAuth } from "@/hooks/useAuth";
+import DashboardSidebar from "@/components/DashboardSidebar";
 
 export default function Home() {
   const user = useAuthStore((s) => s.user);
@@ -14,7 +15,8 @@ export default function Home() {
 
   return (
     <ProtectedLayout>
-      <main style={{ padding: 24 }}>
+      <main className="flex flex-row">
+        <DashboardSidebar />
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <h1>Welcome to MMS</h1>
           {user && (

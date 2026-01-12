@@ -77,7 +77,7 @@ export const CoursesApi = {
 
     FetchMyCourses: async () => {
         return handleRequest(
-            apiClient.get('/courses/me/courses')
+            apiClient.get('/courses/users/me/courses')
         )
     }
 }
