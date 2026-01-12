@@ -61,12 +61,11 @@ export default function DashboardSidebar() {
                                     <div className="px-4 text-sm text-gray-500">No teaching courses</div>
                                 )}
                                 {teaching.map((course) => (
-                                    <CourseItem key={course.id} name={course.name} id={course.id} />
+                                    <CourseItem key={course.id} name={course.name} id={course.id} Highlight={pathname === `/c/${course.id}`} />
                                 ))}
                             </div>
                         )}
                     </div>
-
                     <div className="bg-white py-2">
                         <SectionHeader
                             title="Enrolled"
@@ -82,7 +81,7 @@ export default function DashboardSidebar() {
                                     <div className="px-4 text-sm text-gray-500">No enrolled courses</div>
                                 )}
                                 {enrolled.map((course) => (
-                                    <CourseItem key={course.id} name={course.name} id={course.id} />
+                                    <CourseItem key={course.id} name={course.name} id={course.id} Highlight={pathname === `/c/${course.id}`} />
                                 ))}
                             </div>
                         )}
