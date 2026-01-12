@@ -15,6 +15,7 @@ export default {
         indigo: "#9F9FF8",
         greenLight: "#94E9B8",
         black: "#000000",
+        white: "#FFFFFF",
       },
     },
   },
