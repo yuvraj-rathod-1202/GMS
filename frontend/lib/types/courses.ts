@@ -49,4 +49,5 @@ export interface AllMarksDBObject {
 export interface CourseState {
     courses: CourseDBObject[];
     setCourses: (courses: CourseDBObject[]) => void;
+    clearCourses: () => void;
 }

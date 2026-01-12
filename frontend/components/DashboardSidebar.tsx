@@ -10,25 +10,27 @@ import { CourseItem } from "./ui/CourseItem";
 import { AiOutlineHome } from "react-icons/ai";
 import { FaUserCheck } from "react-icons/fa";
 import { MdGroups } from "react-icons/md";
-import { RiLockPasswordLine } from "react-icons/ri";
 import UserMenu from "./UserMenu";
 
 
 export default function DashboardSidebar() {
 	const { fetchCourses, loading, error } = useCourses();
 	const courses = useCoursesStore((s) => s.courses);
+	const user = useAuthStore((s) => s.user);
 	const [teachOpen, setTeachOpen] = useState(true);
 	const [enrolledOpen, setEnrolledOpen] = useState(true);
-	const [hasFetched, setHasFetched] = useState(false);
+    const [hasFetched, setHasFetched] = useState(false);
 	const pathname = usePathname();
 
+	// Fetch courses when user changes (reload, login, logout)
 	useEffect(() => {
-		const coursesList = Array.isArray(courses) ? courses : [];
-		if (!coursesList.length && !hasFetched) {
-			setHasFetched(true);
-			fetchCourses().catch(() => {});
+		if (user?.id) {
+            setHasFetched(true);
+			if (!hasFetched){
+                fetchCourses().catch(() => {});
+            }
 		}
-	}, [courses, hasFetched, fetchCourses]);
+	}, [user?.id, fetchCourses, hasFetched]);
 
 	const { teaching, enrolled } = useMemo(() => {
 		const coursesList = Array.isArray(courses) ? courses : [];

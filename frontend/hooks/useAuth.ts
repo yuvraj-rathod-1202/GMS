@@ -2,10 +2,12 @@
 import { useState } from "react";
 import { Authapi } from "@/lib/api/auth";
 import { useAuthStore } from "@/lib/store/auth";
+import { useCoursesStore } from "@/lib/store/courses";
 
 export function useAuth() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const logout = useAuthStore((s) => s.logout);
+  const clearCourses = useCoursesStore((s) => s.clearCourses);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +48,7 @@ export function useAuth() {
     logout: async () => {
       try {
         await fetch('/api/session', { method: 'DELETE' });
+        clearCourses();
       } catch {}
       try { localStorage.removeItem('lastLogin'); } catch {}
       logout();

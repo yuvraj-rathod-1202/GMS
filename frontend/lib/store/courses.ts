@@ -7,6 +7,7 @@ export const useCoursesStore = create<CourseState>()(
         (set) => ({
             courses: [],
             setCourses: (courses: any[]) => set({ courses }),
+            clearCourses: () => set({ courses: [] }),
         }),
         {
             name: 'courses-storage',

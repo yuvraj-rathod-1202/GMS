@@ -8,7 +8,7 @@ import CourseCard from "./CourseCard";
 export default function DashboardCourses() {
   const [statusFilter, setStatusFilter] = useState<"ongoing" | "completed">("ongoing");
   const [open, setOpen] = useState(false);
-  const { fetchCourses, loading, error } = useCourses();
+  const { loading, error } = useCourses();
   const courses = useCoursesStore((s) => s.courses);
   const user = useAuthStore((s) => s.user);
 
