@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react";
 import { MarksApi } from "@/lib/api/marks";
 import { CoursesApi } from "@/lib/api/courses";
+import {PolicyApi} from "@/lib/api/policy";
 import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useAuthStore } from "@/lib/store/auth";
 import {AddMarksRequest} from "@/lib/types/marks";
@@ -186,6 +187,29 @@ export function useTACourse() {
         } finally {
             setLoading(false);
         }
+    }, [user?.id]);6
+
+    const GetTotalScores = useCallback(async (courseId: number) => {
+        if (!user?.id) {
+            setError("User not found");
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await PolicyApi.GetTotalOfAllStudents(courseId);
+            const MarksList = Array.isArray(response) ? response : (response as any)?.marks || [];
+            return MarksList;
+        } catch (err: any) {
+            const errorMessage = err?.message || "Failed to fetch total scores";
+            setError(errorMessage);
+            console.error("Error fetching total scores:", err);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
     }, [user?.id]);
 
     return {
@@ -196,6 +220,7 @@ export function useTACourse() {
         DeleteStudentMarks,
         PublishMarks,
         UnpublishMarks,
+        GetTotalScores,
         loading,
         error,
     };
