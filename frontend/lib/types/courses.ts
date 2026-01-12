@@ -4,7 +4,7 @@ export interface CourseDBObject {
     name: string;
     semester: string;
     credits: number;
-    status: 'Ongoing' | 'Completed';
+    status: 'ongoing' | 'completed';
     created_at: Date;
     role: 'instructor' | 'ta' | 'student';
 };
@@ -17,7 +17,7 @@ export interface AddCourseRequest {
 };
 
 export interface UpdateCourseRequest {
-    status?: 'Ongoing' | 'Completed';
+    status?: 'ongoing' | 'completed';
     course_code?: string;
     name?: string;
     credits?: number;
