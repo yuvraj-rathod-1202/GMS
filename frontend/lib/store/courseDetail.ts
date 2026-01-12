@@ -34,6 +34,11 @@ export interface CourseDetailState {
   isLoading: boolean;
   error: string | null;
   
+  // Session-based fetch tracking (in-memory only, resets on reload)
+  hasFetchedStudentDataInSession: boolean;
+  hasFetchedTADataInSession: boolean;
+  hasFetchedInstructorDataInSession: boolean;
+  
   // Actions
   setCurrentCourse: (course: CourseDBObject | null) => void;
   setStudentData: (data: StudentCourseData) => void;
@@ -41,6 +46,9 @@ export interface CourseDetailState {
   setInstructorData: (data: InstructorCourseData) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setHasFetchedStudentDataInSession: (value: boolean) => void;
+  setHasFetchedTADataInSession: (value: boolean) => void;
+  setHasFetchedInstructorDataInSession: (value: boolean) => void;
   clearCourseDetail: () => void;
 }
 
@@ -51,6 +59,9 @@ export const useCourseDetailStore = create<CourseDetailState>((set) => ({
   instructorData: null,
   isLoading: false,
   error: null,
+  hasFetchedStudentDataInSession: false,
+  hasFetchedTADataInSession: false,
+  hasFetchedInstructorDataInSession: false,
   
   setCurrentCourse: (course) => set({ currentCourse: course }),
   setStudentData: (data) => set({ studentData: data }),
@@ -58,6 +69,9 @@ export const useCourseDetailStore = create<CourseDetailState>((set) => ({
   setInstructorData: (data) => set({ instructorData: data }),
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
+  setHasFetchedStudentDataInSession: (value) => set({ hasFetchedStudentDataInSession: value }),
+  setHasFetchedTADataInSession: (value) => set({ hasFetchedTADataInSession: value }),
+  setHasFetchedInstructorDataInSession: (value) => set({ hasFetchedInstructorDataInSession: value }),
   clearCourseDetail: () => set({
     currentCourse: null,
     studentData: null,
