@@ -19,6 +19,19 @@ export function useAuth() {
       const token = (data as any).token ?? null;
       if (!token) throw new Error("Invalid login response");
       setAuth(user, token);
+      const lastLogin = new Date().toISOString();
+      // Persist last login locally
+      try {
+        localStorage.setItem('lastLogin', lastLogin);
+      } catch {}
+      // Ensure server sets cookie so middleware can read it
+      try {
+        await fetch('/api/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, lastLogin }),
+        });
+      } catch {}
       return { user, token };
     } catch (err: any) {
       setError(err?.message || "Login failed");
@@ -30,7 +43,13 @@ export function useAuth() {
 
   return {
     login,
-    logout,
+    logout: async () => {
+      try {
+        await fetch('/api/session', { method: 'DELETE' });
+      } catch {}
+      try { localStorage.removeItem('lastLogin'); } catch {}
+      logout();
+    },
     loading,
     error,
     clearError: () => setError(null),

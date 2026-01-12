@@ -63,7 +63,7 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-2.5 rounded-md bg-mms-blue text-white disabled:opacity-60 hover:bg-mms-indigo transition-colors"
+        className="w-full py-2.5 hover:cursor-pointer rounded-md bg-mms-blue text-white disabled:opacity-60 hover:bg-mms-indigo transition-colors"
       >
         {loading ? 'Logging in...' : 'Login'}
       </button>
