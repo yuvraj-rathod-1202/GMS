@@ -48,7 +48,7 @@ def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
         os.getenv("JWT_SECRET_KEY") or "default",
     )
     
-    return {token}
+    return {"token": token, "user": {"id": id, "email": email, "last_login": datetime.datetime.now(tz=datetime.timezone.utc)}}
 
 @app.post("/verify-token")
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
