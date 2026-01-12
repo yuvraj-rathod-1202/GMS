@@ -6,7 +6,7 @@ export interface CourseDBObject {
     credits: number;
     status: 'Ongoing' | 'Completed';
     created_at: Date;
-    updated_at: Date;
+    role: 'instructor' | 'ta' | 'student';
 };
 
 export interface AddCourseRequest {
@@ -44,4 +44,9 @@ export interface AllMarksDBObject {
     assessment_type_id: number;
     max_marks: number;
     assessment_date: Date;
+}
+
+export interface CourseState {
+    courses: CourseDBObject[];
+    setCourses: (courses: CourseDBObject[]) => void;
 }

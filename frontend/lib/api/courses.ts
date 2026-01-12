@@ -74,4 +74,10 @@ export const CoursesApi = {
             apiClient.delete(`/courses/${courseId}/instructors`, { data: { "instructor_id": instructorId } })
         )
     },
+
+    FetchMyCourses: async () => {
+        return handleRequest(
+            apiClient.get('/courses/me/courses')
+        )
+    }
 }
