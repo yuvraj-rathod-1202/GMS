@@ -8,5 +8,6 @@ class CourseDBObject(BaseModel):
     semester: str
     credits: int
     status: str
+    total_students: int
     created_at: datetime
     role: str

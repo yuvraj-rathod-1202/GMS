@@ -5,6 +5,7 @@ export interface CourseDBObject {
     semester: string;
     credits: number;
     status: 'ongoing' | 'completed';
+    total_students: number;
     created_at: Date;
     role: 'instructor' | 'ta' | 'student';
 };

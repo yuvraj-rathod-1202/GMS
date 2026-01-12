@@ -13,7 +13,7 @@ def fetch_all_courses_from_db():
     try:
         cursor = db.cursor()
         cursor.execute(
-            "SELECT * FROM courses"
+            "SELECT id, course_code, name, semester, credits, status, total_students, created_at, updated_at FROM courses"
         )
         courses = cursor.fetchall()
         course_list = []
@@ -25,8 +25,9 @@ def fetch_all_courses_from_db():
                 semester=course[3],
                 credits=course[4],
                 status=course[5],
-                created_at=course[6],
-                updated_at=course[7],
+                total_students=course[6],
+                created_at=course[7],
+                updated_at=course[8],
             )
             course_list.append(courseObj)
             
@@ -69,7 +70,7 @@ def fetch_course_by_id_from_db(course_id: int):
     try:
         cursor = db.cursor()
         cursor.execute(
-            "SELECT * FROM courses WHERE id = %s",
+            "SELECT id, course_code, name, semester, credits, status, total_students, created_at, updated_at FROM courses WHERE id = %s",
             (course_id,)
         )
         course = cursor.fetchone()
@@ -83,8 +84,9 @@ def fetch_course_by_id_from_db(course_id: int):
             semester=course[3],
             credits=course[4],
             status=course[5],
-            created_at=course[6],
-            updated_at=course[7],
+            total_students=course[6],
+            created_at=course[7],
+            updated_at=course[8],
         )
         return courseObj
     except Exception as e:

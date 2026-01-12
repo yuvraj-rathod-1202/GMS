@@ -30,6 +30,10 @@ def enroll_student_in_course_in_db(course_id: int, student_id: int, enroll: bool
                     "DELETE FROM courses_role WHERE id = %s",
                     (role_id[0],)
                 )
+                cursor.execute(
+                    "UPDATE courses SET total_students = total_students - 1 WHERE id = %s",
+                    (course_id,)
+                )
                 db.commit()
                 return role_id[0]
             except Exception as e:
@@ -45,6 +49,11 @@ def enroll_student_in_course_in_db(course_id: int, student_id: int, enroll: bool
             "VALUES (%s, %s, %s, NOW())",
             (course_id, student_id, 'instructor' if assign_instructor else ('ta' if assign_ta else 'student'))
         )
+        if not assign_ta and not assign_instructor:
+            cursor.execute(
+                "UPDATE courses SET total_students = total_students + 1 WHERE id = %s",
+                (course_id,)
+            )
         db.commit()
         return cursor.lastrowid
     except Exception as e:

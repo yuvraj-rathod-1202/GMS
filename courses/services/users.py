@@ -42,7 +42,7 @@ def fetch_all_course_from_db(user_id: int, course_status: str | None = None, cou
     
     try:
         query = """
-            SELECT c.id, c.course_code, c.name, c.semester, c.credits, c.status, c.created_at, cr.role
+            SELECT c.id, c.course_code, c.name, c.semester, c.credits, c.status, c.total_students, c.created_at, cr.role
             FROM courses c
             JOIN courses_role cr ON c.id = cr.course_id
             WHERE cr.user_id = %s AND c.status = COALESCE(%s, c.status) AND cr.role = COALESCE(%s, cr.role)
@@ -62,8 +62,9 @@ def fetch_all_course_from_db(user_id: int, course_status: str | None = None, cou
                 semester=row[3],
                 credits=row[4],
                 status=row[5],
-                created_at=row[6],
-                role=row[7]
+                total_students=row[6],
+                created_at=row[7],
+                role=row[8]
             ))
         
         return courses
