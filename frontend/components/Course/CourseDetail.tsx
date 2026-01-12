@@ -1,42 +1,48 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { useCoursesStore } from "@/lib/store/courses";
 import { useEffect, useState } from "react";
+import { useUserRoleInCourse } from "@/hooks/useUserRoleInCourse";
+import { useCourseDetailStore } from "@/lib/store/courseDetail";
+import StudentCourseView from "./StudentCourseView";
+import TACourseView from "./TACourseView";
+import InstructorCourseView from "./InstructorCourseView";
 
 export default function CourseDetail() {
   const params = useParams();
   const router = useRouter();
-  const courses = useCoursesStore((s) => s.courses);
   const courseId = Number(params.id);
   const [isTimeout, setIsTimeout] = useState(false);
 
-  // Find the course
-  const course = courses.find((c) => c.id === courseId);
+  // Get role and course from the hook
+  const { role, course, isLoading } = useUserRoleInCourse(courseId);
+  
+  // Access shared store
+  const currentCourse = useCourseDetailStore((s) => s.currentCourse);
 
   useEffect(() => {
-    // If courses are loaded but course not found -> Redirect
-    if (courses.length > 0 && !course) {
+    // If not loading and course not found -> Redirect
+    if (!isLoading && !course) {
         router.push("/");
         return;
     }
 
-    // Safety timeout for empty courses (e.g. user has no courses or loading failed)
-    if (courses.length === 0) {
+    // Safety timeout for loading state
+    if (isLoading) {
         const timer = setTimeout(() => {
             setIsTimeout(true);
         }, 3000);
         return () => clearTimeout(timer);
     }
-  }, [courses, course, router]);
+  }, [isLoading, course, router]);
 
   // Handle timeout redirect
   useEffect(() => {
-      if (isTimeout && courses.length === 0) {
+      if (isTimeout && !course) {
           router.push("/");
       }
-  }, [isTimeout, courses.length, router]);
+  }, [isTimeout, course, router]);
 
-  if (!course) {
+  if (isLoading || !currentCourse || !role) {
     return (
         <div className="flex justify-center items-center h-full p-10">
             <div className="text-gray-900 text-lg animate-pulse">Loading course...</div>
@@ -44,9 +50,16 @@ export default function CourseDetail() {
     );
   }
 
-  return (
-    <div className="p-6">
-        <p className="text-gray-500 italic">Course content coming soon...</p>
-    </div>
-  );
+  // Render role-specific view
+  switch (role) {
+    case 'student':
+      return <StudentCourseView />;
+    case 'ta':
+      return <TACourseView />;
+    case 'instructor':
+      return <InstructorCourseView />;
+    default:
+      router.push("/");
+      return null;
+  }
 }
