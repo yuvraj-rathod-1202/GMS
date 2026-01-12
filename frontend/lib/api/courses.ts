@@ -1,6 +1,6 @@
 import { apiClient } from "./client";
 import { handleRequest } from "./utils";
-import {AddCourseRequest, UpdateCourseRequest} from "@/lib/types/courses";
+import {AddCourseRequest, UpdateCourseRequest, EnrollInstructorRequest, EnrollStudentRequest, EnrollTaRequest} from "@/lib/types/courses";
 
 export const CoursesApi = {
     CreateCourse: async (CourseData: AddCourseRequest) => {
@@ -39,9 +39,9 @@ export const CoursesApi = {
         )
     },
 
-    EnrollStudent: async (courseId: number, studentId: number) => {
+    EnrollStudent: async (courseId: number, EnrollStudentData: EnrollStudentRequest) => {
         return handleRequest(
-            apiClient.post(`/courses/${courseId}/enroll`, { student_id: studentId })
+            apiClient.post(`/courses/${courseId}/enroll`, EnrollStudentData)
         )
     },
 
@@ -51,9 +51,9 @@ export const CoursesApi = {
         )
     },
 
-    AddTa: async (courseId: number, taId: number) => {
+    AddTa: async (courseId: number, EnrollTaData: EnrollTaRequest) => {
         return handleRequest(
-            apiClient.post(`/courses/${courseId}/tas`, { "ta_id": taId })
+            apiClient.post(`/courses/${courseId}/tas`, EnrollTaData)
         )
     },
 
@@ -63,9 +63,9 @@ export const CoursesApi = {
         )
     },
 
-    AddInstructor: async (courseId: number, instructorId: number) => {
+    AddInstructor: async (courseId: number, EnrollInstructorData: EnrollInstructorRequest) => {
         return handleRequest(
-            apiClient.post(`/courses/${courseId}/instructors`, { "instructor_id": instructorId })
+            apiClient.post(`/courses/${courseId}/instructors`, EnrollInstructorData)
         )
     },
 
