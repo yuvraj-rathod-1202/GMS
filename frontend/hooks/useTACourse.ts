@@ -12,6 +12,7 @@ export function useTACourse() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const TaData = useCourseDetailStore((s) => s.taData);
     const setTaData = useCourseDetailStore((s) => s.setTAData);
     const hasFetchedInSession = useCourseDetailStore((s) => s.hasFetchedTADataInSession);
     const setHasFetchedInSession = useCourseDetailStore((s) => s.setHasFetchedTADataInSession);
@@ -101,10 +102,11 @@ export function useTACourse() {
         try {
             const marksData = await MarksApi.GetAllMarks(courseId, assessment_id);
             const marksList = Array.isArray(marksData) ? marksData : (marksData as any)?.marks || [];
-            console.log("Fetched TA marks data:", marksList);
-            // setTaData({
-            //     marks: marksList,
-            // });
+            setTaData({
+                assessments: TaData?.assessments || [],
+                assesmentMarks: { ...TaData?.assesmentMarks, [assessment_id]: marksList},
+                totalMarks: TaData?.totalMarks || [],
+            });
             setHasFetchedInSession(true);
             return marksData;
         } catch (err: any) {
@@ -203,7 +205,9 @@ export function useTACourse() {
             const assessmentsList = Array.isArray(response) ? response : (response as any)?.assessments || [];
             setTaData({
                 assessments: assessmentsList,
-            })
+                assesmentMarks: TaData?.assesmentMarks ?? {},
+                totalMarks: TaData?.totalMarks ?? [],
+            });
 
             return assessmentsList;
         } catch (err: any) {
@@ -276,6 +280,11 @@ export function useTACourse() {
         try {
             const response = await PolicyApi.GetTotalOfAllStudents(courseId);
             const MarksList = Array.isArray(response) ? response : (response as any)?.marks || [];
+            setTaData({
+                assessments: TaData?.assessments || [],
+                assesmentMarks: TaData?.assesmentMarks || {},
+                totalMarks: MarksList,
+            });
             return MarksList;
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch total scores";
