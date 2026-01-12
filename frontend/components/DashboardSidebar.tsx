@@ -8,14 +8,15 @@ import { useAuthStore } from "@/lib/store/auth";
 import { SectionHeader } from "./ui/SectionHeader";
 import { CourseItem } from "./ui/CourseItem";
 import { AiOutlineHome } from "react-icons/ai";
-import { FaUserCheck, FaUserCircle } from "react-icons/fa";
+import { FaUserCheck } from "react-icons/fa";
 import { MdGroups } from "react-icons/md";
+import { RiLockPasswordLine } from "react-icons/ri";
+import UserMenu from "./UserMenu";
 
 
 export default function DashboardSidebar() {
 	const { fetchCourses, loading, error } = useCourses();
 	const courses = useCoursesStore((s) => s.courses);
-	const user = useAuthStore((s) => s.user);
 	const [teachOpen, setTeachOpen] = useState(true);
 	const [enrolledOpen, setEnrolledOpen] = useState(true);
 	const [hasFetched, setHasFetched] = useState(false);
@@ -41,12 +42,7 @@ export default function DashboardSidebar() {
 	return (
 		<aside className="hidden sm:flex w-1/6 h-screen max-h-screen border-r border-zinc-200 bg-white flex-col justify-between py-4">
 			<div className="space-y-4">
-				<div className="px-4 py-2 flex items-center gap-3">
-					<FaUserCircle className="size-6 text-mms-black" />
-					<span className="truncate font-semibold text-base text-gray-900" title={user?.email || "User"}>
-						{user?.email.split('@')[0] || "User"}
-					</span>
-				</div>
+				<UserMenu />
                 <div className="px-4 space-y-2">
                     <button className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-900 hover:bg-mms-indigoLight rounded-xl text-sm font-medium transition-colors ${
                         pathname === '/' ? 'bg-mms-grayLight' : ''
