@@ -187,7 +187,78 @@ export function useTACourse() {
         } finally {
             setLoading(false);
         }
-    }, [user?.id]);6
+    }, [user?.id]);
+
+    const GetAllAssessments = useCallback(async (courseId: number) => {
+        if (!user?.id) {
+            setError("User not found");
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await MarksApi.GetAllAssessments(courseId);
+            const assessmentsList = Array.isArray(response) ? response : (response as any)?.assessments || [];
+            return assessmentsList;
+        } catch (err: any) {
+            const errorMessage = err?.message || "Failed to fetch assessments";
+            setError(errorMessage);
+            console.error("Error fetching assessments:", err);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [user?.id]);
+
+    const GetAllPolicy = useCallback(async (courseId: number) => {
+        if (!user?.id) {
+            setError("User not found");
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+
+            const response = await PolicyApi.GetAllPolicy(courseId);
+            const policyList = Array.isArray(response) ? response : (response as any)?.policies || [];
+            return policyList;
+        } catch (err: any) {
+            const errorMessage = err?.message || "Failed to fetch policies";
+            setError(errorMessage);
+            console.error("Error fetching policies:", err);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [user?.id]);
+
+    const GetPolicyById = useCallback(async (courseId: number, policy_id: number) => {
+        if (!user?.id) {
+            setError("User not found");
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+
+            const response = await PolicyApi.GetPolicyById(courseId, policy_id);
+            return response;
+        } catch (err: any) {
+            const errorMessage = err?.message || "Failed to fetch policy";
+            setError(errorMessage);
+            console.error("Error fetching policy:", err);
+            throw err;
+        }
+        finally {
+            setLoading(false);
+        }
+    }, [user?.id]);
 
     const GetTotalScores = useCallback(async (courseId: number) => {
         if (!user?.id) {
@@ -220,6 +291,9 @@ export function useTACourse() {
         DeleteStudentMarks,
         PublishMarks,
         UnpublishMarks,
+        GetAllAssessments,
+        GetAllPolicy,
+        GetPolicyById,
         GetTotalScores,
         loading,
         error,
