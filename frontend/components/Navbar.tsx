@@ -6,12 +6,12 @@ export default function Navbar() {
     const pathname = usePathname();
     const courseMatch = useMemo(() => pathname.match(/^\/c\/(\d+)/), [pathname]);
     const courses = useCoursesStore((s) => s.courses);
-    const [couresName, setCourseName] = React.useState<string | null>(null);
+    const [courseCode, setCourseCode] = React.useState<string | null>(null);
     useEffect(() => {
         if (courseMatch) {
             const courseId = parseInt(courseMatch[1], 0);
             const course = courses.find((c) => c.id === courseId);
-            setCourseName(course ? course.name : null);
+            setCourseCode(course ? course.course_code : null);
             if (course) {
                 document.title = `${course.name} - MMS`;
             } else {
@@ -24,7 +24,7 @@ export default function Navbar() {
             <nav className="bg-white opacity-60 h-12 gap-4 border-b-2 border-mms-grayLight flex text-sm items-center px-6">
                 <p>Dashboard</p>
                 <p>/</p>
-                {courseMatch  && <p>{couresName}</p>}
+                {courseMatch  && <p>{courseCode}</p>}
             </nav>
         </div>
     )

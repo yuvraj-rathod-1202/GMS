@@ -1,11 +1,10 @@
 import { create } from "zustand";
 import { CourseDBObject } from "@/lib/types/courses";
+import {AllMarksDBObject} from '@/lib/types/courses';
 
 // Role-specific data types
 export interface StudentCourseData {
-  assignments?: any[];
-  grades?: any[];
-  attendance?: any[];
+  marks: AllMarksDBObject[];
 }
 
 export interface TACourseData {
