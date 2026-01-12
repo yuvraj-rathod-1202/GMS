@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { CourseDBObject } from "@/lib/types/courses";
 import {AllMarksDBObject} from '@/lib/types/courses';
+import {AssessmentDBObject} from '@/lib/types/assessments';
 
 // Role-specific data types
 export interface StudentCourseData {
@@ -8,9 +9,7 @@ export interface StudentCourseData {
 }
 
 export interface TACourseData {
-  studentList?: any[];
-  gradingQueue?: any[];
-  sections?: any[];
+  assessments: AssessmentDBObject[];
 }
 
 export interface InstructorCourseData {

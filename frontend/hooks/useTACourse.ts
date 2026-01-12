@@ -201,6 +201,10 @@ export function useTACourse() {
         try {
             const response = await MarksApi.GetAllAssessments(courseId);
             const assessmentsList = Array.isArray(response) ? response : (response as any)?.assessments || [];
+            setTaData({
+                assessments: assessmentsList,
+            })
+
             return assessmentsList;
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch assessments";
