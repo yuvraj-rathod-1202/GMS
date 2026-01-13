@@ -52,3 +52,9 @@ export interface CourseState {
     setCourses: (courses: CourseDBObject[]) => void;
     clearCourses: () => void;
 }
+
+export interface MarksChanges {
+    student_id: number;
+    old_marks: number;
+    new_marks: number;
+}

@@ -7,6 +7,8 @@ import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useAuthStore } from "@/lib/store/auth";
 import {AddMarksRequest} from "@/lib/types/marks";
 import {EnrollStudentRequest} from "@/lib/types/courses";
+import {SignUpRequest} from "@/lib/types/auth";
+import { Authapi } from "@/lib/api/auth";
 
 export function useTACourse() {
     const [loading, setLoading] = useState(false);
@@ -106,6 +108,7 @@ export function useTACourse() {
                 assessments: TaData?.assessments || [],
                 assesmentMarks: { ...TaData?.assesmentMarks, [assessment_id]: marksList},
                 totalMarks: TaData?.totalMarks || [],
+                marksChanges: TaData?.marksChanges || {},
             });
             setHasFetchedInSession(true);
             return marksData;
@@ -207,6 +210,7 @@ export function useTACourse() {
                 assessments: assessmentsList,
                 assesmentMarks: TaData?.assesmentMarks ?? {},
                 totalMarks: TaData?.totalMarks ?? [],
+                marksChanges: TaData?.marksChanges || {},
             });
 
             return assessmentsList;
@@ -284,6 +288,7 @@ export function useTACourse() {
                 assessments: TaData?.assessments || [],
                 assesmentMarks: TaData?.assesmentMarks || {},
                 totalMarks: MarksList,
+                marksChanges: TaData?.marksChanges || {},
             });
             return MarksList;
         } catch (err: any) {
@@ -294,6 +299,29 @@ export function useTACourse() {
         } finally {
             setLoading(false);
         }
+    }, [user?.id]);
+
+    const SignUpUser = useCallback(async (courseId: number, signUpData: SignUpRequest) => {
+        if (!user?.id) {
+            setError("User not found");
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await Authapi.signup(signUpData);
+            return response;
+        } catch (err: any) {
+            const errorMessage = err?.message || "Failed to sign up user";
+            setError(errorMessage);
+            console.error("Error signing up user:", err);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+
     }, [user?.id]);
 
     return {
@@ -308,6 +336,7 @@ export function useTACourse() {
         GetAllPolicy,
         GetPolicyById,
         GetTotalScores,
+        SignUpUser,
         loading,
         error,
     };
