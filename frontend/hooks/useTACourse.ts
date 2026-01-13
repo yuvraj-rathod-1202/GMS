@@ -36,10 +36,6 @@ export function useTACourse() {
         try {
             const studentresponse = await CoursesApi.GetCourseRoles(courseId, 'student');
             const studentList = Array.isArray(studentresponse) ? studentresponse : (studentresponse as any)?.roles || [];
-            const taresponse = await CoursesApi.GetCourseRoles(courseId, 'ta');
-            const taList = Array.isArray(taresponse) ? taresponse : (taresponse as any)?.roles || [];
-            const instructorresponse = await CoursesApi.GetCourseRoles(courseId, 'instructor');
-            const instructorList = Array.isArray(instructorresponse) ? instructorresponse : (instructorresponse as any)?.roles || [];
             setTaData({
                 assessments: TaData?.assessments || [],
                 assesmentMarks: TaData?.assesmentMarks || {},
@@ -47,15 +43,11 @@ export function useTACourse() {
                 marksChanges: TaData?.marksChanges || {},
                 CourseRoles: {
                     students: studentList,
-                    tas: taList,
-                    instructors: instructorList,
                 }
             });
             setHasFetchedInSession("courseRoles", true);
             return {
                 students: studentList,
-                tas: taList,
-                instructors: instructorList,
             };
         }
         catch (err: any) {
@@ -244,9 +236,9 @@ export function useTACourse() {
         }
     }, [user?.id]);
 
-    const GetAllAssessments = useCallback(async (courseId: number) => {
+    const GetAllAssessments = useCallback(async (courseId: number, forced: boolean = false) => {
         
-        if(hasFetchedInSession["assessments"]) {
+        if(!forced && hasFetchedInSession["assessments"]) {
             return useCourseDetailStore.getState().taData?.assessments;
         }
 

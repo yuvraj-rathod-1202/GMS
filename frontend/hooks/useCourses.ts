@@ -15,7 +15,6 @@ export function useCourses() {
         clearCourses();
         try {
             const data = await CoursesApi.FetchMyCourses();
-            console.log('Fetched courses data:', data);
             const coursesList = Array.isArray(data) ? data : (data as any)?.courses || [];
             setCourses(coursesList);
             return coursesList;

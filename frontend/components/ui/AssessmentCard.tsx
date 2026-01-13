@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { AssessmentDBObject } from "@/lib/types/assessments";
+import Link from "next/link";
+import { useTACourse } from "@/hooks/useTACourse";
 
 interface AssessmentCardProps {
   assessment: AssessmentDBObject;
   onClick?: () => void;
+  onPublishToggle?: () => void;
 }
 
 const getAssessmentTypeLabel = (typeId: number): string => {
@@ -19,82 +22,106 @@ const getAssessmentTypeLabel = (typeId: number): string => {
   return types[typeId] || `Type ${typeId}`;
 };
 
-const getAssessmentTypeColor = (typeId: number): string => {
-  const colors: { [key: number]: string } = {
-    1: "bg-blue-50 text-blue-700 border-blue-200",
-    2: "bg-purple-50 text-purple-700 border-purple-200",
-    3: "bg-orange-50 text-orange-700 border-orange-200",
-    4: "bg-red-50 text-red-700 border-red-200",
-    5: "bg-green-50 text-green-700 border-green-200",
-    6: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  };
-  return colors[typeId] || "bg-gray-50 text-gray-700 border-gray-200";
-};
-
-export default function AssessmentCard({ assessment, onClick }: AssessmentCardProps) {
+export default function AssessmentCard({ assessment, onClick, onPublishToggle }: AssessmentCardProps) {
+  const [isPublishing, setIsPublishing] = useState(false);
+  const { PublishMarks, UnpublishMarks } = useTACourse();
+  
   const formattedDate = new Date(assessment.assessment_date).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 
-  const formattedTime = new Date(assessment.assessment_date).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const handlePublishToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const action = assessment.is_marks_published ? "unpublish" : "publish";
+    const message = assessment.is_marks_published
+      ? `Are you sure you want to unpublish marks for "${assessment.name}"? Students will no longer be able to view their marks.`
+      : `Are you sure you want to publish marks for "${assessment.name}"? Students will be able to view their marks.`;
+    
+    const confirmed = window.confirm(message);
+    
+    if (!confirmed) {
+      return;
+    }
+    
+    setIsPublishing(true);
+    
+    try {
+      if (assessment.is_marks_published) {
+        await UnpublishMarks(assessment.course_id, assessment.id);
+      } else {
+        await PublishMarks(assessment.course_id, assessment.id);
+      }
+      onPublishToggle?.();
+    } catch (error) {
+      console.error("Error toggling publish status:", error);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   return (
     <div
       onClick={onClick}
-      className={`border border-gray-300 rounded-2xl bg-white p-4 sm:p-6 transition-all duration-200 ${
-        onClick ? "hover:shadow-lg hover:border-gray-400 cursor-pointer" : ""
+      className={`border border-gray-300 rounded-2xl bg-white overflow-hidden transition-all duration-200 ${
+        onClick ? "hover:border-gray-400" : ""
       }`}
     >
       {/* Header Section */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-            {assessment.name}
-          </h3>
-          <div className="flex items-center gap-2">
-            <span
-              className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getAssessmentTypeColor(
-                assessment.assessment_type_id
-              )}`}
+      <div className="px-4 sm:px-6 py-3 sm:py-4 flex flex-row justify-between items-center bg-gray-50 border-b border-gray-300">
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
+          {assessment.name}
+        </h3>
+        <div className="flex flex-row gap-2 items-center">
+          <div>
+            <button
+              onClick={handlePublishToggle}
+              disabled={isPublishing}
+              className={`rounded-lg cursor-pointer bg-gray-300 px-3 py-1 text-xs sm:text-sm font-medium text-black hover:bg-mms-blueDark transition-colors ${
+                assessment.is_marks_published
+                  ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  : "bg-gray-900 text-white hover:bg-gray-800"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {getAssessmentTypeLabel(assessment.assessment_type_id)}
-            </span>
-            {assessment.is_marks_published && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Published
-              </span>
-            )}
+              {isPublishing ? "Processing..." : assessment.is_marks_published ? "Unpublish Marks" : "Publish Marks"}
+            </button>
           </div>
+          <Link href={`/c/${assessment.course_id}/g/assessment/${assessment.id}`} passHref>
+            <button className="rounded-lg cursor-pointer bg-gray-300 px-3 py-1 text-xs sm:text-sm font-medium text-black hover:bg-mms-blueDark transition-colors">
+                Open Grade Sheet
+            </button>
+          </Link>
         </div>
       </div>
 
-      {/* Details Grid */}
-      <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
-        <div>
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Date</p>
-          <p className="text-sm font-medium text-gray-900">{formattedDate}</p>
-          <p className="text-xs text-gray-600">{formattedTime}</p>
+      {/* Content Section */}
+      <div className="px-4 sm:px-6 py-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs sm:text-sm text-gray-500">Type</span>
+          <span className="text-xs sm:text-sm font-medium text-gray-900">
+            {getAssessmentTypeLabel(assessment.assessment_type_id)}
+          </span>
         </div>
-        <div>
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Max Marks</p>
-          <p className="text-2xl font-bold text-gray-900">{assessment.max_marks}</p>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-xs sm:text-sm text-gray-500">Date</span>
+          <span className="text-xs sm:text-sm font-medium text-gray-900">{formattedDate}</span>
         </div>
-      </div>
-
-      {/* Footer Section */}
-      <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
-        <div>
-          <span className="font-medium">Created:</span>{" "}
-          {new Date(assessment.created_at).toLocaleDateString()}
+        
+        <div className="flex items-center justify-between">
+          <span className="text-xs sm:text-sm text-gray-500">Max Marks</span>
+          <span className="text-base sm:text-lg font-bold text-gray-900">{assessment.max_marks}</span>
         </div>
-        <div>
-          <span className="font-medium">ID:</span> {assessment.id}
-        </div>
+        
+        {assessment.is_marks_published && (
+          <div className="flex pt-2 border-t border-gray-300">
+            <span className="text-xs text-black flex flex-row gap-1 font-medium">
+              <p className="text-mms-greenLight font-bold">✓</p> Marks Published
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

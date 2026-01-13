@@ -12,6 +12,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const geist = Geist({ 
+  subsets: ["latin"],
+  variable: "--font-geist-sans"
+ });
+
 export const metadata: Metadata = {
   title: "MMS",
   description: "Management System",
@@ -25,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}
+        className={`${geistSans.variable} ${geistMono.variable} ${geist.variable} antialiased bg-white`}
       >
         {children}
       </body>

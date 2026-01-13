@@ -61,6 +61,4 @@ export interface MarksChanges {
 
 export interface CourseRoles {
     students: number[];
-    tas: number[];
-    instructors: number[]; 
 };
