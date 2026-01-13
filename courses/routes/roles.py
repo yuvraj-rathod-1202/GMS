@@ -15,7 +15,7 @@ def enroll_student(course_id: int, data: EnrollStudentRequest):
             detail="Instructor or TA privileges required"
         )
         
-    enrolled_id = enroll_student_in_course_in_db(course_id, data.student_id)
+    enrolled_id = enroll_student_in_course_in_db(course_id, data.student_id, data.email)
     
     if enrolled_id is None:
         raise HTTPException(

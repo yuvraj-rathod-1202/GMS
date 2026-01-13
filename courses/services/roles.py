@@ -1,7 +1,7 @@
 from fastapi import status, HTTPException
 from utils.db import get_db
 
-def enroll_student_in_course_in_db(course_id: int, student_id: int, enroll: bool = True, assign_ta: bool = False, assign_instructor: bool = False) -> int | None:
+def enroll_student_in_course_in_db(course_id: int, student_id: int, email: str | None = None, enroll: bool = True, assign_ta: bool = False, assign_instructor: bool = False) -> int | None:
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -47,11 +47,21 @@ def enroll_student_in_course_in_db(course_id: int, student_id: int, enroll: bool
     if not enroll:
         return None # Student not enrolled, cannot unenroll
     
+    # Store email in id_email_map if provided and not already exists
+    if email:
+        try:
+            cursor.execute(
+                "INSERT IGNORE INTO id_email_map (user_id, email) VALUES (%s, %s)",
+                (student_id, email)
+            )
+        except Exception as e:
+            print(f"Warning: Could not store email mapping: {e}")
+    
     try:
         cursor.execute(
-            "INSERT INTO courses_role (course_id, user_id, role, assigned_at) "
-            "VALUES (%s, %s, %s, NOW())",
-            (course_id, student_id, 'instructor' if assign_instructor else ('ta' if assign_ta else 'student'))
+            "INSERT INTO courses_role (course_id, user_id, email, role, assigned_at) "
+            "VALUES (%s, %s, %s, %s, NOW())",
+            (course_id, student_id, email, 'instructor' if assign_instructor else ('ta' if assign_ta else 'student'))
         )
         id = cursor.lastrowid
         if not assign_ta and not assign_instructor:
