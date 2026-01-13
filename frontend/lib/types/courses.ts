@@ -26,14 +26,17 @@ export interface UpdateCourseRequest {
 
 export interface EnrollStudentRequest {
     student_id: number;
+    email?: string;
 };
 
 export interface EnrollTaRequest {
     ta_id: number;
+    email?: string;
 };
 
 export interface EnrollInstructorRequest {
     instructor_id: number;
+    email?: string;
 }
 
 export interface AllMarksDBObject {
@@ -59,6 +62,11 @@ export interface MarksChanges {
     new_marks: number;
 }
 
+export interface UserRole {
+    user_id: number;
+    email: string | null;
+}
+
 export interface CourseRoles {
-    students: number[];
+    students: UserRole[];
 };
