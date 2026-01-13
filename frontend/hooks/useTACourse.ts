@@ -89,7 +89,7 @@ export function useTACourse() {
 
     const GetMarksOfAssessment = useCallback(async (courseId: number, assessment_id: number) => {
         
-        if (hasFetchedInSession) {
+        if (hasFetchedInSession["marks_"+assessment_id]) {
             return useCourseDetailStore.getState().taData;
         }
 
@@ -110,7 +110,7 @@ export function useTACourse() {
                 totalMarks: TaData?.totalMarks || [],
                 marksChanges: TaData?.marksChanges || {},
             });
-            setHasFetchedInSession(true);
+            setHasFetchedInSession("marks_"+assessment_id, true);
             return marksData;
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch marks for assessment";
@@ -195,6 +195,11 @@ export function useTACourse() {
     }, [user?.id]);
 
     const GetAllAssessments = useCallback(async (courseId: number) => {
+        
+        if(hasFetchedInSession["assessments"]) {
+            return useCourseDetailStore.getState().taData?.assessments;
+        }
+
         if (!user?.id) {
             setError("User not found");
             return;
@@ -213,6 +218,8 @@ export function useTACourse() {
                 marksChanges: TaData?.marksChanges || {},
             });
 
+            setHasFetchedInSession("assessments", true);
+
             return assessmentsList;
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch assessments";
@@ -222,7 +229,7 @@ export function useTACourse() {
         } finally {
             setLoading(false);
         }
-    }, [user?.id]);
+    }, [user?.id, hasFetchedInSession, setHasFetchedInSession]);
 
     const GetAllPolicy = useCallback(async (courseId: number) => {
         if (!user?.id) {
@@ -273,6 +280,11 @@ export function useTACourse() {
     }, [user?.id]);
 
     const GetTotalScores = useCallback(async (courseId: number) => {
+        
+        if(hasFetchedInSession["totalScores"]) {
+            return useCourseDetailStore.getState().taData?.totalMarks;
+        }
+
         if (!user?.id) {
             setError("User not found");
             return;
@@ -290,6 +302,7 @@ export function useTACourse() {
                 totalMarks: MarksList,
                 marksChanges: TaData?.marksChanges || {},
             });
+            setHasFetchedInSession("totalScores", true);
             return MarksList;
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch total scores";
@@ -299,7 +312,7 @@ export function useTACourse() {
         } finally {
             setLoading(false);
         }
-    }, [user?.id]);
+    }, [user?.id, hasFetchedInSession, setHasFetchedInSession]);
 
     const SignUpUser = useCallback(async (courseId: number, signUpData: SignUpRequest) => {
         if (!user?.id) {

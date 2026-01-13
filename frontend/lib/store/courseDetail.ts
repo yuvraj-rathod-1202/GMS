@@ -39,7 +39,7 @@ export interface CourseDetailState {
   
   // Session-based fetch tracking (in-memory only, resets on reload)
   hasFetchedStudentDataInSession: boolean;
-  hasFetchedTADataInSession: boolean;
+  hasFetchedTADataInSession: Record<string, boolean>;
   hasFetchedInstructorDataInSession: boolean;
   
   // Actions
@@ -50,7 +50,7 @@ export interface CourseDetailState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setHasFetchedStudentDataInSession: (value: boolean) => void;
-  setHasFetchedTADataInSession: (value: boolean) => void;
+  setHasFetchedTADataInSession: (key: string, value: boolean) => void;
   setHasFetchedInstructorDataInSession: (value: boolean) => void;
   clearCourseDetail: () => void;
 }
@@ -63,7 +63,7 @@ export const useCourseDetailStore = create<CourseDetailState>((set) => ({
   isLoading: false,
   error: null,
   hasFetchedStudentDataInSession: false,
-  hasFetchedTADataInSession: false,
+  hasFetchedTADataInSession: {},
   hasFetchedInstructorDataInSession: false,
   
   setCurrentCourse: (course) => set({ currentCourse: course }),
@@ -73,7 +73,7 @@ export const useCourseDetailStore = create<CourseDetailState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
   setHasFetchedStudentDataInSession: (value) => set({ hasFetchedStudentDataInSession: value }),
-  setHasFetchedTADataInSession: (value) => set({ hasFetchedTADataInSession: value }),
+  setHasFetchedTADataInSession: (key, value) => set((state) => ({ hasFetchedTADataInSession: { ...state.hasFetchedTADataInSession, [key]: value}})),
   setHasFetchedInstructorDataInSession: (value) => set({ hasFetchedInstructorDataInSession: value }),
   clearCourseDetail: () => set({
     currentCourse: null,
