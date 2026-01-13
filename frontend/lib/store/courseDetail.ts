@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { CourseDBObject } from "@/lib/types/courses";
-import {AllMarksDBObject, MarksChanges} from '@/lib/types/courses';
+import {AllMarksDBObject, MarksChanges, CourseRoles} from '@/lib/types/courses';
 import {AssessmentDBObject} from '@/lib/types/assessments';
 import { TotalScoreDBObject } from "../types/policy";
 
@@ -14,6 +14,7 @@ export interface TACourseData {
   assesmentMarks: Record<number, AllMarksDBObject[]>;
   totalMarks: TotalScoreDBObject[];
   marksChanges: Record<number, MarksChanges[]>;
+  CourseRoles: CourseRoles | null;
 }
 
 export interface InstructorCourseData {

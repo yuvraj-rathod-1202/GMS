@@ -19,6 +19,55 @@ export function useTACourse() {
     const hasFetchedInSession = useCourseDetailStore((s) => s.hasFetchedTADataInSession);
     const setHasFetchedInSession = useCourseDetailStore((s) => s.setHasFetchedTADataInSession);
     const user = useAuthStore((s) => s.user);
+
+    const CourseRoles = useCallback(async (courseId: number) => {
+        
+        if(hasFetchedInSession["courseRoles"]) {
+            return useCourseDetailStore.getState().taData?.CourseRoles;
+        }
+
+        if (!user?.id) {
+            setError("User not found");
+            return;
+        }
+        setLoading(true);
+        setError(null);
+
+        try {
+            const studentresponse = await CoursesApi.GetCourseRoles(courseId, 'student');
+            const studentList = Array.isArray(studentresponse) ? studentresponse : (studentresponse as any)?.roles || [];
+            const taresponse = await CoursesApi.GetCourseRoles(courseId, 'ta');
+            const taList = Array.isArray(taresponse) ? taresponse : (taresponse as any)?.roles || [];
+            const instructorresponse = await CoursesApi.GetCourseRoles(courseId, 'instructor');
+            const instructorList = Array.isArray(instructorresponse) ? instructorresponse : (instructorresponse as any)?.roles || [];
+            setTaData({
+                assessments: TaData?.assessments || [],
+                assesmentMarks: TaData?.assesmentMarks || {},
+                totalMarks: TaData?.totalMarks || [],
+                marksChanges: TaData?.marksChanges || {},
+                CourseRoles: {
+                    students: studentList,
+                    tas: taList,
+                    instructors: instructorList,
+                }
+            });
+            setHasFetchedInSession("courseRoles", true);
+            return {
+                students: studentList,
+                tas: taList,
+                instructors: instructorList,
+            };
+        }
+        catch (err: any) {
+            const errorMessage = err?.message || "Failed to fetch course roles";
+            setError(errorMessage);
+            console.error("Error fetching course roles:", err);
+            throw err;
+        }
+        finally {
+            setLoading(false);
+        }
+    }, [user?.id, hasFetchedInSession, setHasFetchedInSession]);
     
     const AddMarks = useCallback(async (courseId: number, assessment_id: number, marksData: AddMarksRequest) => {
         if (!user?.id) {
@@ -109,6 +158,7 @@ export function useTACourse() {
                 assesmentMarks: { ...TaData?.assesmentMarks, [assessment_id]: marksList},
                 totalMarks: TaData?.totalMarks || [],
                 marksChanges: TaData?.marksChanges || {},
+                CourseRoles: TaData?.CourseRoles || null,
             });
             setHasFetchedInSession("marks_"+assessment_id, true);
             return marksData;
@@ -216,6 +266,7 @@ export function useTACourse() {
                 assesmentMarks: TaData?.assesmentMarks ?? {},
                 totalMarks: TaData?.totalMarks ?? [],
                 marksChanges: TaData?.marksChanges || {},
+                CourseRoles: TaData?.CourseRoles || null,
             });
 
             setHasFetchedInSession("assessments", true);
@@ -301,6 +352,7 @@ export function useTACourse() {
                 assesmentMarks: TaData?.assesmentMarks || {},
                 totalMarks: MarksList,
                 marksChanges: TaData?.marksChanges || {},
+                CourseRoles: TaData?.CourseRoles || null,
             });
             setHasFetchedInSession("totalScores", true);
             return MarksList;
@@ -338,6 +390,7 @@ export function useTACourse() {
     }, [user?.id]);
 
     return {
+        CourseRoles,
         AddMarks,
         EnrollStudent,
         UnEnrollStudent,

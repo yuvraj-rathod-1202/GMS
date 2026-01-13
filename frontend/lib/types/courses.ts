@@ -58,3 +58,9 @@ export interface MarksChanges {
     old_marks: number;
     new_marks: number;
 }
+
+export interface CourseRoles {
+    students: number[];
+    tas: number[];
+    instructors: number[]; 
+};
