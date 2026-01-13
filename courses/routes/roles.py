@@ -17,13 +17,13 @@ def enroll_student(course_id: int, data: EnrollStudentRequest):
         
     enrolled_id = enroll_student_in_course_in_db(course_id, data.student_id)
     
-    if not enrolled_id:
+    if enrolled_id is None:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to enroll student"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Student already enrolled in this course"
         )
         
-    return {"enrolled_id": enrolled_id}
+    return {"id": enrolled_id, "message": "Student enrolled successfully"}
 
 @router.delete("/{course_id}/enroll")
 def unenroll_student(course_id: int, user_id: int = Query(...), student_id: int = Query(...)):
