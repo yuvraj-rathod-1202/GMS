@@ -1,13 +1,11 @@
 "use client";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { useCourseDetailStore } from "@/lib/store/courseDetail";
 
 export default function TANavbar() {
   const params = useParams();
   const pathname = usePathname();
   const courseId = params.id;
-  const currentCourse = useCourseDetailStore((s) => s.currentCourse);
 
   const navItems = [
     { label: "Overview", href: `/c/${courseId}` },

@@ -61,7 +61,7 @@ export default function DashboardSidebar() {
                                     <div className="px-4 text-sm text-gray-500">No teaching courses</div>
                                 )}
                                 {teaching.map((course) => (
-                                    <CourseItem key={course.id} name={course.name} id={course.id} Highlight={pathname === `/c/${course.id}`} />
+                                    <CourseItem key={course.id} name={course.name} id={course.id} Highlight={pathname.split("/")[1] === `c` && pathname.split("/")[2] === `${course.id}`} />
                                 ))}
                             </div>
                         )}
