@@ -4,6 +4,8 @@ import { CoursesApi } from "@/lib/api/courses";
 import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useAuthStore } from "@/lib/store/auth";
 import { EnrollStudentRequest } from "@/lib/types/courses";
+import { MarksApi } from "@/lib/api/marks";
+import { get } from "http";
 
 type UserRole = 'instructor' | 'ta' | 'student';
 
@@ -65,6 +67,86 @@ export function useCourseManagement(role: UserRole) {
     }
   }, [user?.id, hasFetchedInSession, setHasFetchedInSession, taData, setTaData]);
 
+  const fetchAllAssessments = useCallback(async (courseId: number, forceRefresh = false) => {
+    
+    if(!forceRefresh && hasFetchedInSession["assessments"]){
+      return;
+    }
+
+    if (!user?.id) {
+      setError("User not found");
+      return taData?.assessments || [];
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+
+      const assessments = await MarksApi.GetAllAssessments(courseId);
+      const assessmentList = Array.isArray(assessments) ? assessments : (assessments as any)?.assessments || [];
+      setTaData({
+        assessments: assessmentList,
+        assesmentMarks: taData?.assesmentMarks || {},
+        totalMarks: taData?.totalMarks || [],
+        marksChanges: taData?.marksChanges || {},
+        CourseRoles: taData?.CourseRoles || null,
+      });
+
+      setHasFetchedInSession("assessments", true);
+      return assessmentList;
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to fetch assessments";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error fetching assessments:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+
+  }, [user?.id, hasFetchedInSession, setHasFetchedInSession, taData, setTaData]);
+
+  const getmarksofassessment = useCallback(async (courseId: number, assessmentId: number) => {
+    
+    if (hasFetchedInSession["marks_" + assessmentId]) {
+      return taData?.assesmentMarks[assessmentId] || [];
+    }
+
+    if (!user?.id) {
+      setError("User not found");
+      return taData?.assesmentMarks[assessmentId] || [];
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+
+      const marks = await MarksApi.GetAllMarks(courseId, assessmentId);
+      const marksList = Array.isArray(marks) ? marks : (marks as any)?.marks || [];
+      setTaData({
+        assessments: taData?.assessments || [],
+        assesmentMarks: { ...taData?.assesmentMarks, [assessmentId]: marksList } ,
+        totalMarks: taData?.totalMarks || [],
+        marksChanges: taData?.marksChanges || {},
+        CourseRoles: taData?.CourseRoles || null,
+      });
+      setHasFetchedInSession("marks_" + assessmentId, true);
+      return marksList;
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to fetch marks";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error fetching marks:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, hasFetchedInSession, setHasFetchedInSession, taData, setTaData]);
+
   const enrollStudent = useCallback(async (courseId: number, enrollData: EnrollStudentRequest) => {
     if (!user?.id) {
       setError("User not found");
@@ -117,6 +199,8 @@ export function useCourseManagement(role: UserRole) {
     loading,
     error,
     fetchCourseRoles,
+    fetchAllAssessments,
+    getmarksofassessment,
     enrollStudent,
     unenrollStudent,
     courseRoles: taData?.CourseRoles,

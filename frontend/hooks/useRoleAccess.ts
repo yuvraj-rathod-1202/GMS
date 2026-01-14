@@ -9,11 +9,12 @@ interface UseRoleAccessOptions {
   allowedRoles: UserRole[];
   redirectTo?: string;
   courseId: number;
+  assessmentId?: number;
 }
 
-export function useRoleAccess({ allowedRoles, redirectTo, courseId }: UseRoleAccessOptions) {
+export function useRoleAccess({ allowedRoles, redirectTo, courseId, assessmentId }: UseRoleAccessOptions) {
   const router = useRouter();
-  const { role, course, isLoading } = useUserRoleInCourse(courseId);
+  const { role, course, assessment, isLoading } = useUserRoleInCourse(courseId);
   const [isTimeout, setIsTimeout] = useState(false);
 
   useEffect(() => {
@@ -21,6 +22,11 @@ export function useRoleAccess({ allowedRoles, redirectTo, courseId }: UseRoleAcc
       router.push("/");
       return;
     }
+
+    // if (!isLoading && assessmentId && !assessment) {
+    //   router.push(`/c/${courseId}`);
+    //   return;
+    // }
 
     if (isLoading) {
       const timer = setTimeout(() => {
@@ -45,6 +51,7 @@ export function useRoleAccess({ allowedRoles, redirectTo, courseId }: UseRoleAcc
   return {
     role,
     course,
+    assessment,
     isLoading,
     hasAccess: role ? allowedRoles.includes(role) : false,
   };

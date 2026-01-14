@@ -28,6 +28,7 @@ export interface InstructorCourseData {
 export interface CourseDetailState {
   // Current course metadata
   currentCourse: CourseDBObject | null;
+  currentAssessment: AssessmentDBObject | null;
   
   // Role-specific data
   studentData: StudentCourseData | null;
@@ -45,6 +46,7 @@ export interface CourseDetailState {
   
   // Actions
   setCurrentCourse: (course: CourseDBObject | null) => void;
+  setCurrentAssessment: (assessment: AssessmentDBObject | null) => void;
   setStudentData: (data: StudentCourseData) => void;
   setTAData: (data: TACourseData) => void;
   setInstructorData: (data: InstructorCourseData) => void;
@@ -58,6 +60,7 @@ export interface CourseDetailState {
 
 export const useCourseDetailStore = create<CourseDetailState>((set) => ({
   currentCourse: null,
+  currentAssessment: null,
   studentData: null,
   taData: null,
   instructorData: null,
@@ -68,6 +71,7 @@ export const useCourseDetailStore = create<CourseDetailState>((set) => ({
   hasFetchedInstructorDataInSession: false,
   
   setCurrentCourse: (course) => set({ currentCourse: course }),
+  setCurrentAssessment: (assessment) => set({ currentAssessment: assessment }),
   setStudentData: (data) => set({ studentData: data }),
   setTAData: (data) => set({ taData: data }),
   setInstructorData: (data) => set({ instructorData: data }),
@@ -78,6 +82,7 @@ export const useCourseDetailStore = create<CourseDetailState>((set) => ({
   setHasFetchedInstructorDataInSession: (value) => set({ hasFetchedInstructorDataInSession: value }),
   clearCourseDetail: () => set({
     currentCourse: null,
+    currentAssessment: null,
     studentData: null,
     taData: null,
     instructorData: null,

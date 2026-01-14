@@ -1,58 +1,33 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useUserRoleInCourse } from "@/hooks/useUserRoleInCourse";
 import { useCourseDetailStore } from "@/lib/store/courseDetail";
-import { useTACourse } from "@/hooks/useTACourse";
 import TANavbar from "@/components/Course/TANavbar";
 import AssessmentCard from "@/components/ui/AssessmentCard";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { useCourseManagement } from "@/hooks/useCourseManagement";
 
 export default function GradesPage() {
   const params = useParams();
-  const router = useRouter();
   const courseId = Number(params.id);
-  const [isTimeout, setIsTimeout] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
 
-  const { role, course, isLoading } = useUserRoleInCourse(courseId);
+  const { role, course, isLoading, hasAccess } = useRoleAccess({
+    allowedRoles: ['ta'],
+    courseId,
+  });
+
   const currentCourse = useCourseDetailStore((s) => s.currentCourse);
   const taData = useCourseDetailStore((s) => s.taData);
-  const { GetAllAssessments, loading: taLoading } = useTACourse();
-
-  useEffect(() => {
-    if (!isLoading && !course) {
-      router.push("/");
-      return;
-    }
-
-    if (isLoading) {
-      const timer = setTimeout(() => {
-        setIsTimeout(true);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, course, router]);
-
-  useEffect(() => {
-    if (isTimeout && !course) {
-      router.push("/");
-    }
-  }, [isTimeout, course, router]);
-
-  // Redirect if not TA
-  useEffect(() => {
-    if (!isLoading && role && role !== 'ta') {
-      router.push(`/c/${courseId}`);
-    }
-  }, [role, isLoading, router, courseId]);
+  const {loading: managementLoading, fetchAllAssessments} = useCourseManagement(role || 'ta');
 
   // Fetch assessments and course roles when TA role is confirmed
   useEffect(() => {
-    const fetchData = async () => {
-      if (!isLoading && role === 'ta' && !isFetchingData) {
+    if (!isLoading && hasAccess && !isFetchingData) {
+      const fetchData = async () => {
         setIsFetchingData(true);
         try {
-          await GetAllAssessments(courseId);
+          await fetchAllAssessments(courseId);
         } catch (error) {
           if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
             console.error("Error fetching TA data:", error);
@@ -61,9 +36,8 @@ export default function GradesPage() {
           setIsFetchingData(false);
         }
       }
+      fetchData();
     };
-
-    fetchData();
   }, [role, isLoading, courseId]);
 
   if (isLoading || !currentCourse || !role) {
@@ -78,12 +52,12 @@ export default function GradesPage() {
     return null;
   }
 
-  const isLoadingData = taLoading || isFetchingData;
+  const isLoadingData = managementLoading || isFetchingData;
 
   const handlePublishToggle = async () => {
     // Refresh assessments after publish/unpublish
     try {
-      await GetAllAssessments(courseId, true);
+      await fetchAllAssessments(courseId, true);
     } catch (error) {
       if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
         console.error("Error refreshing assessments:", error);
