@@ -203,26 +203,6 @@ export default function GradeSheet<T extends Record<string, any>>({
                           disabled={isProcessing}
                           className="flex-1 px-2 py-1 rounded outline-none"
                         />
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditSave(rowIndex, column);
-                          }}
-                          disabled={isProcessing}
-                          className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 text-xs"
-                        >
-                          ✓
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditCancel();
-                          }}
-                          disabled={isProcessing}
-                          className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 text-xs"
-                        >
-                          ✕
-                        </button>
                       </div>
                     ) : (
                       // View Mode

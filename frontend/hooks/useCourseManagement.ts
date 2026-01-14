@@ -5,6 +5,7 @@ import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useAuthStore } from "@/lib/store/auth";
 import { EnrollStudentRequest } from "@/lib/types/courses";
 import { MarksApi } from "@/lib/api/marks";
+import { AddMarksRequest } from "@/lib/types/marks";
 
 type UserRole = 'instructor' | 'ta' | 'student';
 
@@ -73,7 +74,7 @@ export function useCourseManagement(role: UserRole) {
 
     if (!user?.id) {
       setError("User not found");
-      return taData?.assessments || [];
+      return;
     }
 
     setLoading(true);
@@ -106,9 +107,9 @@ export function useCourseManagement(role: UserRole) {
 
   }, [user?.id, hasFetchedInSession, setHasFetchedInSession, taData, setTaData]);
 
-  const getmarksofassessment = useCallback(async (courseId: number, assessmentId: number) => {
+  const getmarksofassessment = useCallback(async (courseId: number, assessmentId: number, forceRefresh = false) => {
     
-    if (hasFetchedInSession["marks_" + assessmentId]) {
+    if (!forceRefresh && hasFetchedInSession["marks_" + assessmentId]) {
       return useCourseDetailStore.getState().taData?.assessmentMarks[assessmentId] || [];
     }
 
@@ -193,6 +194,32 @@ export function useCourseManagement(role: UserRole) {
     }
   }, [user?.id]);
 
+  const saveMarks = useCallback(async (courseId: number, assessmentId: number, marksData: AddMarksRequest) => {
+    if (!user?.id) {
+      setError("User not found");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await MarksApi.AddMarks(courseId, assessmentId, marksData);
+      // Invalidate the cache for this assessment's marks so they are fetched again perfectly
+      setHasFetchedInSession("marks_" + assessmentId, false);
+      return response;
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to save marks";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error saving marks:", err);
+      }
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, setHasFetchedInSession]);
+
   return {
     loading,
     error,
@@ -201,6 +228,7 @@ export function useCourseManagement(role: UserRole) {
     getmarksofassessment,
     enrollStudent,
     unenrollStudent,
+    saveMarks,
     courseRoles: taData?.CourseRoles,
   };
 }
