@@ -54,7 +54,9 @@ export default function GradesPage() {
         try {
           await GetAllAssessments(courseId);
         } catch (error) {
-          console.error("Error fetching TA data:", error);
+          if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+            console.error("Error fetching TA data:", error);
+          }
         } finally {
           setIsFetchingData(false);
         }
@@ -83,7 +85,9 @@ export default function GradesPage() {
     try {
       await GetAllAssessments(courseId, true);
     } catch (error) {
-      console.error("Error refreshing assessments:", error);
+      if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+        console.error("Error refreshing assessments:", error);
+      }
     }
   };
 
@@ -157,7 +161,6 @@ export default function GradesPage() {
                     assessment={assessment}
                     onClick={() => {
                       // Handle assessment click - navigate to assessment details or marks entry
-                      console.log("Assessment clicked:", assessment.id);
                     }}
                     onPublishToggle={handlePublishToggle}
                   />

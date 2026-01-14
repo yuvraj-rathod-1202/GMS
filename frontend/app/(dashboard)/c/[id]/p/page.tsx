@@ -1,11 +1,16 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUserRoleInCourse } from "@/hooks/useUserRoleInCourse";
 import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useTACourse } from "@/hooks/useTACourse";
 import TANavbar from "@/components/Course/TANavbar";
 import { BiPencil, BiUserPlus, BiX } from "react-icons/bi";
+
+interface Student {
+  user_id: number;
+  email: string | null;
+}
 
 export default function PeoplePage() {
   const params = useParams();
@@ -15,11 +20,14 @@ export default function PeoplePage() {
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
   const [studentId, setStudentId] = useState("");
+  const [email, setEmail] = useState("");
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [isFetchingData, setIsFetchingData] = useState(false);
+  const taData = useCourseDetailStore((s) => s.taData);
 
   const { role, course, isLoading } = useUserRoleInCourse(courseId);
   const currentCourse = useCourseDetailStore((s) => s.currentCourse);
-  const { EnrollStudent, loading: taLoading } = useTACourse();
+  const { EnrollStudent, UnEnrollStudent, loading: taLoading, CourseRoles } = useTACourse();
 
   useEffect(() => {
     if (!isLoading && !course) {
@@ -48,7 +56,35 @@ export default function PeoplePage() {
     }
   }, [role, isLoading, router, courseId]);
 
-  if (isLoading || !currentCourse || !role) {
+  useEffect(() => {
+    if (!isLoading && role === 'ta' && !isFetchingData) {
+      const fetchStudents = async () => {
+        setIsFetchingData(true);
+        try {
+          await CourseRoles(courseId);
+        } catch (error) {
+          if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+            console.error("Error fetching students:", error);
+          }
+        } finally {
+          setIsFetchingData(false);
+        }
+      };
+      fetchStudents();
+    }
+  }, [courseId, role, isLoading]);
+
+  const students = useMemo(() => {
+    return (taData?.CourseRoles?.students || [])
+      .filter((student: Student) => student?.user_id !== undefined)
+      .map((student: Student, index: number) => ({
+        index,
+        id: student.user_id.toString(),
+        email: student.email || "N/A",
+      }));
+  }, [taData]);
+
+  if (isLoading || !currentCourse || !role || isFetchingData) {
     return (
       <div className="flex justify-center items-center h-full p-10">
         <div className="text-gray-900 text-lg animate-pulse">Loading...</div>
@@ -73,29 +109,34 @@ export default function PeoplePage() {
 
     setIsEnrolling(true);
     try {
-      await EnrollStudent(courseId, { student_id: Number(studentId) });
+      await EnrollStudent(courseId, { student_id: Number(studentId), email: email.trim() });
+      await CourseRoles(courseId, true);
       alert("Student enrolled successfully!");
       setShowEnrollDialog(false);
       setStudentId("");
-      // TODO: Refresh student list
+      setEmail("");
     } catch (error: any) {
-      console.error("Error enrolling student:", error);
+      if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+        console.error("Error enrolling student:", error);
+      }
       alert(error?.message || "Failed to enroll student");
     } finally {
       setIsEnrolling(false);
     }
   };
 
-  const students = [
-    {index: 0, id: "2411004", email: "studnet@example.com"},
-    {index: 1, id: "2411005", email: "studnet@example.com"},
-    {index: 2, id: "2411005", email: "studnet@example.com"},
-    {index: 3, id: "2411005", email: "studnet@example.com"},
-    {index: 4, id: "2411005", email: "studnet@example.com"},
-    {index: 5, id: "2411005", email: "studnet@example.com"},
-    {index: 6, id: "2411005", email: "studnet@example.com"},
-    {index: 7, id: "2411005", email: "studnet@example.com"},
-  ];
+  const handleRemoveStudent = async (studentIdToRemove: number) => {
+    const confirmed = window.confirm(`Are you sure you want to remove student with ID: ${studentIdToRemove} from the course?`);
+    if (!confirmed) return;
+    try {
+      await UnEnrollStudent(courseId, studentIdToRemove);
+      await CourseRoles(courseId, true);
+      alert("Student removed successfully!");
+      setSelectedStudent(null);
+    } catch (error: any) {
+      alert(error?.message || "Failed to remove student");
+    }
+  };
 
   return (
     <div>
@@ -150,6 +191,19 @@ export default function PeoplePage() {
                       disabled={isEnrolling}
                       required
                     />
+                    <label htmlFor="emaik" className="block text-sm font-medium text-gray-700 mt-2">
+                        Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter email"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      disabled={isEnrolling}
+                      required
+                    />
                   </div>
                   
                   <div className="flex gap-3 justify-end">
@@ -192,7 +246,7 @@ export default function PeoplePage() {
                   No students enrolled yet
                 </div>
               ) : (
-                students.map((student, index) => (
+                students.map((student: any, index: number) => (
                   <div
                     key={student.index}
                     className={`grid gap-4 px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm md:text-base items-center ${
@@ -213,11 +267,7 @@ export default function PeoplePage() {
                       {selectedStudent === student.index && (
                         <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-300 rounded-lg shadow-lg z-30">
                           <button
-                            onClick={() => {
-                              // TODO: Implement remove student logic
-                              console.log('Remove student:', student.index);
-                              setSelectedStudent(null);
-                            }}
+                            onClick={() => handleRemoveStudent(Number(student.id))}
                             className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           >
                             Remove from course

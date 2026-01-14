@@ -180,12 +180,6 @@ def fetch_course_roles_from_db(course_id: int, role: str):
             (course_id, role)
         )
         roles = cursor.fetchall()
-        
-        if not roles:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No roles found for the specified course"
-            )
             
         role_data = [{"user_id": r[0], "email": r[1]} for r in roles]
         

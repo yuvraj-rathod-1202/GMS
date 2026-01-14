@@ -7,12 +7,6 @@ router = APIRouter()
 def get_course_roles(course_id: int, user_id: int = Query(...)):
     
     role = fetch_course_roles_from_db(course_id, user_id)
-    
-    if not role:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No roles found for the user in this course"
-        )
         
     return {"role": role}
 

@@ -31,7 +31,6 @@ export function useStudentCourse() {
       // Fetch student's marks for this course
       const marksData = await MarksApi.GetStudentMarks(courseId, user.id);
       const marksList = Array.isArray(marksData) ? marksData : (marksData as any)?.marks || [];
-      console.log("Fetched student marks data:", marksList);
       
       // Store in the shared store
       setStudentData({
@@ -45,8 +44,10 @@ export function useStudentCourse() {
     } catch (err: any) {
       const errorMessage = err?.message || "Failed to fetch student course data";
       setError(errorMessage);
-      console.error("Error fetching student course data:", err);
-      throw err;
+      if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+        console.error("Error fetching student course data:", err);
+        throw err;
+      }
     } finally {
       setLoading(false);
     }

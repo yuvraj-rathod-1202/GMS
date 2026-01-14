@@ -32,12 +32,15 @@ class UpdateCourseStatusRequest(BaseModel):
     
 class EnrollStudentRequest(BaseModel):
     student_id: int
+    email: Optional[EmailStr] = None
     
 class EnrollTaRequest(BaseModel):
     ta_id: int
+    email: Optional[EmailStr] = None
     
 class EnrollInstructorRequest(BaseModel):
     instructor_id: int
+    email: Optional[EmailStr] = None
     
 class GetAllCourseRoleRequest(BaseModel):
     course_status: Optional[str] = None

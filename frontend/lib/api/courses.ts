@@ -47,7 +47,7 @@ export const CoursesApi = {
 
     UnEnrollStudent: async (courseId: number, studentId: number) => {
         return handleRequest(
-            apiClient.delete(`/courses/${courseId}/enroll`, { data: { student_id: studentId } })
+            apiClient.delete(`/courses/${courseId}/enroll?student_id=${studentId}`)
         )
     },
 

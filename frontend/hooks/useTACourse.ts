@@ -20,9 +20,9 @@ export function useTACourse() {
     const setHasFetchedInSession = useCourseDetailStore((s) => s.setHasFetchedTADataInSession);
     const user = useAuthStore((s) => s.user);
 
-    const CourseRoles = useCallback(async (courseId: number) => {
+    const CourseRoles = useCallback(async (courseId: number, forced: boolean = false) => {
         
-        if(hasFetchedInSession["courseRoles"]) {
+        if(!forced && hasFetchedInSession["courseRoles"]) {
             return useCourseDetailStore.getState().taData?.CourseRoles;
         }
 
@@ -53,8 +53,11 @@ export function useTACourse() {
         catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch course roles";
             setError(errorMessage);
-            console.error("Error fetching course roles:", err);
-            throw err;
+            
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error fetching course roles:", err);
+                throw err;
+            }
         }
         finally {
             setLoading(false);
@@ -76,8 +79,10 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to add marks";
             setError(errorMessage);
-            console.error("Error adding marks:", err);
-            throw err;
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error adding marks:", err);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }
@@ -95,9 +100,11 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to enroll student";
             setError(errorMessage);
-            console.error("Error enrolling student:", err);
-            throw err;
-        } finally {
+                if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                    console.error("Error enrolling student:", err);
+                    throw err;
+                }
+            } finally {
             setLoading(false);
         }
     }, [user?.id]);
@@ -120,9 +127,10 @@ export function useTACourse() {
 
             const errorMessage = err?.message || "Failed to unenroll student";
             setError(errorMessage);
-            console.error("Error unenrolling student:", err);
-            throw err;
-
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error unenrolling student:", err);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }
@@ -157,8 +165,10 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch marks for assessment";
             setError(errorMessage);
-            console.error("Error fetching marks for assessment:", err);
-            throw err;
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error fetching marks for assessment:", err);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }
@@ -181,8 +191,10 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to delete student marks";
             setError(errorMessage);
-            console.error("Error deleting student marks:", err);
-            throw err;
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error deleting student marks:", err);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }
@@ -205,8 +217,10 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to publish marks";
             setError(errorMessage);
-            console.error("Error publishing marks:", err);
-            throw err;
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error publishing marks:", err);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }
@@ -229,8 +243,10 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to unpublish marks";
             setError(errorMessage);
-            console.error("Error unpublishing marks:", err);
-            throw err;
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error unpublishing marks:", err);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }
@@ -267,8 +283,10 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch assessments";
             setError(errorMessage);
-            console.error("Error fetching assessments:", err);
-            throw err;
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error fetching assessments:", err);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }
@@ -291,8 +309,10 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch policies";
             setError(errorMessage);
-            console.error("Error fetching policies:", err);
-            throw err;
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error fetching policies:", err);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }
@@ -314,8 +334,10 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch policy";
             setError(errorMessage);
-            console.error("Error fetching policy:", err);
-            throw err;
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error fetching policy:", err);
+                throw err;
+            }
         }
         finally {
             setLoading(false);
@@ -351,8 +373,10 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to fetch total scores";
             setError(errorMessage);
-            console.error("Error fetching total scores:", err);
-            throw err;
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error fetching total scores:", err);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }
@@ -373,8 +397,10 @@ export function useTACourse() {
         } catch (err: any) {
             const errorMessage = err?.message || "Failed to sign up user";
             setError(errorMessage);
-            console.error("Error signing up user:", err);
-            throw err;
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error signing up user:", err);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }

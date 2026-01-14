@@ -56,7 +56,9 @@ export default function AssessmentCard({ assessment, onClick, onPublishToggle }:
       }
       onPublishToggle?.();
     } catch (error) {
-      console.error("Error toggling publish status:", error);
+      if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+        console.error("Error toggling publish status:", error);
+      }
     } finally {
       setIsPublishing(false);
     }

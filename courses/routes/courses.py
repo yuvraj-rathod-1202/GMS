@@ -112,10 +112,4 @@ def get_course_roles(course_id: int, role: str, user_id: int = Query(...)):
         
     role_user_ids = fetch_course_roles_from_db(course_id=course_id, role=role)
     
-    if not role_user_ids:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No roles found for the specified course"
-        )
-    
     return {"roles": role_user_ids}
