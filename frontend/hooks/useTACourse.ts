@@ -38,12 +38,10 @@ export function useTACourse() {
             const studentList = Array.isArray(studentresponse) ? studentresponse : (studentresponse as any)?.roles || [];
             setTaData({
                 assessments: TaData?.assessments || [],
-                assesmentMarks: TaData?.assesmentMarks || {},
+                assessmentMarks: TaData?.assessmentMarks || {},
                 totalMarks: TaData?.totalMarks || [],
                 marksChanges: TaData?.marksChanges || {},
-                CourseRoles: {
-                    students: studentList,
-                }
+                CourseRoles: {students: studentList},
             });
             setHasFetchedInSession("courseRoles", true);
             return {
@@ -155,7 +153,7 @@ export function useTACourse() {
             const marksList = Array.isArray(marksData) ? marksData : (marksData as any)?.marks || [];
             setTaData({
                 assessments: TaData?.assessments || [],
-                assesmentMarks: { ...TaData?.assesmentMarks, [assessment_id]: marksList},
+                assessmentMarks: { ...TaData?.assessmentMarks, [assessment_id]: marksList},
                 totalMarks: TaData?.totalMarks || [],
                 marksChanges: TaData?.marksChanges || {},
                 CourseRoles: TaData?.CourseRoles || null,
@@ -271,7 +269,7 @@ export function useTACourse() {
             const assessmentsList = Array.isArray(response) ? response : (response as any)?.assessments || [];
             setTaData({
                 assessments: assessmentsList,
-                assesmentMarks: TaData?.assesmentMarks ?? {},
+                assessmentMarks: TaData?.assessmentMarks ?? {},
                 totalMarks: TaData?.totalMarks ?? [],
                 marksChanges: TaData?.marksChanges || {},
                 CourseRoles: TaData?.CourseRoles || null,
@@ -363,7 +361,7 @@ export function useTACourse() {
             const MarksList = Array.isArray(response) ? response : (response as any)?.marks || [];
             setTaData({
                 assessments: TaData?.assessments || [],
-                assesmentMarks: TaData?.assesmentMarks || {},
+                assessmentMarks: TaData?.assessmentMarks || {},
                 totalMarks: MarksList,
                 marksChanges: TaData?.marksChanges || {},
                 CourseRoles: TaData?.CourseRoles || null,

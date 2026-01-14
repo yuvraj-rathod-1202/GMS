@@ -5,7 +5,6 @@ import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useAuthStore } from "@/lib/store/auth";
 import { EnrollStudentRequest } from "@/lib/types/courses";
 import { MarksApi } from "@/lib/api/marks";
-import { get } from "http";
 
 type UserRole = 'instructor' | 'ta' | 'student';
 
@@ -39,15 +38,14 @@ export function useCourseManagement(role: UserRole) {
     try {
       const studentResponse = await CoursesApi.GetCourseRoles(courseId, 'student');
       const studentList = Array.isArray(studentResponse) ? studentResponse : (studentResponse as any)?.roles || [];
-      
       setTaData({
         assessments: taData?.assessments || [],
-        assesmentMarks: taData?.assesmentMarks || {},
+        assessmentMarks: taData?.assessmentMarks || {},
         totalMarks: taData?.totalMarks || [],
         marksChanges: taData?.marksChanges || {},
         CourseRoles: {
           students: studentList,
-        }
+        },
       });
       
       setHasFetchedInSession("courseRoles", true);
@@ -70,7 +68,7 @@ export function useCourseManagement(role: UserRole) {
   const fetchAllAssessments = useCallback(async (courseId: number, forceRefresh = false) => {
     
     if(!forceRefresh && hasFetchedInSession["assessments"]){
-      return;
+      return useCourseDetailStore.getState().taData?.assessments || [];
     }
 
     if (!user?.id) {
@@ -87,7 +85,7 @@ export function useCourseManagement(role: UserRole) {
       const assessmentList = Array.isArray(assessments) ? assessments : (assessments as any)?.assessments || [];
       setTaData({
         assessments: assessmentList,
-        assesmentMarks: taData?.assesmentMarks || {},
+        assessmentMarks: taData?.assessmentMarks || {},
         totalMarks: taData?.totalMarks || [],
         marksChanges: taData?.marksChanges || {},
         CourseRoles: taData?.CourseRoles || null,
@@ -111,12 +109,12 @@ export function useCourseManagement(role: UserRole) {
   const getmarksofassessment = useCallback(async (courseId: number, assessmentId: number) => {
     
     if (hasFetchedInSession["marks_" + assessmentId]) {
-      return taData?.assesmentMarks[assessmentId] || [];
+      return useCourseDetailStore.getState().taData?.assessmentMarks[assessmentId] || [];
     }
 
     if (!user?.id) {
       setError("User not found");
-      return taData?.assesmentMarks[assessmentId] || [];
+      return useCourseDetailStore.getState().taData?.assessmentMarks[assessmentId] || [];
     }
 
     setLoading(true);
@@ -128,7 +126,7 @@ export function useCourseManagement(role: UserRole) {
       const marksList = Array.isArray(marks) ? marks : (marks as any)?.marks || [];
       setTaData({
         assessments: taData?.assessments || [],
-        assesmentMarks: { ...taData?.assesmentMarks, [assessmentId]: marksList } ,
+        assessmentMarks: { ...(taData?.assessmentMarks || {}), [assessmentId]: marksList },
         totalMarks: taData?.totalMarks || [],
         marksChanges: taData?.marksChanges || {},
         CourseRoles: taData?.CourseRoles || null,

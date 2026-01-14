@@ -24,7 +24,7 @@ export interface GradeSheetProps<T = any> {
 
 export default function GradeSheet<T extends Record<string, any>>({
   columns,
-  data,
+  data = [],
   searchable = true,
   searchKeys,
   emptyMessage = "No data available",
@@ -38,6 +38,10 @@ export default function GradeSheet<T extends Record<string, any>>({
 
   // Filter data based on search term
   const filteredData = useMemo(() => {
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
     if (!searchable || !searchTerm.trim()) {
       return data;
     }
@@ -114,6 +118,12 @@ export default function GradeSheet<T extends Record<string, any>>({
   const gridTemplateColumns = columns
     .map((col) => col.width || "1fr")
     .join(" ");
+
+    {filteredData === undefined && (
+        <div className="px-6 py-8 text-xs sm:text-sm md:text-base text-center text-gray-500">
+        Loading...
+        </div>
+    )}
 
   return (
     <div className={`flex flex-col overflow-x-auto w-full gap-4 ${className}`}>

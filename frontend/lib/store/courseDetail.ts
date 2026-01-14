@@ -3,6 +3,7 @@ import { CourseDBObject } from "@/lib/types/courses";
 import {AllMarksDBObject, MarksChanges, CourseRoles} from '@/lib/types/courses';
 import {AssessmentDBObject} from '@/lib/types/assessments';
 import { TotalScoreDBObject } from "../types/policy";
+import { MarksDBObject } from "../types/marks";
 
 // Role-specific data types
 export interface StudentCourseData {
@@ -11,7 +12,7 @@ export interface StudentCourseData {
 
 export interface TACourseData {
   assessments: AssessmentDBObject[];
-  assesmentMarks: Record<number, AllMarksDBObject[]>;
+  assessmentMarks: Record<number, MarksDBObject[]>;
   totalMarks: TotalScoreDBObject[];
   marksChanges: Record<number, MarksChanges[]>;
   CourseRoles: CourseRoles | null;

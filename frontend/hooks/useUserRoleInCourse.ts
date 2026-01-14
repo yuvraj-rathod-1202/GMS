@@ -20,7 +20,7 @@ export function useUserRoleInCourse(courseId: number, assessmentId?: number): {
   const setCurrentAssessment = useCourseDetailStore((s) => s.setCurrentAssessment);
 
   const course = courses.find((c) => c.id === courseId) || null;
-  const assessment = assessmentId && assessments ? assessments.find(a => a.id === assessmentId) || null : null;
+  const assessment = assessments?.find(a => a.id === assessmentId) || null;
   const role = course?.role || null;
 
   // Update the shared store whenever course changes

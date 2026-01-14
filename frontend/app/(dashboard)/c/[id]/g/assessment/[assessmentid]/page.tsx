@@ -28,6 +28,17 @@ export default function AssessmentPage() {
   const assessmentId = Number(params.assessmentid);
   const [isFetchingMarks, setIsFetchingMarks] = useState(false);
   const [isFetchingRoles, setIsFetchingRoles] = useState(false);
+  const [isFetchingAssessments, setIsFetchingAssessments] = useState(false);
+
+  const [isAssessmentsFetched, setIsAssessmentsFetched] = useState(false);
+  const [isRolesFetched, setIsRolesFetched] = useState(false);
+  const [isMarksFetched, setIsMarksFetched] = useState(false);
+
+  const [mergedData, setMergedData] = useState<Array<{
+    student_id: number;
+    email: string | null;
+    marks_obtained: number | null;
+  }>>([]);
   
   const { role, course, assessment, isLoading, hasAccess } = useRoleAccess({
     allowedRoles: ['ta'],
@@ -35,18 +46,38 @@ export default function AssessmentPage() {
     assessmentId,
   });
 
-  const currentAssessment = useCourseDetailStore((s) => s.currentAssessment);
-  const taData = useCourseDetailStore((s) => s.taData);
-  const {loading: managementLoading, getmarksofassessment, fetchCourseRoles} = useCourseManagement(role || 'ta');
-
-
+  const {loading: managementLoading, getmarksofassessment, fetchCourseRoles, fetchAllAssessments} = useCourseManagement(role || 'ta');
 
   useEffect(() => {
-    const fetchRoles = async () => {
-      if (!isLoading && hasAccess && !isFetchingRoles) {
+    if (!isLoading && hasAccess && !isFetchingAssessments) {  
+      const fetchAssessments = async () => {
+        setIsFetchingAssessments(true);
+        try {
+          await fetchAllAssessments(courseId);
+          setIsAssessmentsFetched(true);
+        }
+        catch (error) {
+          if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+            console.error("Error fetching assessments:", error);
+          }
+        } finally {
+          setIsFetchingAssessments(false);
+        }
+      }
+      fetchAssessments();
+    };
+  }, [isLoading, courseId, role]);
+
+  const currentAssessment = useCourseDetailStore((s) => s.currentAssessment);
+  const taData = useCourseDetailStore((s) => s.taData);
+
+  useEffect(() => {
+    if (!isLoading && hasAccess && !isFetchingRoles && isAssessmentsFetched) {  
+      const fetchRoles = async () => {
         setIsFetchingRoles(true);
         try {
           await fetchCourseRoles(courseId);
+          setIsRolesFetched(true);
         }
         catch (error) {
           if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
@@ -56,33 +87,17 @@ export default function AssessmentPage() {
           setIsFetchingRoles(false);
         }
       }
+      fetchRoles();
     };
+  }, [isLoading, courseId, role, isAssessmentsFetched]);
 
-    fetchRoles();
-  }, [role, isLoading, courseId]);
-
-
-  const exmapleMarksData = [
-    {student_id: 2411004, marks_obtained: 85, recorded_by_id: 101, updated_at: new Date()},
-    {student_id: 2411005, marks_obtained: 90, recorded_by_id: 102, updated_at: new Date()},
-  ];
-
-  const mergedData = (taData?.CourseRoles?.students || []).map(student => {
-    const marksRecord = exmapleMarksData.find(mark => mark.student_id === student.user_id);
-    return {
-      student_id: student.user_id,
-      email: student.email,
-      marks_obtained: marksRecord ? marksRecord.marks_obtained : null,
-    };
-  });
-
-
-  useEffect(() => {
+    useEffect(() => {
     const fetchMarks = async () => {
-      if (!isLoading && hasAccess && !isFetchingMarks) {
+      if (!isLoading && hasAccess && !isFetchingMarks && isAssessmentsFetched && isRolesFetched) {
         setIsFetchingMarks(true);
         try {
           await getmarksofassessment(courseId, assessmentId);
+          setIsMarksFetched(true);
         } catch (error) {
           if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
             console.error("Error fetching marks data:", error);
@@ -94,9 +109,24 @@ export default function AssessmentPage() {
     };
 
     fetchMarks();
-  }, [role, isLoading, courseId, assessmentId]);
+  }, [isLoading, role, courseId, assessmentId, isAssessmentsFetched, isRolesFetched]);
 
-  if (isLoading || !currentAssessment || !role) {
+  useEffect(() => {
+    if (taData?.assessmentMarks && taData.assessments) {
+      const marksData = taData.assessmentMarks[assessmentId] || [];
+      const merged = taData.CourseRoles?.students.map((student) => {
+        const markEntry = marksData.find(m => m.student_id === student.user_id);
+        return {
+          student_id: student.user_id,
+          email: student.email || null,
+          marks_obtained: markEntry ? markEntry.marks_obtained : null,
+        };
+      }) || [];
+      setMergedData(merged);
+    }
+  }, [taData, assessmentId]);
+
+  if (isLoading || !role) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900"></div>
@@ -108,7 +138,16 @@ export default function AssessmentPage() {
     return null;
   }
 
-  const isLoadingData = managementLoading || isFetchingMarks;
+  // Show loading while fetching assessments or if current assessment is not available yet
+  if (isFetchingAssessments || !currentAssessment) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  const isLoadingData = managementLoading || isFetchingMarks || isFetchingRoles || isFetchingAssessments;
 
   const columns = [
     { header: "Student ID", key: "student_id"},

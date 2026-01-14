@@ -5,7 +5,8 @@ import TANavbar from "./TANavbar";
 
 export default function TACourseView() {
   const currentCourse = useCourseDetailStore((s) => s.currentCourse);
-  const taData = useCourseDetailStore((s) => s.taData);
+
+  
 
   if (!currentCourse) return null;
 

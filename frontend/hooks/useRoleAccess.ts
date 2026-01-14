@@ -14,7 +14,7 @@ interface UseRoleAccessOptions {
 
 export function useRoleAccess({ allowedRoles, redirectTo, courseId, assessmentId }: UseRoleAccessOptions) {
   const router = useRouter();
-  const { role, course, assessment, isLoading } = useUserRoleInCourse(courseId);
+  const { role, course, assessment, isLoading } = useUserRoleInCourse(courseId, assessmentId);
   const [isTimeout, setIsTimeout] = useState(false);
 
   useEffect(() => {
@@ -22,11 +22,6 @@ export function useRoleAccess({ allowedRoles, redirectTo, courseId, assessmentId
       router.push("/");
       return;
     }
-
-    // if (!isLoading && assessmentId && !assessment) {
-    //   router.push(`/c/${courseId}`);
-    //   return;
-    // }
 
     if (isLoading) {
       const timer = setTimeout(() => {
