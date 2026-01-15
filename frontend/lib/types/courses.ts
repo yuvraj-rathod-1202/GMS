@@ -70,3 +70,8 @@ export interface UserRole {
 export interface CourseRoles {
     students: UserRole[];
 };
+
+export interface InstructorCourseRoles {
+    students: UserRole[];
+    tas: UserRole[];
+}

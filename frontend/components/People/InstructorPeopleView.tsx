@@ -1,24 +1,48 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import PageHeader from "../Course/PageHeader";
 import EnrollStudentDialog from "./EnrollStudentDialog";
-import StudentList from "../Course/StudentList";
+import StudentList from "./StudentList";
 import InstructorNavbar from "../Course/InstructorNavbar";
 import AddTADialog from "./AddTADialog";
+import { useCourseDetailStore } from "@/lib/store/courseDetail";
+import TAList from "./TAList";
 
-export function InstructorPeopleView({setShowEnrollDialog, showEnrollDialog, handleEnrollStudent, handleRemoveStudent, students, managementLoading} : {
+interface Student {
+  user_id: number;
+  email: string | null;
+}
+
+export function InstructorPeopleView({setShowEnrollDialog, showEnrollDialog, handleEnrollStudent, handleRemoveStudent, managementLoading} : {
     setShowEnrollDialog: React.Dispatch<React.SetStateAction<boolean>>;
     showEnrollDialog: boolean;
     handleEnrollStudent: (studentId: string, email: string) => Promise<void>;
     handleRemoveStudent: (studentId: number) => Promise<void>;
-    students: {
-        index: number;
-        id: string;
-        email: string;
-    }[];
     managementLoading: boolean;
 }) {
 
     const [showAddDialog, setShowAddDialog] = useState(false);
+
+    const instructorData = useCourseDetailStore((s) => s.instructorData);
+
+    const students = useMemo(() => {
+        return (instructorData?.CourseRoles?.students || [])
+            .filter((student: Student) => student?.user_id !== undefined)
+            .map((student: Student, index: number) => ({
+            index,
+            id: student.user_id.toString(),
+            email: student.email || "N/A",
+            }));
+        }, [instructorData]);
+
+    const tas = useMemo(() => {
+        return (instructorData?.CourseRoles?.tas || [])
+            .filter((ta: Student) => ta?.user_id !== undefined)
+            .map((ta: Student, index: number) => ({
+            index,
+            id: ta.user_id.toString(),
+            email: ta.email || "N/A",
+            }));
+        }, [instructorData]);
 
     return (
         <div>
@@ -35,6 +59,11 @@ export function InstructorPeopleView({setShowEnrollDialog, showEnrollDialog, han
                 isOpen={showAddDialog}
                 onClose={() => setShowAddDialog(false)}
                 onSubmit={handleEnrollStudent}
+                isLoading={managementLoading}
+                />
+                <TAList
+                students={tas}
+                onRemoveStudent={handleRemoveStudent}
                 isLoading={managementLoading}
                 />
 

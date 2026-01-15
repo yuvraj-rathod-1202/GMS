@@ -1,21 +1,36 @@
-import React from "react";
+import React, { useMemo } from "react";
 import TANavbar from "../Course/TANavbar";
 import PageHeader from "../Course/PageHeader";
 import EnrollStudentDialog from "./EnrollStudentDialog";
-import StudentList from "../Course/StudentList";
+import StudentList from "./StudentList";
+import { useCourseDetailStore } from "@/lib/store/courseDetail";
 
-export function TAPeopleView({setShowEnrollDialog, showEnrollDialog, handleEnrollStudent, handleRemoveStudent, students, managementLoading} : {
+interface Student {
+  user_id: number;
+  email: string | null;
+}
+
+
+export function TAPeopleView({setShowEnrollDialog, showEnrollDialog, handleEnrollStudent, handleRemoveStudent, managementLoading} : {
     setShowEnrollDialog: React.Dispatch<React.SetStateAction<boolean>>;
     showEnrollDialog: boolean;
     handleEnrollStudent: (studentId: string, email: string) => Promise<void>;
     handleRemoveStudent: (studentId: number) => Promise<void>;
-    students: {
-        index: number;
-        id: string;
-        email: string;
-    }[];
     managementLoading: boolean;
 }) {
+
+    const taData = useCourseDetailStore((s) => s.taData);
+
+    const students = useMemo(() => {
+    return (taData?.CourseRoles?.students || [])
+        .filter((student: Student) => student?.user_id !== undefined)
+        .map((student: Student, index: number) => ({
+        index,
+        id: student.user_id.toString(),
+        email: student.email || "N/A",
+        }));
+    }, [taData]);
+
     return (
         <div>
             <TANavbar />

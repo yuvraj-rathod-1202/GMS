@@ -1,20 +1,11 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useCourseManagement } from "@/hooks/useCourseManagement";
-import TANavbar from "@/components/Course/TANavbar";
-import PageHeader from "@/components/Course/PageHeader";
-import EnrollStudentDialog from "@/components/People/EnrollStudentDialog";
-import StudentList from "@/components/Course/StudentList";
 import { TAPeopleView } from "@/components/People/TAPeopleView";
 import { InstructorPeopleView } from "@/components/People/InstructorPeopleView";
-
-interface Student {
-  user_id: number;
-  email: string | null;
-}
 
 export default function PeoplePage() {
   const params = useParams();
@@ -28,7 +19,6 @@ export default function PeoplePage() {
   });
 
   const currentCourse = useCourseDetailStore((s) => s.currentCourse);
-  const taData = useCourseDetailStore((s) => s.taData);
   
   const {
     loading: managementLoading,
@@ -55,16 +45,6 @@ export default function PeoplePage() {
     }
   }, [courseId, hasAccess, isLoading, fetchCourseRoles]);
 
-  const students = useMemo(() => {
-    return (taData?.CourseRoles?.students || [])
-      .filter((student: Student) => student?.user_id !== undefined)
-      .map((student: Student, index: number) => ({
-        index,
-        id: student.user_id.toString(),
-        email: student.email || "N/A",
-      }));
-  }, [taData]);
-
   if (isLoading || !currentCourse || !hasAccess || isFetchingData) {
     return (
       <div className="flex justify-center items-center h-full p-10">
@@ -88,7 +68,7 @@ export default function PeoplePage() {
 
     try {
       await enrollStudent(courseId, { student_id: Number(studentId), email: email.trim() });
-      await fetchCourseRoles(courseId, true);
+      await fetchCourseRoles(courseId, true, role=='instructor');
       alert("Student enrolled successfully!");
       setShowEnrollDialog(false);
     } catch (error: any) {
@@ -118,7 +98,6 @@ export default function PeoplePage() {
                 showEnrollDialog={showEnrollDialog}
                 handleEnrollStudent={handleEnrollStudent}
                 handleRemoveStudent={handleRemoveStudent}
-                students={students}
                 managementLoading={managementLoading}
               />;
     case 'instructor':
@@ -127,7 +106,6 @@ export default function PeoplePage() {
                 showEnrollDialog={showEnrollDialog}
                 handleEnrollStudent={handleEnrollStudent}
                 handleRemoveStudent={handleRemoveStudent}
-                students={students}
                 managementLoading={managementLoading}
               />;
   }

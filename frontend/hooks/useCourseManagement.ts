@@ -20,10 +20,12 @@ export function useCourseManagement(role: UserRole) {
   const user = useAuthStore((s) => s.user);
   const taData = useCourseDetailStore((s) => s.taData);
   const setTaData = useCourseDetailStore((s) => s.setTAData);
+  const instructorData = useCourseDetailStore((s) => s.instructorData);
+  const setInstructorData = useCourseDetailStore((s) => s.setInstructorData);
   const hasFetchedInSession = useCourseDetailStore((s) => s.hasFetchedTADataInSession);
   const setHasFetchedInSession = useCourseDetailStore((s) => s.setHasFetchedTADataInSession);
 
-  const fetchCourseRoles = useCallback(async (courseId: number, forceRefresh = false): Promise<CourseRoleData | undefined> => {
+  const fetchCourseRoles = useCallback(async (courseId: number, forceRefresh = false, isInstructor = false): Promise<CourseRoleData | undefined> => {
     if (!forceRefresh && hasFetchedInSession["courseRoles"]) {
       return useCourseDetailStore.getState().taData?.CourseRoles || undefined;
     }
@@ -39,15 +41,36 @@ export function useCourseManagement(role: UserRole) {
     try {
       const studentResponse = await CoursesApi.GetCourseRoles(courseId, 'student');
       const studentList = Array.isArray(studentResponse) ? studentResponse : (studentResponse as any)?.roles || [];
-      setTaData({
-        assessments: taData?.assessments || [],
-        assessmentMarks: taData?.assessmentMarks || {},
-        totalMarks: taData?.totalMarks || [],
-        marksChanges: taData?.marksChanges || {},
-        CourseRoles: {
-          students: studentList,
-        },
-      });
+      let taList = null;
+      if (isInstructor) {
+        console.log("Fetching TA data for instructor");
+        const taResponse = await CoursesApi.GetCourseRoles(courseId, 'ta');
+        console.log("TA Response:", taResponse);
+        taList = Array.isArray(taResponse) ? taResponse : (taResponse as any)?.roles || [];
+
+      }
+      if (role === 'ta') {
+        setTaData({
+          assessments: taData?.assessments || [],
+          assessmentMarks: taData?.assessmentMarks || {},
+          totalMarks: taData?.totalMarks || [],
+          marksChanges: taData?.marksChanges || {},
+          CourseRoles: {
+            students: studentList,
+          },
+        });
+      } else if (role === 'instructor') {
+        setInstructorData({
+          assessments: instructorData?.assessments || [],
+          assessmentMarks: instructorData?.assessmentMarks || {},
+          totalMarks: instructorData?.totalMarks || [],
+          marksChanges: instructorData?.marksChanges || {},
+          CourseRoles: {
+            students: studentList,
+            tas: taList
+          },
+        });
+      }
       
       setHasFetchedInSession("courseRoles", true);
       
@@ -84,13 +107,23 @@ export function useCourseManagement(role: UserRole) {
 
       const assessments = await MarksApi.GetAllAssessments(courseId);
       const assessmentList = Array.isArray(assessments) ? assessments : (assessments as any)?.assessments || [];
-      setTaData({
-        assessments: assessmentList,
-        assessmentMarks: taData?.assessmentMarks || {},
-        totalMarks: taData?.totalMarks || [],
-        marksChanges: taData?.marksChanges || {},
-        CourseRoles: taData?.CourseRoles || null,
-      });
+      if (role == 'ta'){
+        setTaData({
+          assessments: assessmentList,
+          assessmentMarks: taData?.assessmentMarks || {},
+          totalMarks: taData?.totalMarks || [],
+          marksChanges: taData?.marksChanges || {},
+          CourseRoles: taData?.CourseRoles || null,
+        });
+      } else if (role == 'instructor') {
+        setInstructorData({
+          assessments: assessmentList,
+          assessmentMarks: instructorData?.assessmentMarks || {},
+          totalMarks: instructorData?.totalMarks || [],
+          marksChanges: instructorData?.marksChanges || {},
+          CourseRoles: instructorData?.CourseRoles || null,
+        })
+      }
 
       setHasFetchedInSession("assessments", true);
       return assessmentList;
@@ -125,13 +158,24 @@ export function useCourseManagement(role: UserRole) {
 
       const marks = await MarksApi.GetAllMarks(courseId, assessmentId);
       const marksList = Array.isArray(marks) ? marks : (marks as any)?.marks || [];
-      setTaData({
-        assessments: taData?.assessments || [],
-        assessmentMarks: { ...(taData?.assessmentMarks || {}), [assessmentId]: marksList },
-        totalMarks: taData?.totalMarks || [],
-        marksChanges: taData?.marksChanges || {},
-        CourseRoles: taData?.CourseRoles || null,
-      });
+      if(role == 'ta'){
+        setTaData({
+          assessments: taData?.assessments || [],
+          assessmentMarks: { ...(taData?.assessmentMarks || {}), [assessmentId]: marksList },
+          totalMarks: taData?.totalMarks || [],
+          marksChanges: taData?.marksChanges || {},
+          CourseRoles: taData?.CourseRoles || null,
+        });
+      } else if (role == 'instructor') {
+        setInstructorData({
+          assessments: instructorData?.assessments || [],
+          assessmentMarks: { ...(instructorData?.assessmentMarks || {}), [assessmentId]: marksList },
+          totalMarks: instructorData?.totalMarks || [],
+          marksChanges: instructorData?.marksChanges || {},
+          CourseRoles: instructorData?.CourseRoles || null,
+        });
+      }
+
       setHasFetchedInSession("marks_" + assessmentId, true);
       return marksList;
     } catch (err: any) {
@@ -254,6 +298,6 @@ export function useCourseManagement(role: UserRole) {
     BulkEnrollStudent,
     unenrollStudent,
     saveMarks,
-    courseRoles: taData?.CourseRoles,
+    courseRoles: taData?.CourseRoles || instructorData?.CourseRoles || null,
   };
 }

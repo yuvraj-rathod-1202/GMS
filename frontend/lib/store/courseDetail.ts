@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { CourseDBObject } from "@/lib/types/courses";
-import {AllMarksDBObject, MarksChanges, CourseRoles} from '@/lib/types/courses';
+import {AllMarksDBObject, MarksChanges, CourseRoles, InstructorCourseRoles} from '@/lib/types/courses';
 import {AssessmentDBObject} from '@/lib/types/assessments';
 import { TotalScoreDBObject } from "../types/policy";
 import { MarksDBObject } from "../types/marks";
@@ -19,10 +19,11 @@ export interface TACourseData {
 }
 
 export interface InstructorCourseData {
-  analytics?: any;
-  roster?: any[];
-  settings?: any;
-  assessments?: any[];
+  assessments: AssessmentDBObject[];
+  assessmentMarks: Record<number, MarksDBObject[]>;
+  totalMarks: TotalScoreDBObject[];
+  marksChanges: Record<number, MarksChanges[]>;
+  CourseRoles: InstructorCourseRoles | null;
 }
 
 // Shared course detail state
