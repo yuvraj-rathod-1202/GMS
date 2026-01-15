@@ -12,15 +12,17 @@ interface Student {
   email: string | null;
 }
 
-export function InstructorPeopleView({setShowEnrollDialog, showEnrollDialog, handleEnrollStudent, handleRemoveStudent, managementLoading} : {
+export function InstructorPeopleView({setShowEnrollDialog, showEnrollDialog, setShowAddDialog, showAddDialog, handleEnrollStudent, handleRemoveStudent, handleAddTA, handleRemoveTA, managementLoading} : {
     setShowEnrollDialog: React.Dispatch<React.SetStateAction<boolean>>;
     showEnrollDialog: boolean;
+    setShowAddDialog: React.Dispatch<React.SetStateAction<boolean>>;
+    showAddDialog: boolean;
     handleEnrollStudent: (studentId: string, email: string) => Promise<void>;
     handleRemoveStudent: (studentId: number) => Promise<void>;
+    handleAddTA: (taId: string, email: string) => Promise<void>;
+    handleRemoveTA: (taId: number) => Promise<void>;
     managementLoading: boolean;
 }) {
-
-    const [showAddDialog, setShowAddDialog] = useState(false);
 
     const instructorData = useCourseDetailStore((s) => s.instructorData);
 
@@ -58,12 +60,12 @@ export function InstructorPeopleView({setShowEnrollDialog, showEnrollDialog, han
                 <AddTADialog
                 isOpen={showAddDialog}
                 onClose={() => setShowAddDialog(false)}
-                onSubmit={handleEnrollStudent}
+                onSubmit={handleAddTA}
                 isLoading={managementLoading}
                 />
                 <TAList
                 students={tas}
-                onRemoveStudent={handleRemoveStudent}
+                onRemoveStudent={handleRemoveTA}
                 isLoading={managementLoading}
                 />
 

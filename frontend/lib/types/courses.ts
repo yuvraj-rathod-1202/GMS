@@ -29,10 +29,20 @@ export interface EnrollStudentRequest {
     email?: string;
 };
 
+export interface AddTARequest {
+    ta_id: number;
+    email?: string;
+};
+
 export interface EnrollTaRequest {
     ta_id: number;
     email?: string;
 };
+
+export interface AddInstructorRequest {
+    instructor_id: number;
+    email?: string;
+}
 
 export interface EnrollInstructorRequest {
     instructor_id: number;

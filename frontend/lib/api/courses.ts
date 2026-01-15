@@ -1,6 +1,6 @@
 import { apiClient } from "./client";
 import { handleRequest } from "./utils";
-import {AddCourseRequest, UpdateCourseRequest, EnrollInstructorRequest, EnrollStudentRequest, EnrollTaRequest} from "@/lib/types/courses";
+import {AddCourseRequest, UpdateCourseRequest, EnrollInstructorRequest, EnrollStudentRequest, EnrollTaRequest, AddTARequest} from "@/lib/types/courses";
 
 export const CoursesApi = {
     CreateCourse: async (CourseData: AddCourseRequest) => {
@@ -65,7 +65,7 @@ export const CoursesApi = {
 
     RemoveTa: async (courseId: number, taId: number) => {
         return handleRequest(
-            apiClient.delete(`/courses/${courseId}/tas`, { data: { "ta_id": taId } })
+            apiClient.delete(`/courses/${courseId}/tas?ta_id=${taId}`)
         )
     },
 

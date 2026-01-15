@@ -44,7 +44,7 @@ export default function AddTADialog({
           <BiX className="text-xl text-gray-600" />
         </button>
 
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Enroll Student</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Add TA</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

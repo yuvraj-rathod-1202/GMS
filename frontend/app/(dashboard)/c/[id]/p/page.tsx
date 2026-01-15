@@ -11,6 +11,7 @@ export default function PeoplePage() {
   const params = useParams();
   const courseId = Number(params.id);
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
 
   const { role, course, isLoading, hasAccess } = useRoleAccess({
@@ -25,6 +26,8 @@ export default function PeoplePage() {
     fetchCourseRoles,
     enrollStudent,
     unenrollStudent,
+    AddTA,
+    RemoveTA
   } = useCourseManagement(role || 'ta');
 
   useEffect(() => {
@@ -32,7 +35,7 @@ export default function PeoplePage() {
       const fetchStudents = async () => {
         setIsFetchingData(true);
         try {
-          await fetchCourseRoles(courseId);
+          await fetchCourseRoles(courseId, false, role=== 'instructor');
         } catch (error) {
           if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
             console.error("Error fetching students:", error);
@@ -68,7 +71,6 @@ export default function PeoplePage() {
 
     try {
       await enrollStudent(courseId, { student_id: Number(studentId), email: email.trim() });
-      await fetchCourseRoles(courseId, true, role=='instructor');
       alert("Student enrolled successfully!");
       setShowEnrollDialog(false);
     } catch (error: any) {
@@ -91,6 +93,40 @@ export default function PeoplePage() {
     }
   };
 
+  const handleAddTA = async (taId: string, email: string) => {
+    if (!taId.trim()) {
+      alert("Please enter a TA ID");
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to add TA with ID: ${taId}?`);
+    if (!confirmed) return;
+
+    try {
+
+      await AddTA(courseId, { ta_id: Number(taId), email: email.trim() });
+      alert("TA added successfully!");
+      setShowAddDialog(false);
+    } catch (error: any) {
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error adding TA:", error);
+      }
+      alert(error?.message || "Failed to add TA");
+    }
+  };
+
+  const handleRemoveTA = async (taId: number) => {
+    const confirmed = window.confirm(`Are you sure you want to remove TA with ID: ${taId} from the course?`);
+    if (!confirmed) return;
+    try {
+      await RemoveTA(courseId, taId);
+      await fetchCourseRoles(courseId, true);
+      alert("TA removed successfully!");
+    } catch (error: any) {
+      alert(error?.message || "Failed to remove TA");
+    }
+  };
+
   switch (role) {
     case 'ta':
       return <TAPeopleView 
@@ -104,8 +140,12 @@ export default function PeoplePage() {
       return <InstructorPeopleView
                 setShowEnrollDialog={setShowEnrollDialog}
                 showEnrollDialog={showEnrollDialog}
+                showAddDialog={showAddDialog}
+                setShowAddDialog={setShowAddDialog}
                 handleEnrollStudent={handleEnrollStudent}
                 handleRemoveStudent={handleRemoveStudent}
+                handleAddTA={handleAddTA}
+                handleRemoveTA={handleRemoveTA}
                 managementLoading={managementLoading}
               />;
   }

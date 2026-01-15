@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { CoursesApi } from "@/lib/api/courses";
 import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useAuthStore } from "@/lib/store/auth";
-import { EnrollStudentRequest } from "@/lib/types/courses";
+import { EnrollStudentRequest, AddTARequest } from "@/lib/types/courses";
 import { MarksApi } from "@/lib/api/marks";
 import { AddMarksRequest } from "@/lib/types/marks";
 
@@ -45,7 +45,6 @@ export function useCourseManagement(role: UserRole) {
       if (isInstructor) {
         console.log("Fetching TA data for instructor");
         const taResponse = await CoursesApi.GetCourseRoles(courseId, 'ta');
-        console.log("TA Response:", taResponse);
         taList = Array.isArray(taResponse) ? taResponse : (taResponse as any)?.roles || [];
 
       }
@@ -262,6 +261,52 @@ export function useCourseManagement(role: UserRole) {
     }
   }, [user?.id]);
 
+  const AddTA = useCallback(async (courseId: number, taData: AddTARequest) => {
+    if (!user?.id) {
+      setError("User not found");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await CoursesApi.AddTa(courseId, taData);
+      return response;
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to add TA";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error adding TA:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  const RemoveTA = useCallback(async (courseId: number, taId: number) => {
+    if (!user?.id) {
+      setError("User not found");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+
+    try {
+
+      const response = await CoursesApi.RemoveTa(courseId, taId);
+      return response;
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to remove TA";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error removing TA:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
   const saveMarks = useCallback(async (courseId: number, assessmentId: number, marksData: AddMarksRequest) => {
     if (!user?.id) {
       setError("User not found");
@@ -297,6 +342,8 @@ export function useCourseManagement(role: UserRole) {
     enrollStudent,
     BulkEnrollStudent,
     unenrollStudent,
+    AddTA,
+    RemoveTA,
     saveMarks,
     courseRoles: taData?.CourseRoles || instructorData?.CourseRoles || null,
   };
