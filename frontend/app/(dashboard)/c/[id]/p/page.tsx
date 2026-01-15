@@ -6,8 +6,10 @@ import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useCourseManagement } from "@/hooks/useCourseManagement";
 import TANavbar from "@/components/Course/TANavbar";
 import PageHeader from "@/components/Course/PageHeader";
-import EnrollStudentDialog from "@/components/Course/EnrollStudentDialog";
+import EnrollStudentDialog from "@/components/People/EnrollStudentDialog";
 import StudentList from "@/components/Course/StudentList";
+import { TAPeopleView } from "@/components/People/TAPeopleView";
+import { InstructorPeopleView } from "@/components/People/InstructorPeopleView";
 
 interface Student {
   user_id: number;
@@ -109,32 +111,24 @@ export default function PeoplePage() {
     }
   };
 
-  return (
-    <div>
-      <TANavbar />
-      <div className="h-[calc(100vh-96px)] overflow-y-auto w-full md:max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
-        <div className="space-y-6 md:space-y-8">
-          <PageHeader
-            title="Students"
-            description="Manage students enrolled in this course."
-            buttonText="Enroll Student"
-            onButtonClick={() => setShowEnrollDialog(true)}
-          />
-
-          <EnrollStudentDialog
-            isOpen={showEnrollDialog}
-            onClose={() => setShowEnrollDialog(false)}
-            onSubmit={handleEnrollStudent}
-            isLoading={managementLoading}
-          />
-
-          <StudentList
-            students={students}
-            onRemoveStudent={handleRemoveStudent}
-            isLoading={managementLoading}
-          />
-        </div>
-      </div>
-    </div>
-  );
+  switch (role) {
+    case 'ta':
+      return <TAPeopleView 
+                setShowEnrollDialog={setShowEnrollDialog}
+                showEnrollDialog={showEnrollDialog}
+                handleEnrollStudent={handleEnrollStudent}
+                handleRemoveStudent={handleRemoveStudent}
+                students={students}
+                managementLoading={managementLoading}
+              />;
+    case 'instructor':
+      return <InstructorPeopleView
+                setShowEnrollDialog={setShowEnrollDialog}
+                showEnrollDialog={showEnrollDialog}
+                handleEnrollStudent={handleEnrollStudent}
+                handleRemoveStudent={handleRemoveStudent}
+                students={students}
+                managementLoading={managementLoading}
+              />;
+  }
 }
