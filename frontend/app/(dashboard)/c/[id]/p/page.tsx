@@ -105,6 +105,7 @@ export default function PeoplePage() {
     try {
 
       await AddTA(courseId, { ta_id: Number(taId), email: email.trim() });
+      await fetchCourseRoles(courseId, true, true);
       alert("TA added successfully!");
       setShowAddDialog(false);
     } catch (error: any) {
@@ -120,7 +121,7 @@ export default function PeoplePage() {
     if (!confirmed) return;
     try {
       await RemoveTA(courseId, taId);
-      await fetchCourseRoles(courseId, true);
+      await fetchCourseRoles(courseId, true, true);
       alert("TA removed successfully!");
     } catch (error: any) {
       alert(error?.message || "Failed to remove TA");

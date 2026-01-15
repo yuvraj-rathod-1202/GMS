@@ -52,7 +52,7 @@ export function InstructorPeopleView({setShowEnrollDialog, showEnrollDialog, set
             <div className="h-[calc(100vh-96px)] overflow-y-auto w-full md:max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
             <div className="space-y-6 md:space-y-8">
                 <PageHeader
-                title="Tas"
+                title="TAs"
                 description="Manage tas enrolled in this course."
                 buttonText="Add TA"
                 onButtonClick={() => setShowAddDialog(true)}

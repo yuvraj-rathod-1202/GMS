@@ -73,7 +73,7 @@ def assign_ta(course_id: int, data: EnrollTaRequest):
             detail="Instructor privileges required"
         )
         
-    assigned_id = enroll_student_in_course_in_db(course_id, data.ta_id, assign_ta=True)
+    assigned_id = enroll_student_in_course_in_db(course_id, data.ta_id, data.email, assign_ta=True)
     
     if not assigned_id:
         raise HTTPException(
@@ -113,7 +113,7 @@ def assign_instructor(course_id: int, data: EnrollInstructorRequest):
             detail="Admin privileges required"
         )
         
-    assigned_id = enroll_student_in_course_in_db(course_id, data.instructor_id, assign_instructor=True)
+    assigned_id = enroll_student_in_course_in_db(course_id, data.instructor_id, data.email, assign_instructor=True)
     
     if not assigned_id:
         raise HTTPException(
