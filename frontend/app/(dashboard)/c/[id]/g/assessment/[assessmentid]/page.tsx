@@ -7,6 +7,9 @@ import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { GradeSheetHeader } from "@/components/ui/GradeSheetHeader";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useCourseManagement } from "@/hooks/useCourseManagement";
+import GradeSheetButtons from "@/components/ui/GradeSheetButtons";
+import { useTACourse } from "@/hooks/useTACourse";
+import UnenrolledStudentsDialog from "@/components/ui/UnenrolledStudentsDialog";
 
 const getAssessmentTypeLabel = (typeId: number): string => {
   const types: { [key: number]: string } = {
@@ -44,6 +47,13 @@ export default function AssessmentPage() {
   const [changedMarks, setChangedMarks] = useState<Map<number, number>>(new Map());
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  
+  // Bulk upload state
+  const [unenrolledStudents, setUnenrolledStudents] = useState<Array<{student_id: number; email: string; marks_obtained: number}>>([]);
+  const [showUnenrolledDialog, setShowUnenrolledDialog] = useState(false);
+  const [pendingMarksData, setPendingMarksData] = useState<Array<{student_id: number; email: string; marks_obtained: number}>>([]);
+  const [isProcessingEnrollment, setIsProcessingEnrollment] = useState(false);
   
   const { role, course, assessment, isLoading, hasAccess } = useRoleAccess({
     allowedRoles: ['ta'],
@@ -51,20 +61,8 @@ export default function AssessmentPage() {
     assessmentId,
   });
 
-  const {loading: managementLoading, getmarksofassessment, fetchCourseRoles, fetchAllAssessments, saveMarks} = useCourseManagement(role || 'ta');
-
-  // Warn before leaving with unsaved changes
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasUnsavedChanges]);
+  const {loading: managementLoading, getmarksofassessment, fetchCourseRoles, fetchAllAssessments, saveMarks, BulkEnrollStudent} = useCourseManagement(role || 'ta');
+  const {PublishMarks, UnpublishMarks} = useTACourse();
 
   useEffect(() => {
     if (!isLoading && hasAccess && !isFetchingAssessments) {  
@@ -149,8 +147,7 @@ export default function AssessmentPage() {
   // Handle local mark changes
   const handleMarkChange = useCallback((newValue: any, oldValue: any, row: any) => {
     const newMark = Number(newValue);
-    // basic validation
-    if (isNaN(newMark) || newMark > currentAssessment?.max_marks) return; // Allow 0
+    if (isNaN(newMark) || (currentAssessment && newMark > currentAssessment?.max_marks)) return;
     
     setChangedMarks(prev => {
       const next = new Map(prev);
@@ -217,11 +214,172 @@ export default function AssessmentPage() {
     }
   };
 
+  const handlePublishToggle = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    
+    const action = assessment.is_marks_published ? "unpublish" : "publish";
+    const message = assessment.is_marks_published
+      ? `Are you sure you want to unpublish marks for "${assessment.name}"? Students will no longer be able to view their marks.`
+      : `Are you sure you want to publish marks for "${assessment.name}"? Students will be able to view their marks.`;
+    
+    const confirmed = window.confirm(message);
+    
+    if (!confirmed) {
+      return;
+    }
+    
+    setIsPublishing(true);
+    
+    try {
+      if (assessment.is_marks_published) {
+        await UnpublishMarks(assessment.course_id, assessment.id);
+      } else {
+        await PublishMarks(assessment.course_id, assessment.id);
+      }
+      // Refresh assessment data
+      await fetchAllAssessments(courseId, true);
+    } catch (error) {
+      if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+        console.error("Error toggling publish status:", error);
+      }
+    } finally {
+      setIsPublishing(false);
+    }
+  }
+
   const handleDiscard = () => {
     if (window.confirm("Are you sure you want to discard your changes?")) {
       setChangedMarks(new Map());
       setHasUnsavedChanges(false);
     }
+  };
+
+  const parseCSV = (text: string): Array<{student_id: number; email: string; marks_obtained: number}> => {
+    const lines = text.trim().split('\n');
+    const data: Array<{student_id: number; email: string; marks_obtained: number}> = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const values = line.split(',').map(v => v.trim());
+      if (values.length >= 3) {
+        const studentId = parseInt(values[0]);
+        const email = values[1];
+        const marks = parseFloat(values[2]);
+        
+        if (!isNaN(studentId) && !isNaN(marks)) {
+          data.push({
+            student_id: studentId,
+            email: email,
+            marks_obtained: marks
+          });
+        }
+      }
+    }
+    
+    return data;
+  };
+
+  const handleBulkUpload = async (file: File) => {
+    try {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size exceeds 5MB limit");
+        return;
+      }
+
+      const text = await file.text();
+      let parsedData: Array<{student_id: number; email: string; marks_obtained: number}> = [];
+
+      if (file.name.endsWith('.csv')) {
+        parsedData = parseCSV(text);
+      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        alert("Excel file support is not implemented yet. Please upload a CSV file.");
+        return;
+      } else {
+        alert("Only CSV and Excel files are supported.");
+        return;
+      }
+
+      if (parsedData.length === 0) {
+        alert("No valid data found in file. Please check the format.");
+        return;
+      }
+
+      if (currentAssessment?.max_marks) {
+        const invalidMarks = parsedData.filter(d => d.marks_obtained > currentAssessment.max_marks);
+        if (invalidMarks.length > 0) {
+          alert(`${invalidMarks.length} entries have marks exceeding maximum (${currentAssessment.max_marks}). Please correct the file.`);
+          return;
+        }
+      }
+
+      const enrolledIds = new Set(mergedData.map(s => s.student_id));
+      const enrolled = parsedData.filter(d => enrolledIds.has(d.student_id));
+      const unenrolled = parsedData.filter(d => !enrolledIds.has(d.student_id));
+
+      setPendingMarksData(parsedData);
+
+      if (unenrolled.length > 0) {
+        setUnenrolledStudents(unenrolled);
+        setShowUnenrolledDialog(true);
+      } else {
+        await importMarks(enrolled);
+      }
+    } catch (error) {
+      console.error("Bulk upload error:", error);
+      alert("Failed to process file. Please check the format and try again.");
+    }
+  };
+
+  const importMarks = async (marksData: Array<{student_id: number; email: string; marks_obtained: number}>) => {
+    try {
+      const newChanges = new Map(changedMarks);
+      marksData.forEach(mark => {
+        newChanges.set(mark.student_id, mark.marks_obtained);
+      });
+      
+      setChangedMarks(newChanges);
+      setHasUnsavedChanges(true);
+      
+      alert(`Successfully imported marks for ${marksData.length} student${marksData.length > 1 ? 's' : ''}. Click "Save Marks" to apply changes.`);
+    } catch (error) {
+      console.error("Import marks error:", error);
+      alert("Failed to import marks. Please try again.");
+    }
+  };
+
+  const handleEnrollAndImport = async (selected: {student_id: number; email: string}[]) => {
+    setIsProcessingEnrollment(true);
+    try {
+      
+      const enrollData = selected.map(s => ({ student_id: s.student_id, email: s.email }));
+      await BulkEnrollStudent(courseId, enrollData);
+      await fetchCourseRoles(courseId, true);
+      
+      const enrolledIds = new Set(mergedData.map(s => s.student_id));
+      const toImport = pendingMarksData.filter(d => 
+        enrolledIds.has(d.student_id) || selected.some(s => s.student_id === d.student_id)
+      );
+      
+      setShowUnenrolledDialog(false);
+      await importMarks(toImport);
+      
+      await fetchCourseRoles(courseId);
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      alert("Failed to enroll students. Please try again.");
+    } finally {
+      setIsProcessingEnrollment(false);
+    }
+  };
+
+  const handleSkipUnenrolled = async () => {
+    const enrolledIds = new Set(mergedData.map(s => s.student_id));
+    const toImport = pendingMarksData.filter(d => enrolledIds.has(d.student_id));
+    
+    setShowUnenrolledDialog(false);
+    await importMarks(toImport);
   };
 
   const columns = [
@@ -251,37 +409,28 @@ export default function AssessmentPage() {
         getAssessmentTypeLabel={getAssessmentTypeLabel}
         formattedDate={formattedDate}
       />
-      {/* Grade Sheet */}
-      <GradeSheet columns={columns} data={displayData} />
-
-      {hasUnsavedChanges && (
-        <div className="fixed bottom-6 right-6 bg-white p-4 shadow-lg rounded-lg border border-yellow-200 flex gap-4 items-center animate-in slide-in-from-bottom-5 z-50">
-          <span className="text-sm font-medium text-amber-700">You have unsaved changes</span>
-          <div className="flex gap-2">
-            <button 
-              onClick={handleDiscard}
-              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-              disabled={isSaving}
-            >
-              Discard
-            </button>
-            <button 
-              onClick={handleSave} 
-              disabled={isSaving}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-            >
-              {isSaving ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Saving...
-                </>
-              ) : "Save Changes"}
-            </button>
-          </div>
-        </div>
+      <GradeSheetButtons
+        handleSave={handleSave}
+        handleDiscard={handleDiscard}
+        hasUnsavedChanges={hasUnsavedChanges}
+        isSaving={isSaving}
+        assessment={currentAssessment}
+        handlePublishToggle={handlePublishToggle}
+        isPublishing={isPublishing}
+        handleBulkUpload={handleBulkUpload}
+      />
+      <GradeSheet columns={columns} data={displayData} max_marks={currentAssessment ? currentAssessment.max_marks : undefined} />
+      
+      {/* Unenrolled Students Dialog */}
+      {showUnenrolledDialog && (
+        <UnenrolledStudentsDialog
+          students={unenrolledStudents}
+          onEnrollAll={() => handleEnrollAndImport(unenrolledStudents.map(s => ({ student_id: s.student_id, email: s.email })))}
+          onSkipAll={handleSkipUnenrolled}
+          onSelectiveEnroll={handleEnrollAndImport}
+          onClose={() => setShowUnenrolledDialog(false)}
+          isProcessing={isProcessingEnrollment}
+        />
       )}
     </div>
   );

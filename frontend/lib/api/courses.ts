@@ -45,6 +45,12 @@ export const CoursesApi = {
         )
     },
 
+    BulkEnrollStudents: async (courseId: number, EnrollStudentData: EnrollStudentRequest[]) => {
+        return handleRequest(
+            apiClient.post(`/courses/${courseId}/enroll/bulk`, EnrollStudentData)
+        )
+    },
+
     UnEnrollStudent: async (courseId: number, studentId: number) => {
         return handleRequest(
             apiClient.delete(`/courses/${courseId}/enroll?student_id=${studentId}`)

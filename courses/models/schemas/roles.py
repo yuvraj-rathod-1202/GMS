@@ -15,3 +15,11 @@ class EnrollInstructorRequest(BaseModel):
     user_id: int
     instructor_id: int
     email: Optional[str] = None
+
+class StudentEnrollment(BaseModel):
+    student_id: int
+    email: Optional[str] = None    
+
+class BulkEnrollStudentRequest(BaseModel):
+    user_id: int
+    students: list[StudentEnrollment]

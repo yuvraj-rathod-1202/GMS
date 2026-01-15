@@ -15,6 +15,7 @@ export interface GradeSheetColumn<T = any> {
 export interface GradeSheetProps<T = any> {
   columns: GradeSheetColumn<T>[];
   data: T[];
+  max_marks?: number;
   searchable?: boolean;
   searchKeys?: (keyof T | string)[];
   emptyMessage?: string;
@@ -25,6 +26,7 @@ export interface GradeSheetProps<T = any> {
 export default function GradeSheet<T extends Record<string, any>>({
   columns,
   data = [],
+  max_marks,
   searchable = true,
   searchKeys,
   emptyMessage = "No data available",
@@ -35,6 +37,7 @@ export default function GradeSheet<T extends Record<string, any>>({
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnKey: string } | null>(null);
   const [editValue, setEditValue] = useState<any>("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [validationError, setValidationError] = useState<string>("");
 
   // Filter data based on search term
   const filteredData = useMemo(() => {
@@ -72,6 +75,14 @@ export default function GradeSheet<T extends Record<string, any>>({
     const row = filteredData[rowIndex];
     const oldValue = row[column.key];
 
+    // Validate marks against max_marks
+    const numericValue = Number(editValue);
+    if (!isNaN(numericValue) && max_marks !== undefined && numericValue > max_marks) {
+      setValidationError(`Marks cannot exceed ${max_marks}`);
+      return;
+    }
+    setValidationError("");
+
     // Prevent multiple saves
     if (isProcessing) return;
     setIsProcessing(true);
@@ -101,6 +112,7 @@ export default function GradeSheet<T extends Record<string, any>>({
   const handleEditCancel = () => {
     setEditingCell(null);
     setEditValue("");
+    setValidationError("");
   };
 
   // Handle keyboard events in edit mode
@@ -192,17 +204,24 @@ export default function GradeSheet<T extends Record<string, any>>({
                   <div key={colIndex} className="text-gray-700">
                     {isEditing ? (
                       // Edit Mode
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onKeyDown={(e) => handleKeyDown(e, rowIndex, column)}
-                          onBlur={() => !isProcessing && handleEditCancel()}
-                          autoFocus
-                          disabled={isProcessing}
-                          className="flex-1 px-2 py-1 rounded outline-none"
-                        />
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(e, rowIndex, column)}
+                            onBlur={() => !isProcessing && handleEditCancel()}
+                            autoFocus
+                            disabled={isProcessing}
+                            className="flex-1 px-2 py-1 rounded outline-none"
+                          />
+                        </div>
+                        {validationError && (
+                          <div className="text-xs text-red-600">
+                            {validationError}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       // View Mode
@@ -215,7 +234,7 @@ export default function GradeSheet<T extends Record<string, any>>({
                       >
                         {column.render
                           ? column.render(cellValue, row, rowIndex)
-                          : cellValue ?? "-"}
+                          : cellValue ?? "-"} {column.editable ? `/ ${max_marks}` : ""}
                       </div>
                     )}
                   </div>

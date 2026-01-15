@@ -170,6 +170,30 @@ export function useCourseManagement(role: UserRole) {
     }
   }, [user?.id]);
 
+  const BulkEnrollStudent = useCallback(async (courseId: number, enrollData: EnrollStudentRequest[]) => {
+    if (!user?.id) {
+      setError("User not found");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await CoursesApi.BulkEnrollStudents(courseId, enrollData);
+      return response;
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to enroll students";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error enrolling students:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+
   const unenrollStudent = useCallback(async (courseId: number, studentId: number) => {
     if (!user?.id) {
       setError("User not found");
@@ -227,6 +251,7 @@ export function useCourseManagement(role: UserRole) {
     fetchAllAssessments,
     getmarksofassessment,
     enrollStudent,
+    BulkEnrollStudent,
     unenrollStudent,
     saveMarks,
     courseRoles: taData?.CourseRoles,
