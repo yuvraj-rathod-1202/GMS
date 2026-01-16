@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { CourseDBObject } from "@/lib/types/courses";
 import {AllMarksDBObject, MarksChanges, CourseRoles, InstructorCourseRoles} from '@/lib/types/courses';
 import {AssessmentDBObject} from '@/lib/types/assessments';
-import { TotalScoreDBObject } from "../types/policy";
+import { PolicyDBObject, TotalScoreDBObject } from "../types/policy";
 import { MarksDBObject } from "../types/marks";
 
 // Role-specific data types
@@ -24,6 +24,7 @@ export interface InstructorCourseData {
   totalMarks: TotalScoreDBObject[];
   marksChanges: Record<number, MarksChanges[]>;
   CourseRoles: InstructorCourseRoles | null;
+  policies: PolicyDBObject[];
 }
 
 // Shared course detail state

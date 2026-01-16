@@ -19,7 +19,7 @@ export default function InstructorNavbar() {
     if (href === `/c/${courseId}`) {
       return pathname === href;
     }
-    return pathname?.startsWith(href);
+    return pathname === href || pathname?.startsWith(`${href}/`);
   };
 
   return (

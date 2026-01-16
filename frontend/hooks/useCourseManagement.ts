@@ -6,6 +6,8 @@ import { useAuthStore } from "@/lib/store/auth";
 import { EnrollStudentRequest, AddTARequest } from "@/lib/types/courses";
 import { MarksApi } from "@/lib/api/marks";
 import { AddMarksRequest } from "@/lib/types/marks";
+import { PolicyApi } from "@/lib/api/policy";
+import { AssignPolicyRequest, CreatePolicyRequest, UpdatePolicyRequest } from "@/lib/types/policy";
 
 type UserRole = 'instructor' | 'ta' | 'student';
 
@@ -68,6 +70,7 @@ export function useCourseManagement(role: UserRole) {
             students: studentList,
             tas: taList
           },
+          policies: instructorData?.policies || [],
         });
       }
       
@@ -121,6 +124,7 @@ export function useCourseManagement(role: UserRole) {
           totalMarks: instructorData?.totalMarks || [],
           marksChanges: instructorData?.marksChanges || {},
           CourseRoles: instructorData?.CourseRoles || null,
+          policies: instructorData?.policies || [],
         })
       }
 
@@ -172,6 +176,7 @@ export function useCourseManagement(role: UserRole) {
           totalMarks: instructorData?.totalMarks || [],
           marksChanges: instructorData?.marksChanges || {},
           CourseRoles: instructorData?.CourseRoles || null,
+          policies: instructorData?.policies || [],
         });
       }
 
@@ -333,6 +338,172 @@ export function useCourseManagement(role: UserRole) {
     }
   }, [user?.id, setHasFetchedInSession]);
 
+  const fetchAllPolicy = useCallback(async (courseId: number, forceRefresh: boolean = false) => {
+    
+    if(hasFetchedInSession["policies"] && !forceRefresh){
+      return useCourseDetailStore.getState().instructorData?.policies || [];
+    }
+
+    if (!user?.id) {
+      setError("User not found");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const policies = await PolicyApi.GetAllPolicy(courseId);
+      const policyList = Array.isArray(policies) ? policies : (policies as any)?.policy || [];
+      if (role == 'instructor'){
+        setInstructorData({
+          assessments: instructorData?.assessments || [],
+          assessmentMarks: instructorData?.assessmentMarks || {},
+          totalMarks: instructorData?.totalMarks || [],
+          marksChanges: instructorData?.marksChanges || {},
+          policies: policyList,
+          CourseRoles: instructorData?.CourseRoles || null,
+        });
+      }
+      setHasFetchedInSession("policies", true);
+      return policyList;
+    }
+    catch (err: any) {
+      const errorMessage = err?.message || "Failed to fetch policies";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error fetching policies:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+
+  }, [user?.id, hasFetchedInSession]);
+
+  const setDefaultPolicy = useCallback(async (courseId: number, policyId: number) => {
+    if (!user?.id) {
+      setError("User not found");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await PolicyApi.SetDefaultPolicy(courseId, policyId);
+      return response;
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to set default policy";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error setting default policy:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  const createPolicy = useCallback(async (courseId: number, policyData: CreatePolicyRequest) => {
+    if (!user?.id) {
+      setError("User not found");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await PolicyApi.CreatePolicy(courseId, policyData);
+      return response;
+    }
+    catch (err: any) {
+      const errorMessage = err?.message || "Failed to create policy";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error creating policy:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+
+  const updatePolicy = useCallback(async (courseId: number, policyData: UpdatePolicyRequest) => {
+    if (!user?.id) {
+      setError("User not found");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await PolicyApi.UpdatePolicy(courseId, policyData);
+      return response;
+    }
+    catch (err: any) {
+      const errorMessage = err?.message || "Failed to update policy";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error updating policy:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  const updatePolicyComponent = useCallback(async (courseId: number, policyId: number, componentId: number, componentData: any) => {
+    if (!user?.id) {
+      setError("User not found");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await PolicyApi.UpdatePolicyComponents(courseId, policyId, componentId, componentData);
+      return response;
+    }
+    catch (err: any) {
+      const errorMessage = err?.message || "Failed to update policy component";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error updating policy component:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  const AssignPolicyToStudent = useCallback(async (courseId: number, studentData: AssignPolicyRequest) => {
+    if (!user?.id) {
+      setError("User not found");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await PolicyApi.AssignPolicyToStudent(courseId, studentData);
+      return response;
+    }
+    catch (err: any) {
+      const errorMessage = err?.message || "Failed to assign policy to student";
+      setError(errorMessage);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error("Error assigning policy to student:", err);
+        throw err;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+
   return {
     loading,
     error,
@@ -345,6 +516,12 @@ export function useCourseManagement(role: UserRole) {
     AddTA,
     RemoveTA,
     saveMarks,
+    fetchAllPolicy,
+    setDefaultPolicy,
+    createPolicy,
+    updatePolicy,
+    updatePolicyComponent,
+    AssignPolicyToStudent,
     courseRoles: taData?.CourseRoles || instructorData?.CourseRoles || null,
   };
 }
