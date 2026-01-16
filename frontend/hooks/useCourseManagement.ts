@@ -27,482 +27,198 @@ export function useCourseManagement(role: UserRole) {
   const hasFetchedInSession = useCourseDetailStore((s) => s.hasFetchedTADataInSession);
   const setHasFetchedInSession = useCourseDetailStore((s) => s.setHasFetchedTADataInSession);
 
+  // Generic API request wrapper
+  const executeRequest = useCallback(async <T,>(
+    apiCall: () => Promise<T>,
+    errorMessage: string,
+    shouldCheckUser: boolean = true
+  ): Promise<T | undefined> => {
+    if (shouldCheckUser && !user?.id) {
+      setError("User not found");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiCall();
+      return response;
+    } catch (err: any) {
+      const finalError = err?.message || errorMessage;
+      setError(finalError);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error(errorMessage, err);
+      }
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  // Update store data helper
+  const updateStoreData = useCallback((updates: Partial<typeof taData | typeof instructorData>) => {
+    const currentData = role === 'ta' ? taData : instructorData;
+    const setData = role === 'ta' ? setTaData : setInstructorData;
+    
+    setData({
+      assessments: currentData?.assessments || [],
+      assessmentMarks: currentData?.assessmentMarks || {},
+      totalMarks: currentData?.totalMarks || [],
+      marksChanges: currentData?.marksChanges || {},
+      CourseRoles: currentData?.CourseRoles || null,
+      ...(role === 'instructor' && { policies: instructorData?.policies || [] }),
+      ...updates,
+    } as any);
+  }, [role, taData, instructorData, setTaData, setInstructorData]);
+
   const fetchCourseRoles = useCallback(async (courseId: number, forceRefresh = false, isInstructor = false): Promise<CourseRoleData | undefined> => {
-    if (!forceRefresh && hasFetchedInSession["courseRoles"]) {
+    const cacheKey = "courseRoles";
+    if (!forceRefresh && hasFetchedInSession[cacheKey]) {
       return useCourseDetailStore.getState().taData?.CourseRoles || undefined;
     }
 
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
+    return executeRequest(async () => {
       const studentResponse = await CoursesApi.GetCourseRoles(courseId, 'student');
       const studentList = Array.isArray(studentResponse) ? studentResponse : (studentResponse as any)?.roles || [];
+      
       let taList = null;
       if (isInstructor) {
-        console.log("Fetching TA data for instructor");
         const taResponse = await CoursesApi.GetCourseRoles(courseId, 'ta');
         taList = Array.isArray(taResponse) ? taResponse : (taResponse as any)?.roles || [];
+      }
 
-      }
-      if (role === 'ta') {
-        setTaData({
-          assessments: taData?.assessments || [],
-          assessmentMarks: taData?.assessmentMarks || {},
-          totalMarks: taData?.totalMarks || [],
-          marksChanges: taData?.marksChanges || {},
-          CourseRoles: {
-            students: studentList,
-          },
-        });
-      } else if (role === 'instructor') {
-        setInstructorData({
-          assessments: instructorData?.assessments || [],
-          assessmentMarks: instructorData?.assessmentMarks || {},
-          totalMarks: instructorData?.totalMarks || [],
-          marksChanges: instructorData?.marksChanges || {},
-          CourseRoles: {
-            students: studentList,
-            tas: taList
-          },
-          policies: instructorData?.policies || [],
-        });
-      }
+      updateStoreData({
+        CourseRoles: {
+          students: studentList,
+          ...(isInstructor && { tas: taList }),
+        } as any,
+      });
       
-      setHasFetchedInSession("courseRoles", true);
-      
-      return {
-        students: studentList,
-      };
-    } catch (err: any) {
-      const errorMessage = err?.message || "Failed to fetch course roles";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error fetching course roles:", err);
-      }
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id, hasFetchedInSession, setHasFetchedInSession, taData, setTaData]);
+      setHasFetchedInSession(cacheKey, true);
+      return { students: studentList };
+    }, "Failed to fetch course roles");
+  }, [hasFetchedInSession, setHasFetchedInSession, updateStoreData, executeRequest]);
 
   const fetchAllAssessments = useCallback(async (courseId: number, forceRefresh = false) => {
-    
-    if(!forceRefresh && hasFetchedInSession["assessments"]){
+    const cacheKey = "assessments";
+    if (!forceRefresh && hasFetchedInSession[cacheKey]) {
       return useCourseDetailStore.getState().taData?.assessments || [];
     }
 
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-
+    return executeRequest(async () => {
       const assessments = await MarksApi.GetAllAssessments(courseId);
       const assessmentList = Array.isArray(assessments) ? assessments : (assessments as any)?.assessments || [];
-      if (role == 'ta'){
-        setTaData({
-          assessments: assessmentList,
-          assessmentMarks: taData?.assessmentMarks || {},
-          totalMarks: taData?.totalMarks || [],
-          marksChanges: taData?.marksChanges || {},
-          CourseRoles: taData?.CourseRoles || null,
-        });
-      } else if (role == 'instructor') {
-        setInstructorData({
-          assessments: assessmentList,
-          assessmentMarks: instructorData?.assessmentMarks || {},
-          totalMarks: instructorData?.totalMarks || [],
-          marksChanges: instructorData?.marksChanges || {},
-          CourseRoles: instructorData?.CourseRoles || null,
-          policies: instructorData?.policies || [],
-        })
-      }
-
-      setHasFetchedInSession("assessments", true);
+      
+      updateStoreData({ assessments: assessmentList });
+      setHasFetchedInSession(cacheKey, true);
+      
       return assessmentList;
-    } catch (err: any) {
-      const errorMessage = err?.message || "Failed to fetch assessments";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error fetching assessments:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-
-  }, [user?.id, hasFetchedInSession, setHasFetchedInSession, taData, setTaData]);
+    }, "Failed to fetch assessments");
+  }, [hasFetchedInSession, setHasFetchedInSession, updateStoreData, executeRequest]);
 
   const getmarksofassessment = useCallback(async (courseId: number, assessmentId: number, forceRefresh = false) => {
+    const cacheKey = `marks_${assessmentId}`;
+    const currentData = role === 'ta' ? taData : instructorData;
     
-    if (!forceRefresh && hasFetchedInSession["marks_" + assessmentId]) {
-      return useCourseDetailStore.getState().taData?.assessmentMarks[assessmentId] || [];
+    if (!forceRefresh && hasFetchedInSession[cacheKey]) {
+      return currentData?.assessmentMarks[assessmentId] || [];
     }
 
-    if (!user?.id) {
-      setError("User not found");
-      return useCourseDetailStore.getState().taData?.assessmentMarks[assessmentId] || [];
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-
+    return executeRequest(async () => {
       const marks = await MarksApi.GetAllMarks(courseId, assessmentId);
       const marksList = Array.isArray(marks) ? marks : (marks as any)?.marks || [];
-      if(role == 'ta'){
-        setTaData({
-          assessments: taData?.assessments || [],
-          assessmentMarks: { ...(taData?.assessmentMarks || {}), [assessmentId]: marksList },
-          totalMarks: taData?.totalMarks || [],
-          marksChanges: taData?.marksChanges || {},
-          CourseRoles: taData?.CourseRoles || null,
-        });
-      } else if (role == 'instructor') {
-        setInstructorData({
-          assessments: instructorData?.assessments || [],
-          assessmentMarks: { ...(instructorData?.assessmentMarks || {}), [assessmentId]: marksList },
-          totalMarks: instructorData?.totalMarks || [],
-          marksChanges: instructorData?.marksChanges || {},
-          CourseRoles: instructorData?.CourseRoles || null,
-          policies: instructorData?.policies || [],
-        });
-      }
-
-      setHasFetchedInSession("marks_" + assessmentId, true);
+      
+      updateStoreData({
+        assessmentMarks: { ...(currentData?.assessmentMarks || {}), [assessmentId]: marksList },
+      });
+      
+      setHasFetchedInSession(cacheKey, true);
       return marksList;
-    } catch (err: any) {
-      const errorMessage = err?.message || "Failed to fetch marks";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error fetching marks:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id, hasFetchedInSession, setHasFetchedInSession, taData, setTaData]);
+    }, "Failed to fetch marks", false) || currentData?.assessmentMarks[assessmentId] || [];
+  }, [role, taData, instructorData, hasFetchedInSession, setHasFetchedInSession, updateStoreData, executeRequest]);
 
-  const enrollStudent = useCallback(async (courseId: number, enrollData: EnrollStudentRequest) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
+  const enrollStudent = useCallback((courseId: number, enrollData: EnrollStudentRequest) => 
+    executeRequest(() => CoursesApi.EnrollStudent(courseId, enrollData), "Failed to enroll student"),
+    [executeRequest]
+  );
 
-    setLoading(true);
-    setError(null);
+  const BulkEnrollStudent = useCallback((courseId: number, enrollData: EnrollStudentRequest[]) => 
+    executeRequest(() => CoursesApi.BulkEnrollStudents(courseId, enrollData), "Failed to enroll students"),
+    [executeRequest]
+  );
 
-    try {
-      const response = await CoursesApi.EnrollStudent(courseId, enrollData);
-      return response;
-    } catch (err: any) {
-      const errorMessage = err?.message || "Failed to enroll student";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error enrolling student:", err);
-      }
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
+  const unenrollStudent = useCallback((courseId: number, studentId: number) => 
+    executeRequest(() => CoursesApi.UnEnrollStudent(courseId, studentId), "Failed to unenroll student"),
+    [executeRequest]
+  );
 
-  const BulkEnrollStudent = useCallback(async (courseId: number, enrollData: EnrollStudentRequest[]) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-    setLoading(true);
-    setError(null);
+  const AddTA = useCallback((courseId: number, taData: AddTARequest) => 
+    executeRequest(() => CoursesApi.AddTa(courseId, taData), "Failed to add TA"),
+    [executeRequest]
+  );
 
-    try {
-      const response = await CoursesApi.BulkEnrollStudents(courseId, enrollData);
-      return response;
-    } catch (err: any) {
-      const errorMessage = err?.message || "Failed to enroll students";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error enrolling students:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-
-  const unenrollStudent = useCallback(async (courseId: number, studentId: number) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await CoursesApi.UnEnrollStudent(courseId, studentId);
-      return response;
-    } catch (err: any) {
-      const errorMessage = err?.message || "Failed to unenroll student";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error unenrolling student:", err);
-      }
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  const AddTA = useCallback(async (courseId: number, taData: AddTARequest) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await CoursesApi.AddTa(courseId, taData);
-      return response;
-    } catch (err: any) {
-      const errorMessage = err?.message || "Failed to add TA";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error adding TA:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  const RemoveTA = useCallback(async (courseId: number, taId: number) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-
-    try {
-
-      const response = await CoursesApi.RemoveTa(courseId, taId);
-      return response;
-    } catch (err: any) {
-      const errorMessage = err?.message || "Failed to remove TA";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error removing TA:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
+  const RemoveTA = useCallback((courseId: number, taId: number) => 
+    executeRequest(() => CoursesApi.RemoveTa(courseId, taId), "Failed to remove TA"),
+    [executeRequest]
+  );
 
   const saveMarks = useCallback(async (courseId: number, assessmentId: number, marksData: AddMarksRequest) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
+    const result = await executeRequest(
+      () => MarksApi.AddMarks(courseId, assessmentId, marksData),
+      "Failed to save marks"
+    );
+    
+    if (result) {
+      setHasFetchedInSession(`marks_${assessmentId}`, false);
     }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await MarksApi.AddMarks(courseId, assessmentId, marksData);
-      // Invalidate the cache for this assessment's marks so they are fetched again perfectly
-      setHasFetchedInSession("marks_" + assessmentId, false);
-      return response;
-    } catch (err: any) {
-      const errorMessage = err?.message || "Failed to save marks";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error saving marks:", err);
-      }
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id, setHasFetchedInSession]);
+    
+    return result;
+  }, [executeRequest, setHasFetchedInSession]);
 
   const fetchAllPolicy = useCallback(async (courseId: number, forceRefresh: boolean = false) => {
-    
-    if(hasFetchedInSession["policies"] && !forceRefresh){
+    const cacheKey = "policies";
+    if (hasFetchedInSession[cacheKey] && !forceRefresh) {
       return useCourseDetailStore.getState().instructorData?.policies || [];
     }
 
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
+    return executeRequest(async () => {
       const policies = await PolicyApi.GetAllPolicy(courseId);
       const policyList = Array.isArray(policies) ? policies : (policies as any)?.policy || [];
-      if (role == 'instructor'){
-        setInstructorData({
-          assessments: instructorData?.assessments || [],
-          assessmentMarks: instructorData?.assessmentMarks || {},
-          totalMarks: instructorData?.totalMarks || [],
-          marksChanges: instructorData?.marksChanges || {},
-          policies: policyList,
-          CourseRoles: instructorData?.CourseRoles || null,
-        });
+      
+      if (role === 'instructor') {
+        updateStoreData({ policies: policyList });
       }
-      setHasFetchedInSession("policies", true);
+      
+      setHasFetchedInSession(cacheKey, true);
       return policyList;
-    }
-    catch (err: any) {
-      const errorMessage = err?.message || "Failed to fetch policies";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error fetching policies:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
+    }, "Failed to fetch policies");
+  }, [role, hasFetchedInSession, setHasFetchedInSession, updateStoreData, executeRequest]);
 
-  }, [user?.id, hasFetchedInSession]);
+  const setDefaultPolicy = useCallback((courseId: number, policyId: number) => 
+    executeRequest(() => PolicyApi.SetDefaultPolicy(courseId, policyId), "Failed to set default policy"),
+    [executeRequest]
+  );
 
-  const setDefaultPolicy = useCallback(async (courseId: number, policyId: number) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
+  const createPolicy = useCallback((courseId: number, policyData: CreatePolicyRequest) => 
+    executeRequest(() => PolicyApi.CreatePolicy(courseId, policyData), "Failed to create policy"),
+    [executeRequest]
+  );
 
-    setLoading(true);
-    setError(null);
+  const updatePolicy = useCallback((courseId: number, policyData: UpdatePolicyRequest) => 
+    executeRequest(() => PolicyApi.UpdatePolicy(courseId, policyData), "Failed to update policy"),
+    [executeRequest]
+  );
 
-    try {
-      const response = await PolicyApi.SetDefaultPolicy(courseId, policyId);
-      return response;
-    } catch (err: any) {
-      const errorMessage = err?.message || "Failed to set default policy";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error setting default policy:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
+  const updatePolicyComponent = useCallback((courseId: number, policyId: number, componentId: number, componentData: any) => 
+    executeRequest(() => PolicyApi.UpdatePolicyComponents(courseId, policyId, componentId, componentData), "Failed to update policy component"),
+    [executeRequest]
+  );
 
-  const createPolicy = useCallback(async (courseId: number, policyData: CreatePolicyRequest) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await PolicyApi.CreatePolicy(courseId, policyData);
-      return response;
-    }
-    catch (err: any) {
-      const errorMessage = err?.message || "Failed to create policy";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error creating policy:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-
-  const updatePolicy = useCallback(async (courseId: number, policyData: UpdatePolicyRequest) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await PolicyApi.UpdatePolicy(courseId, policyData);
-      return response;
-    }
-    catch (err: any) {
-      const errorMessage = err?.message || "Failed to update policy";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error updating policy:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  const updatePolicyComponent = useCallback(async (courseId: number, policyId: number, componentId: number, componentData: any) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await PolicyApi.UpdatePolicyComponents(courseId, policyId, componentId, componentData);
-      return response;
-    }
-    catch (err: any) {
-      const errorMessage = err?.message || "Failed to update policy component";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error updating policy component:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  const AssignPolicyToStudent = useCallback(async (courseId: number, studentData: AssignPolicyRequest) => {
-    if (!user?.id) {
-      setError("User not found");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await PolicyApi.AssignPolicyToStudent(courseId, studentData);
-      return response;
-    }
-    catch (err: any) {
-      const errorMessage = err?.message || "Failed to assign policy to student";
-      setError(errorMessage);
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-        console.error("Error assigning policy to student:", err);
-        throw err;
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
+  const AssignPolicyToStudent = useCallback((courseId: number, studentData: AssignPolicyRequest) => 
+    executeRequest(() => PolicyApi.AssignPolicyToStudent(courseId, studentData), "Failed to assign policy to student"),
+    [executeRequest]
+  );
 
   return {
     loading,
