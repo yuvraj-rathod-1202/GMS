@@ -44,7 +44,7 @@ async def update_assessment(course_id: str, assessment_id: str, data: UpdateAsse
         try:
             response = await client.put(
                 f"{MARKS_SERVICE_URL}/assessments/{course_id}/{assessment_id}",
-                json={**data.dict(), "user_id": user_info.get("user_id", 0)},
+                json={**data.model_dump(mode='json', exclude_unset=True), "user_id": user_info.get("user_id", 0)},
             )
             if response.status_code != 200:
                 raise HTTPException(
@@ -84,7 +84,7 @@ async def add_marks(course_id: str, assessment_id: str, data: AddMarksRequest, u
         try:
             response = await client.post(
                 f"{MARKS_SERVICE_URL}/{course_id}/{assessment_id}/marks",
-                json={**data.dict(), "recorded_by_id": user_info.get("user_id", 0)},
+                json={**data.model_dump(mode='json'), "recorded_by_id": user_info.get("user_id", 0)},
             )
             if response.status_code != 200:
                 raise HTTPException(

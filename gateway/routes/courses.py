@@ -289,9 +289,7 @@ async def remove_instructor_from_course(course_id: str, instructor_id: int = Que
 async def create_assessment(course_id: str, data: CreateAssessmentRequest, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
-            payload = data.dict()
-            if payload.get("assessment_date"):
-                payload["assessment_date"] = payload["assessment_date"].isoformat()
+            payload = data.model_dump(mode='json')
             
             response = await client.post(
                 f"{MARKS_SERVICE_URL}/{course_id}/assessments",
