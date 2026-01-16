@@ -3,7 +3,7 @@ import React from "react";
 
 export default function GradingPolicyCard({policy}: {policy: PolicyDBObject}) {
     return (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg border border-gray-200">
             {/* Header */}
             <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

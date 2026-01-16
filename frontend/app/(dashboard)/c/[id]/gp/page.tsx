@@ -160,7 +160,7 @@ export default function GPView() {
             )}
             {instructorData?.policies && (
                 instructorData.policies.map((policy) => (
-                    <div key={policy.id} className="mb-6 p-4 border border-gray-300 rounded-lg shadow-sm">
+                    <div key={policy.id} className="mb-6 p-4 rounded-lg">
                         <GradingPolicyCard policy={policy} />
                     </div>
                 ))

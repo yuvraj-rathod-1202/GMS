@@ -18,13 +18,13 @@ export interface AssessmentFormData {
 }
 
 const ASSESSMENT_TYPES = [
-    { id: 1, name: "Assignment" },
-    { id: 2, name: "Quiz" },
-    { id: 3, name: "Midsem" },
-    { id: 4, name: "EndSem" },
-    { id: 5, name: "Project" },
-    { id: 6, name: "Lab" },
-    { id: 7, name: "Attendance" },
+    {id: 1, name: "Quiz"},
+    {id: 2, name: "Assignment"},
+    {id: 3, name: "Midsem"},
+    {id: 4, name: "EndSem"},
+    {id: 5, name: "Project"},
+    {id: 6, name: "Attendance"},
+    {id: 7, name: "Lab"},
 ];
 
 export default function AssessmentDialog({
