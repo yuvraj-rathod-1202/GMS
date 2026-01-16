@@ -7,6 +7,7 @@ import InstructorNavbar from "@/components/Course/InstructorNavbar";
 import { useCourseManagement } from "@/hooks/useCourseManagement";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import GradingPolicyCard from "@/components/Policy/GradingPolicyCard";
+import { CreatePolicyRequest, UpdatePolicyRequest } from "@/lib/types/policy";
 
 export default function GPView() {
 
@@ -16,6 +17,9 @@ export default function GPView() {
     const [isTimeout, setIsTimeout] = useState(false);
     const [isFetchingPolicy, setIsFetchingPolicy] = useState(false);
     const [settingDefaultPolicyId, setSettingDefaultPolicyId] = useState<boolean>(false);
+    const [creatingPolicy, setCreatingPolicy] = useState<boolean>(false);
+    const [updatingPolicyId, setUpdatingPolicyId] = useState<boolean>(false);
+    const [updatingPolicyComponentId, setUpdatingPolicyComponentId] = useState<boolean>(false);
 
     const { role, course, isLoading, hasAccess } = useRoleAccess({
         allowedRoles: ['instructor'],
@@ -24,7 +28,7 @@ export default function GPView() {
 
     const currentCourse = useCourseDetailStore((s) => s.currentCourse);
     const instructorData = useCourseDetailStore((s) => s.instructorData);
-    const {loading: managementLoading, fetchAllPolicy, setDefaultPolicy} = useCourseManagement(role || 'instructor');
+    const {loading: managementLoading, fetchAllPolicy, setDefaultPolicy, createPolicy, updatePolicy, updatePolicyComponent} = useCourseManagement(role || 'instructor');
 
     useEffect(() => {
         if (!isLoading && !course) {
@@ -90,7 +94,52 @@ export default function GPView() {
         }
     }
 
-    
+    const handleCreatePolicy = async (policyData: CreatePolicyRequest) => {
+        setCreatingPolicy(true);
+        try {
+            await createPolicy(courseId, policyData);
+            fetchAllPolicy(courseId, true);
+        }
+        catch (error) {
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error creating policy:", error);
+            }
+        } finally {
+            setCreatingPolicy(false);
+        }
+    }
+
+    const handleUpdatePolicy = async (PolicyData: UpdatePolicyRequest) => {
+        setUpdatingPolicyId(true);
+        try {
+            await updatePolicy(courseId, PolicyData);
+            fetchAllPolicy(courseId, true);
+        }
+        catch (error) {
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error updating policy:", error);
+            }
+        }
+        finally {
+            setUpdatingPolicyId(false);
+        }
+    }
+
+    const handleUpdatePolicyComponent = async (policyId: number, componentId: number, componentData: any) => {
+        setUpdatingPolicyComponentId(true);
+        try {
+            await updatePolicyComponent(courseId, policyId, componentId, componentData);
+            fetchAllPolicy(courseId, true);
+        }
+        catch (error) {
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error updating policy component:", error);
+            }
+        }
+        finally {
+            setUpdatingPolicyComponentId(false);
+        }
+    }
 
     if (role !== 'instructor') {
         return null;
