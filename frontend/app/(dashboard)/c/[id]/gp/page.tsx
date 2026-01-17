@@ -262,7 +262,7 @@ export default function GPView() {
             )}
             <div className="w-full">
                 <div className="flex gap-4 justify-end mb-4">
-                    <Link href={`/c/${courseId}/gb`}><button className="flex flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400">Open Grade Sheet</button></Link>
+                    <Link href={`/c/${courseId}/gb`}><button className="flex flex-row cursor-pointer items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400">Open Grade Sheet</button></Link>
                     <button onClick={handleCreatePolicy} className="flex flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400"><FaPlus />Create Policy</button>
                 </div>
             </div>

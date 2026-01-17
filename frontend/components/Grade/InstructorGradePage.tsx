@@ -10,6 +10,7 @@ import InstructorAssessmentCard from "./InstructorAssessmentCard";
 import AssessmentDialog, { AssessmentFormData } from "./AssessmentDialog";
 import { MarksApi } from "@/lib/api/marks";
 import { AssessmentDBObject } from "@/lib/types/assessments";
+import Link from "next/link";
 
 export default function InstructorGradePage() {
   const params = useParams();
@@ -117,11 +118,16 @@ export default function InstructorGradePage() {
       <div className="max-h-[calc(100vh-96px)] overflow-y-auto w-full md:max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="space-y-6 md:space-y-8">
           {/* Page Header */}
-          <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Grades</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600">
-              View and manage student grades for assessments in this course.
-            </p>
+          <div className="flex flex-row justify-between items-center mb-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Grades</h1>
+              <p className="text-xs sm:text-sm md:text-base text-gray-600">
+                View and manage student grades for assessments in this course.
+              </p>
+            </div>
+            <div>
+              <Link href={`/c/${courseId}/gb`}><button className="flex cursor-pointer flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400">Open Grade Sheet</button></Link>
+            </div>
           </div>
 
           <div>

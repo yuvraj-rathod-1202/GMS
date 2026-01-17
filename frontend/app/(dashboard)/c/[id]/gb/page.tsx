@@ -5,8 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import InstructorNavbar from "@/components/Course/InstructorNavbar";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { IoArrowBack } from "react-icons/io5";
 
-export default function AnalyticsView() {
+export default function GradeSheetView() {
 
     const params = useParams();
     const router = useRouter();
@@ -53,11 +54,11 @@ export default function AnalyticsView() {
     }
 
   return (
-    <>
-        <InstructorNavbar />
-        <div>
-            analytics page
+    <div className="p-4">
+        <div className="flex flex-row justify-between items-center mb-4">
+            <div className="text-2xl font-semibold">Grade Sheet</div>
+            <button onClick={() => router.back()} className="flex flex-row items-center p-2 rounded-lg bg-gray-300 gap-2"><IoArrowBack />Back</button>
         </div>
-    </>
+    </div>
   );
 }
