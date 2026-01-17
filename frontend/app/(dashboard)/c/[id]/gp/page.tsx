@@ -7,9 +7,10 @@ import InstructorNavbar from "@/components/Course/InstructorNavbar";
 import { useCourseManagement } from "@/hooks/useCourseManagement";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import GradingPolicyCard from "@/components/Policy/GradingPolicyCard";
-import { CreatePolicyRequest, UpdatePolicyRequest } from "@/lib/types/policy";
+import { CreatePolicyRequest, PolicyDBObject, UpdatePolicyRequest } from "@/lib/types/policy";
 import { FaPlus } from "react-icons/fa";
 import Link from "next/link";
+import PolicyDialog, { PolicyFormData } from "@/components/Policy/PolicyDialog";
 
 export default function GPView() {
 
@@ -18,6 +19,8 @@ export default function GPView() {
     const courseId = Number(params.id);
     const [isTimeout, setIsTimeout] = useState(false);
     const [isFetchingPolicy, setIsFetchingPolicy] = useState(false);
+    const [showPolicyDialog, setShowPolicyDialog] = useState(false);
+    const [editingPolicy, setEditingPolicy] = useState<PolicyDBObject | null | undefined>(null);
     const [settingDefaultPolicyId, setSettingDefaultPolicyId] = useState<boolean>(false);
     const [creatingPolicy, setCreatingPolicy] = useState<boolean>(false);
     const [updatingPolicyId, setUpdatingPolicyId] = useState<boolean>(false);
@@ -96,20 +99,30 @@ export default function GPView() {
         }
     }
 
-    const handleCreatePolicy = async (policyData: CreatePolicyRequest) => {
-        setCreatingPolicy(true);
-        try {
-            await createPolicy(courseId, policyData);
-            fetchAllPolicy(courseId, true);
-        }
-        catch (error) {
-            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
-                console.error("Error creating policy:", error);
-            }
-        } finally {
-            setCreatingPolicy(false);
-        }
+    const handleCreatePolicy = () => {
+        setEditingPolicy(null);
+        setShowPolicyDialog(true);
     }
+
+    const handleEditPolicy = (policy: PolicyDBObject) => {
+        setEditingPolicy(policy);
+        setShowPolicyDialog(true);
+    }
+
+    // const handleCreatePolicy = async (policyData: CreatePolicyRequest) => {
+    //     setCreatingPolicy(true);
+    //     try {
+    //         await createPolicy(courseId, policyData);
+    //         fetchAllPolicy(courseId, true);
+    //     }
+    //     catch (error) {
+    //         if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+    //             console.error("Error creating policy:", error);
+    //         }
+    //     } finally {
+    //         setCreatingPolicy(false);
+    //     }
+    // }
 
     const handleUpdatePolicy = async (PolicyData: UpdatePolicyRequest) => {
         setUpdatingPolicyId(true);
@@ -159,6 +172,9 @@ export default function GPView() {
         }
     }
 
+    const handleSubmitPolicy = async (policyData: PolicyFormData) => {
+    }
+
 
     if (role !== 'instructor') {
         return null;
@@ -180,17 +196,24 @@ export default function GPView() {
             <div className="w-full">
                 <div className="flex gap-4 justify-end mb-4">
                     <Link href={`/c/${courseId}/gb`}><button className="flex flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400">Open Grade Sheet</button></Link>
-                    <button className="flex flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400"><FaPlus />Create Policy</button>
+                    <button onClick={handleCreatePolicy} className="flex flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400"><FaPlus />Create Policy</button>
                 </div>
             </div>
             {instructorData?.policies && (
                 instructorData.policies.map((policy) => (
                     <div key={policy.id} className="mb-6 p-4 rounded-lg">
-                        <GradingPolicyCard policy={policy} />
+                        <GradingPolicyCard policy={policy} onEdit={() => handleEditPolicy(policy)} />
                     </div>
                 ))
             )}
         </div>
+        <PolicyDialog
+            isOpen={showPolicyDialog}
+            onClose={() => setShowPolicyDialog(false)}
+            onSubmit={handleSubmitPolicy}
+            policy={editingPolicy}
+            isLoading={creatingPolicy || updatingPolicyId || updatingPolicyComponentId}
+        />
     </>
   );
 }

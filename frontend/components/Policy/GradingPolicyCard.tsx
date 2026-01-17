@@ -16,7 +16,11 @@ const getAssessmentTypeLabel = (typeId: number): string => {
   return types[typeId] || `Type ${typeId}`;
 };
 
-export default function GradingPolicyCard({policy}: {policy: PolicyDBObject}) {
+export default function GradingPolicyCard({policy, onEdit}: 
+    {
+        policy: PolicyDBObject, 
+        onEdit: () => void
+    }) {
     return (
         <div className="bg-white rounded-lg border border-gray-200">
             {/* Header */}
@@ -32,7 +36,7 @@ export default function GradingPolicyCard({policy}: {policy: PolicyDBObject}) {
                     </div>
                     <div className="flex flex-row gap-4 text-sm text-gray-500 items-center">
                         <p>Total Weightage: <span className="font-medium text-gray-900">{policy.total_weightage}%</span></p>
-                        <button title="Edit Policy" className="cursor-pointer text-gray-600 hover:text-mms-indigo hover:underline"><FaPencil /></button>
+                        <button onClick={onEdit} title="Edit Policy" className="cursor-pointer text-gray-600 hover:text-mms-indigo hover:underline"><FaPencil /></button>
                     </div>
                 </div>
             </div>
