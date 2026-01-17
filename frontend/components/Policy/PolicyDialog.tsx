@@ -24,6 +24,7 @@ interface PolicyDialogProps {
 }
 
 export interface PolicyRuleFormData {
+    id?: number;
     rule_type: 'ALL' | 'BEST_N' | 'CUSTOM';
     rule_params: Record<any, any>;
 }
@@ -149,6 +150,7 @@ export default function PolicyDialog({
                     assessment_category_id: c.assessment_category_id,
                     weightage: c.weightage,
                     rules: c.rules ? {
+                        id: c.rules.id,
                         rule_type: c.rules.rule_type,
                         rule_params: c.rules.rule_params
                     } : {

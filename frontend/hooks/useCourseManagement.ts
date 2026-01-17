@@ -7,7 +7,7 @@ import { EnrollStudentRequest, AddTARequest } from "@/lib/types/courses";
 import { MarksApi } from "@/lib/api/marks";
 import { AddMarksRequest } from "@/lib/types/marks";
 import { PolicyApi } from "@/lib/api/policy";
-import { AssignPolicyRequest, CreatePolicyRequest, UpdatePolicyComponentsRequest, UpdatePolicyRequest } from "@/lib/types/policy";
+import { AddPolicyComponentsRequest, AssignPolicyRequest, CreatePolicyRequest, UpdatePolicyComponentsRequest, UpdatePolicyRequest } from "@/lib/types/policy";
 
 type UserRole = 'instructor' | 'ta' | 'student';
 
@@ -210,7 +210,7 @@ export function useCourseManagement(role: UserRole) {
     [executeRequest]
   );
 
-  const updatePolicyComponent = useCallback((courseId: number, policyId: number, componentId: number, componentData: any) => 
+  const updatePolicyComponent = useCallback((courseId: number, policyId: number, componentId: number, componentData: UpdatePolicyComponentsRequest) => 
     executeRequest(() => PolicyApi.UpdatePolicyComponents(courseId, policyId, componentId, componentData), "Failed to update policy component"),
     [executeRequest]
   );
@@ -220,7 +220,7 @@ export function useCourseManagement(role: UserRole) {
     [executeRequest]
   );
 
-  const AddPolicyComponent = useCallback((courseId: number, policyId: number, componentData: UpdatePolicyComponentsRequest) => 
+  const AddPolicyComponent = useCallback((courseId: number, policyId: number, componentData: AddPolicyComponentsRequest) => 
     executeRequest(() => PolicyApi.AddPolicyComponents(courseId, policyId, componentData), "Failed to add policy component"),
     [executeRequest]
   );

@@ -1,6 +1,6 @@
 import { apiClient } from "./client";
 import { handleRequest } from "./utils";
-import {CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentsRequest, AssignPolicyRequest} from '@/lib/types/policy';
+import {CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentsRequest, AssignPolicyRequest, AddPolicyComponentsRequest} from '@/lib/types/policy';
 
 export const PolicyApi = {
     CreatePolicy: async (courseId: number, policyData: CreatePolicyRequest) => {
@@ -39,7 +39,7 @@ export const PolicyApi = {
         );
     },
 
-    AddPolicyComponents: async (courseId: number, policyId: number, data: UpdatePolicyComponentsRequest) => {
+    AddPolicyComponents: async (courseId: number, policyId: number, data: AddPolicyComponentsRequest) => {
         return handleRequest(
             apiClient.post(`/courses/${courseId}/policy/${policyId}/components`, data)
         );

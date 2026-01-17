@@ -7,7 +7,7 @@ import InstructorNavbar from "@/components/Course/InstructorNavbar";
 import { useCourseManagement } from "@/hooks/useCourseManagement";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import GradingPolicyCard from "@/components/Policy/GradingPolicyCard";
-import { CreatePolicyRequest, PolicyDBObject, UpdatePolicyRequest } from "@/lib/types/policy";
+import { AddPolicyComponentsRequest, CreatePolicyRequest, PolicyDBObject, UpdatePolicyComponentsRequest, UpdatePolicyRequest } from "@/lib/types/policy";
 import { FaPlus } from "react-icons/fa";
 import Link from "next/link";
 import PolicyDialog, { PolicyFormData } from "@/components/Policy/PolicyDialog";
@@ -140,7 +140,7 @@ export default function GPView() {
         }
     }
 
-    const handleUpdatePolicyComponent = async (policyId: number, componentId: number, componentData: any) => {
+    const handleUpdatePolicyComponent = async (policyId: number, componentId: number, componentData: UpdatePolicyComponentsRequest) => {
         setUpdatingPolicyComponentId(true);
         try {
             await updatePolicyComponent(courseId, policyId, componentId, componentData);
@@ -156,7 +156,7 @@ export default function GPView() {
         }
     }
 
-    const handleAddPolicyComponent = async (policyId: number, componentData: any) => {
+    const handleAddPolicyComponent = async (policyId: number, componentData: AddPolicyComponentsRequest) => {
         setUpdatingPolicyComponentId(true);
         try {
             await AddPolicyComponent(courseId, policyId, componentData);
@@ -189,37 +189,56 @@ export default function GPView() {
     }
 
     const handleSubmitPolicy = async (policyData: PolicyFormData) => {
-        if (editingPolicy) {
-            await handleUpdatePolicy({
-                id: editingPolicy.id,
-                policy_name: policyData.policy_name,
-                total_weightage: policyData.total_weightage,
-            });
-            policyData.components.forEach(async (component) => {
-                if (component.component_id) {
-                    await handleUpdatePolicyComponent(editingPolicy.id, component.component_id, {
+        try {
+            if (editingPolicy) {
+                await handleUpdatePolicy({
+                    id: editingPolicy.id,
+                    policy_name: policyData.policy_name,
+                    total_weightage: policyData.total_weightage,
+                });
+                policyData.components.forEach(async (component) => {
+                    if (component.component_id) {
+                        await handleUpdatePolicyComponent(editingPolicy.id, component.component_id, {
+                            assessment_category_id: component.assessment_category_id,
+                            weightage: component.weightage,
+                            rules: {
+                                id: component.rules?.id || undefined,
+                                rule_type: component.rules?.rule_type || 'ALL',
+                                rule_params: component.rules?.rule_params || {},
+                            },
+                        });
+                    } else {
+                        await handleAddPolicyComponent(editingPolicy.id, {
+                            assessment_category_id: component.assessment_category_id,
+                            weightage: component.weightage,
+                            rules: {
+                                rule_type: component.rules?.rule_type || 'ALL',
+                                rule_params: component.rules?.rule_params || {},
+                            }
+                        });
+                    }
+                });
+                alert("Policy updated successfully.");   
+            } else {
+                await handleAddPolicy({
+                    policy_name: policyData.policy_name,
+                    total_weightage: policyData.total_weightage,
+                    components: policyData.components.map((component) => ({
                         assessment_category_id: component.assessment_category_id,
                         weightage: component.weightage,
-                        rules: component.rules,
-                    });
-                } else {
-                    await handleAddPolicyComponent(editingPolicy.id, {
-                        assessment_category_id: component.assessment_category_id,
-                        weightage: component.weightage,
-                        rules: component.rules,
-                    });
-                }
-            });      
-        } else {
-            await handleAddPolicy({
-                policy_name: policyData.policy_name,
-                total_weightage: policyData.total_weightage,
-                components: policyData.components.map((component) => ({
-                    assessment_category_id: component.assessment_category_id,
-                    weightage: component.weightage,
-                    rules: component.rules,
-                })),
-            });
+                        rules: {
+                            rule_type: component.rules?.rule_type || 'ALL',
+                            rule_params: component.rules?.rule_params || {},
+                        }
+                    })),
+                });
+                alert("Policy created successfully.");
+            }
+        } catch (error) {
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error submitting policy:", error);
+            }
+            alert("An error occurred while submitting the policy. Please try again.");
         }
     }
 
@@ -250,7 +269,7 @@ export default function GPView() {
             {instructorData?.policies && (
                 instructorData.policies.map((policy) => (
                     <div key={policy.id} className="mb-6 p-4 rounded-lg">
-                        <GradingPolicyCard policy={policy} onEdit={() => handleEditPolicy(policy)} onDelete={() => handleDeletePolicy(policy.id)} />
+                        <GradingPolicyCard policy={policy} onEdit={() => handleEditPolicy(policy)} onDelete={() => handleDeletePolicy(policy.id)} SetDefault={() => handleSetDefaultPolicy(policy.id)} />
                     </div>
                 ))
             )}

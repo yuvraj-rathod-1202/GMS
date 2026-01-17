@@ -17,11 +17,12 @@ const getAssessmentTypeLabel = (typeId: number): string => {
   return types[typeId] || `Type ${typeId}`;
 };
 
-export default function GradingPolicyCard({policy, onEdit, onDelete}: 
+export default function GradingPolicyCard({policy, onEdit, onDelete, SetDefault}: 
     {
         policy: PolicyDBObject, 
         onEdit: () => void,
-        onDelete: () => void
+        onDelete: () => void,
+        SetDefault: () => void
     }) {
     return (
         <div className="bg-white rounded-lg border border-gray-200">
@@ -103,7 +104,7 @@ export default function GradingPolicyCard({policy, onEdit, onDelete}:
             <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-100 rounded-b-lg">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-gray-500">
                     <span>Updated {new Date(policy.updated_at).toLocaleDateString()}</span>
-                    <span>Set by ID: {policy.set_by_id}</span>
+                    {!policy.is_default && <button onClick={SetDefault} className="text-xs text-mms-blue cursor-pointer hover:underline">set as default</button>}
                 </div>
             </div>
         </div>

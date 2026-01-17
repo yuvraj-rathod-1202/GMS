@@ -91,6 +91,11 @@ class UpdateGradingRuleRequest(BaseModel):
     id: Optional[int]
     rule_type: str
     rule_params: Dict
+
+class CreatePolicyComponentRequest(BaseModel):
+    assessment_category_id: int
+    weightage: float
+    rules: GradingRuleRequest | None
     
 class UpdatePolicyComponentRequest(BaseModel):
     assessment_category_id: int

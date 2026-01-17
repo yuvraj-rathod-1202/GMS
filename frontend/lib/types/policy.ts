@@ -59,9 +59,20 @@ export interface UpdateGradingRuleRequest {
 
 export interface UpdatePolicyComponentsRequest {
     assessment_category_id: number;
-    weightage?: number;
-    rules?: UpdateGradingRuleRequest | null;
+    weightage: number;
+    rules: UpdateGradingRuleRequest | null;
 };
+
+export interface AddGradingRuleRequest {
+    rule_type: 'ALL' | 'BEST_N' | 'CUSTOM';
+    rule_params: Record<any, any>;
+}
+
+export interface AddPolicyComponentsRequest {
+    assessment_category_id: number;
+    weightage: number;
+    rules: AddGradingRuleRequest | null;
+}
 
 export interface StudentPolicyMapping {
     student_id: number;

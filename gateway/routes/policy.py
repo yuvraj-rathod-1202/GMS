@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 import httpx, os
 from dotenv import load_dotenv
 from utils.auth import verify_token
-from models.schema import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, AssignPolicyRequest
+from models.schema import CreatePolicyRequest, UpdatePolicyRequest, CreatePolicyComponentRequest, UpdatePolicyComponentRequest, AssignPolicyRequest
 
 load_dotenv()
 router = APIRouter()
@@ -144,7 +144,7 @@ async def delete_policy_component(course_id: int, policy_id: int, component_id: 
             )
 
 @router.post("/{course_id}/policy/{policy_id}/components")
-async def add_policy_component(course_id: int, policy_id: int, data: UpdatePolicyComponentRequest, user_info: dict = Depends(verify_token)):
+async def add_policy_component(course_id: int, policy_id: int, data: CreatePolicyComponentRequest, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
