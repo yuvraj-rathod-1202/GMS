@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Dict
 
 class MarksDBObj(BaseModel):
     student_id: int
@@ -16,3 +17,6 @@ class AllMarksDBObj(BaseModel):
     assessment_type_id: int
     max_marks: float
     assessment_date: datetime
+    
+class AllAssessmentMarksDBObj(BaseModel):
+    marks: Dict[int, list[MarksDBObj]]

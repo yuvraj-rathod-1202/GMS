@@ -138,6 +138,28 @@ export function useCourseManagement(role: UserRole) {
     }, "Failed to fetch marks", false) || currentData?.assessmentMarks[assessmentId] || [];
   }, [role, taData, instructorData, hasFetchedInSession, setHasFetchedInSession, updateStoreData, executeRequest]);
 
+  const getallassessmentmarks = useCallback(async (courseId: number, forcedRefresh = false) => {
+    const cacheKey = `marks_all`;
+    const currentData = role === 'ta' ? taData : instructorData;
+    
+    if (!forcedRefresh && hasFetchedInSession[cacheKey]) {
+      return currentData?.assessmentMarks || {};
+    }
+
+    return executeRequest(async () => {
+      const marks = await MarksApi.GetAllAssessmentMarks(courseId);
+      const marksDict = Array.isArray(marks) ? marks : (marks as any)?.marks?.marks || [];
+      
+      
+      updateStoreData({
+        assessmentMarks: { ...(currentData?.assessmentMarks || {}), ...marksDict },
+      });
+      
+      setHasFetchedInSession(cacheKey, true);
+      return marksDict;
+    }, "Failed to fetch all marks");
+  }, [role, taData, instructorData, hasFetchedInSession, setHasFetchedInSession, updateStoreData, executeRequest]);
+
   const enrollStudent = useCallback((courseId: number, enrollData: EnrollStudentRequest) => 
     executeRequest(() => CoursesApi.EnrollStudent(courseId, enrollData), "Failed to enroll student"),
     [executeRequest]
@@ -236,6 +258,7 @@ export function useCourseManagement(role: UserRole) {
     fetchCourseRoles,
     fetchAllAssessments,
     getmarksofassessment,
+    getallassessmentmarks,
     enrollStudent,
     BulkEnrollStudent,
     unenrollStudent,

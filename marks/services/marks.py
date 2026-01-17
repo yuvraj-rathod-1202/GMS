@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from fastapi import status, HTTPException
 from utils.db import get_db
 from models.schemas.marks import AddMarksRequest
-from models.dbobj.marks import MarksDBObj, AllMarksDBObj
+from models.dbobj.marks import MarksDBObj, AllMarksDBObj, AllAssessmentMarksDBObj
 
 # Thread pool for blocking RabbitMQ operations
 executor = ThreadPoolExecutor(max_workers=5)
@@ -335,4 +335,47 @@ def MarksPublished(assessment_id: int) -> bool:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}"
+        )
+        
+def get_all_assessment_marks_from_db(course_id: int):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+    
+    try:
+        cursor = db.cursor()
+        
+        query = """
+            SELECT m.assessment_id, m.student_id, m.marks_obtained, m.recorded_by_id, m.updated_at
+            FROM marks m
+            JOIN assessments a ON m.assessment_id = a.id
+            WHERE a.course_id = %s
+            ORDER BY m.assessment_id, m.student_id
+        """
+        
+        cursor.execute(query, (course_id,))
+        results = cursor.fetchall()
+        
+        marks = AllAssessmentMarksDBObj(marks={})
+        for row in results:
+            assessment_id = row[0]
+            mark_obj = MarksDBObj(
+                student_id=row[1],
+                marks_obtained=row[2],
+                recorded_by_id=row[3],
+                updated_at=row[4]
+            )
+            if assessment_id not in marks.marks:
+                marks.marks[assessment_id] = []
+            marks.marks[assessment_id].append(mark_obj)
+        
+        return marks
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve all assessment marks from the database : {e}"
         )

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Query
 from utils.auth import verifyInstructorOrTa, verifyRoleInCourse, verifyRoleInCourseAndPublish
 from models.schemas.marks import AddMarksRequest
-from services.marks import add_marks_to_db, get_marks_from_db, delete_marks_from_db, publish_marks_in_db, get_all_marks_from_db
+from services.marks import add_marks_to_db, get_all_assessment_marks_from_db, get_marks_from_db, delete_marks_from_db, publish_marks_in_db, get_all_marks_from_db
 
 router = APIRouter()
 
@@ -129,5 +129,18 @@ async def get_all_marks_for_student(course_id: int, student_id: int, user_id: in
         )
         
     marks = get_all_marks_from_db(student_id, course_id, check_published=verified.get('role', 'student') == 'student')
+    
+    return {"marks": marks}
+
+@router.get("/{course_id}/all/assessment/marks")
+async def get_all_marks(course_id: int, user_id: int = Query(...)):
+    verified = await verifyInstructorOrTa(user_id, course_id)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Instructor or TA privileges required"
+        )
+        
+    marks = get_all_assessment_marks_from_db(course_id)
     
     return {"marks": marks}

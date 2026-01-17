@@ -46,6 +46,12 @@ export const MarksApi = {
         );
     },
 
+    GetAllAssessmentMarks: async (courseId: number) => {
+        return handleRequest(
+            apiClient.get(`/courses/${courseId}/all/assessment/marks`)
+        );
+    },
+
     GetMarksById: async (courseId: number, assessmentId: number, studentId: number) => {
         return handleRequest(
             apiClient.get(`/assessments/${courseId}/${assessmentId}/marks/${studentId}`)

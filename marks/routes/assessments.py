@@ -6,8 +6,8 @@ from services.assessments import add_assessment_to_db, get_all_assessments_from_
 router = APIRouter()
 
 @router.post("/{course_id}/assessments")
-def create_assessment(course_id: int, data: CreateAssessmentRequest):
-    verified = verifyInstructor(data.user_id, course_id)
+async def create_assessment(course_id: int, data: CreateAssessmentRequest):
+    verified = await verifyInstructor(data.user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -25,8 +25,8 @@ def create_assessment(course_id: int, data: CreateAssessmentRequest):
     return {"assessment_id": assessment_id}
 
 @router.get("/{course_id}/assessments")
-def get_all_assessments(course_id: int, user_id: int = Query(...)):
-    verified = verifyRoleInCourse(user_id, course_id)
+async def get_all_assessments(course_id: int, user_id: int = Query(...)):
+    verified = await verifyRoleInCourse(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -44,8 +44,8 @@ def get_all_assessments(course_id: int, user_id: int = Query(...)):
     return {"assessments": assessments}
 
 @router.get("/assessments/{course_id}/{assessment_id}")
-def get_assessment(course_id: int, assessment_id: int, user_id: int = Query(...)):
-    verified = verifyRoleInCourse(user_id, course_id)
+async def get_assessment(course_id: int, assessment_id: int, user_id: int = Query(...)):
+    verified = await verifyRoleInCourse(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -63,8 +63,8 @@ def get_assessment(course_id: int, assessment_id: int, user_id: int = Query(...)
     return {"assessments": assessments}
 
 @router.put("/assessments/{course_id}/{assessment_id}")
-def update_assessment(course_id: int, assessment_id: int, data: UpdateAssessmentRequest):
-    verified = verifyInstructor(data.user_id, course_id)
+async def update_assessment(course_id: int, assessment_id: int, data: UpdateAssessmentRequest):
+    verified = await verifyInstructor(data.user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -82,8 +82,8 @@ def update_assessment(course_id: int, assessment_id: int, data: UpdateAssessment
     return {"detail": "Assessment updated successfully"}
     
 @router.delete("/assessments/{course_id}/{assessment_id}")
-def delete_assessment(course_id: int, assessment_id: int, user_id: int = Query(...)):
-    verified = verifyInstructor(user_id, course_id)
+async def delete_assessment(course_id: int, assessment_id: int, user_id: int = Query(...)):
+    verified = await verifyInstructor(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

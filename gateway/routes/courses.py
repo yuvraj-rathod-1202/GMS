@@ -347,3 +347,22 @@ async def get_student_marks(course_id: str, student_id: str, user_info: dict = D
                 detail=f"Marks service unavailable: {str(e)}"
             )
             
+@router.get("/{course_id}/all/assessment/marks")
+async def get_all_marks(course_id: str, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{MARKS_SERVICE_URL}/{course_id}/all/assessment/marks",
+                params={"user_id": user_info.get("user_id", 0)},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Error fetching all marks"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Marks service unavailable: {str(e)}"
+            )
