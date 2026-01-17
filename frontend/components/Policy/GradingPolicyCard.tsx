@@ -1,5 +1,20 @@
 import { PolicyDBObject } from "@/lib/types/policy";
 import React from "react";
+import { FaEdit } from "react-icons/fa";
+import { FaPencil } from "react-icons/fa6";
+
+const getAssessmentTypeLabel = (typeId: number): string => {
+  const types: { [key: number]: string } = {
+    1: "Quiz",
+    2: "Assignment",
+    3: "Midsem",
+    4: "EndSem",
+    5: "Project",
+    6: "Attendance",
+    7: "Lab",
+  };
+  return types[typeId] || `Type ${typeId}`;
+};
 
 export default function GradingPolicyCard({policy}: {policy: PolicyDBObject}) {
     return (
@@ -15,8 +30,9 @@ export default function GradingPolicyCard({policy}: {policy: PolicyDBObject}) {
                             </span>
                         )}
                     </div>
-                    <div className="text-sm text-gray-500">
-                        Total Weightage: <span className="font-medium text-gray-900">{policy.total_weightage}%</span>
+                    <div className="flex flex-row gap-4 text-sm text-gray-500 items-center">
+                        <p>Total Weightage: <span className="font-medium text-gray-900">{policy.total_weightage}%</span></p>
+                        <button title="Edit Policy" className="cursor-pointer text-gray-600 hover:text-mms-indigo hover:underline"><FaPencil /></button>
                     </div>
                 </div>
             </div>
@@ -36,7 +52,7 @@ export default function GradingPolicyCard({policy}: {policy: PolicyDBObject}) {
                                             {index + 1}
                                         </span>
                                         <span className="text-sm font-medium text-gray-700">
-                                            Category {component.assessment_category_id}
+                                            {getAssessmentTypeLabel(component.assessment_category_id)}
                                         </span>
                                     </div>
                                     <span className="text-sm font-medium text-gray-900 ml-8 sm:ml-0">

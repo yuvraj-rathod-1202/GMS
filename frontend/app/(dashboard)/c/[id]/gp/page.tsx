@@ -8,6 +8,8 @@ import { useCourseManagement } from "@/hooks/useCourseManagement";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import GradingPolicyCard from "@/components/Policy/GradingPolicyCard";
 import { CreatePolicyRequest, UpdatePolicyRequest } from "@/lib/types/policy";
+import { FaPlus } from "react-icons/fa";
+import Link from "next/link";
 
 export default function GPView() {
 
@@ -28,7 +30,7 @@ export default function GPView() {
 
     const currentCourse = useCourseDetailStore((s) => s.currentCourse);
     const instructorData = useCourseDetailStore((s) => s.instructorData);
-    const {loading: managementLoading, fetchAllPolicy, setDefaultPolicy, createPolicy, updatePolicy, updatePolicyComponent} = useCourseManagement(role || 'instructor');
+    const {loading: managementLoading, fetchAllPolicy, setDefaultPolicy, createPolicy, updatePolicy, updatePolicyComponent, AddPolicyComponent} = useCourseManagement(role || 'instructor');
 
     useEffect(() => {
         if (!isLoading && !course) {
@@ -141,6 +143,23 @@ export default function GPView() {
         }
     }
 
+    const handleAddPolicyComponent = async (policyId: number, componentData: any) => {
+        setUpdatingPolicyComponentId(true);
+        try {
+            await AddPolicyComponent(courseId, policyId, componentData);
+            fetchAllPolicy(courseId, true);
+        }
+        catch (error) {
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error adding policy component:", error);
+            }
+        }
+        finally {
+            setUpdatingPolicyComponentId(false);
+        }
+    }
+
+
     if (role !== 'instructor') {
         return null;
     }
@@ -148,7 +167,7 @@ export default function GPView() {
   return (
     <>
         <InstructorNavbar />
-        <div className="p-6">
+        <div className="p-6 max-h-[calc(100vh-96px)] overflow-y-auto">
             {isLoadingPolicy ? (
                 <div className="flex justify-center items-center h-full p-10">
                     <div className="text-gray-900 text-lg animate-pulse">Loading grading policy...</div>
@@ -158,6 +177,12 @@ export default function GPView() {
                     <div className="text-gray-900 text-lg">No grading policy found for this course.</div>
                 )
             )}
+            <div className="w-full">
+                <div className="flex gap-4 justify-end mb-4">
+                    <Link href={`/c/${courseId}/gb`}><button className="flex flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400">Open Grade Sheet</button></Link>
+                    <button className="flex flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400"><FaPlus />Create Policy</button>
+                </div>
+            </div>
             {instructorData?.policies && (
                 instructorData.policies.map((policy) => (
                     <div key={policy.id} className="mb-6 p-4 rounded-lg">
