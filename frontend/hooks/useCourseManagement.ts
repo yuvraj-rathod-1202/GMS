@@ -225,6 +225,11 @@ export function useCourseManagement(role: UserRole) {
     [executeRequest]
   );
 
+  const DeletePolicy = useCallback((courseId: number, policyId: number) =>
+    executeRequest(() => PolicyApi.DeletePolicy(courseId, policyId), "Failed to delete policy"),
+    [executeRequest]
+  );
+
   return {
     loading,
     error,
@@ -244,6 +249,7 @@ export function useCourseManagement(role: UserRole) {
     updatePolicyComponent,
     AddPolicyComponent,
     AssignPolicyToStudent,
+    DeletePolicy,
     courseRoles: taData?.CourseRoles || instructorData?.CourseRoles || null,
   };
 }

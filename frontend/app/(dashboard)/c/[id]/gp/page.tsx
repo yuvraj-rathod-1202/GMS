@@ -33,7 +33,7 @@ export default function GPView() {
 
     const currentCourse = useCourseDetailStore((s) => s.currentCourse);
     const instructorData = useCourseDetailStore((s) => s.instructorData);
-    const {loading: managementLoading, fetchAllPolicy, setDefaultPolicy, createPolicy, updatePolicy, updatePolicyComponent, AddPolicyComponent} = useCourseManagement(role || 'instructor');
+    const {loading: managementLoading, fetchAllPolicy, setDefaultPolicy, createPolicy, updatePolicy, updatePolicyComponent, AddPolicyComponent, DeletePolicy} = useCourseManagement(role || 'instructor');
 
     useEffect(() => {
         if (!isLoading && !course) {
@@ -109,20 +109,20 @@ export default function GPView() {
         setShowPolicyDialog(true);
     }
 
-    // const handleCreatePolicy = async (policyData: CreatePolicyRequest) => {
-    //     setCreatingPolicy(true);
-    //     try {
-    //         await createPolicy(courseId, policyData);
-    //         fetchAllPolicy(courseId, true);
-    //     }
-    //     catch (error) {
-    //         if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
-    //             console.error("Error creating policy:", error);
-    //         }
-    //     } finally {
-    //         setCreatingPolicy(false);
-    //     }
-    // }
+    const handleAddPolicy = async (policyData: CreatePolicyRequest) => {
+        setCreatingPolicy(true);
+        try {
+            await createPolicy(courseId, policyData);
+            fetchAllPolicy(courseId, true);
+        }
+        catch (error) {
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error creating policy:", error);
+            }
+        } finally {
+            setCreatingPolicy(false);
+        }
+    }
 
     const handleUpdatePolicy = async (PolicyData: UpdatePolicyRequest) => {
         setUpdatingPolicyId(true);
@@ -172,7 +172,55 @@ export default function GPView() {
         }
     }
 
+    const handleDeletePolicy = async (policyId: number) => {
+        setUpdatingPolicyId(true);
+        try {
+            await DeletePolicy(courseId, policyId);
+            fetchAllPolicy(courseId, true);
+        }
+        catch (error) {
+            if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
+                console.error("Error deleting policy:", error);
+            }
+        }
+        finally {
+            setUpdatingPolicyId(false);
+        }
+    }
+
     const handleSubmitPolicy = async (policyData: PolicyFormData) => {
+        if (editingPolicy) {
+            await handleUpdatePolicy({
+                id: editingPolicy.id,
+                policy_name: policyData.policy_name,
+                total_weightage: policyData.total_weightage,
+            });
+            policyData.components.forEach(async (component) => {
+                if (component.component_id) {
+                    await handleUpdatePolicyComponent(editingPolicy.id, component.component_id, {
+                        assessment_category_id: component.assessment_category_id,
+                        weightage: component.weightage,
+                        rules: component.rules,
+                    });
+                } else {
+                    await handleAddPolicyComponent(editingPolicy.id, {
+                        assessment_category_id: component.assessment_category_id,
+                        weightage: component.weightage,
+                        rules: component.rules,
+                    });
+                }
+            });      
+        } else {
+            await handleAddPolicy({
+                policy_name: policyData.policy_name,
+                total_weightage: policyData.total_weightage,
+                components: policyData.components.map((component) => ({
+                    assessment_category_id: component.assessment_category_id,
+                    weightage: component.weightage,
+                    rules: component.rules,
+                })),
+            });
+        }
     }
 
 
@@ -202,7 +250,7 @@ export default function GPView() {
             {instructorData?.policies && (
                 instructorData.policies.map((policy) => (
                     <div key={policy.id} className="mb-6 p-4 rounded-lg">
-                        <GradingPolicyCard policy={policy} onEdit={() => handleEditPolicy(policy)} />
+                        <GradingPolicyCard policy={policy} onEdit={() => handleEditPolicy(policy)} onDelete={() => handleDeletePolicy(policy.id)} />
                     </div>
                 ))
             )}

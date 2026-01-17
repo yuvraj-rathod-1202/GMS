@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { PolicyDBObject } from "@/lib/types/policy";
 
+export const ASSESSMENT_CATEGORIES = {
+    1: "Quiz",
+    2: "Assignment",
+    3: "Midsem",
+    4: "EndSem",
+    5: "Project",
+    6: "Attendance",
+    7: "Lab",
+} as const;
+
+export type CategoryId = keyof typeof ASSESSMENT_CATEGORIES;
+
+export const CATEGORY_IDS = Object.keys(ASSESSMENT_CATEGORIES).map(Number) as CategoryId[];
+
 interface PolicyDialogProps {
     isOpen: boolean;
     onClose: () => void;
@@ -15,6 +29,7 @@ export interface PolicyRuleFormData {
 }
 
 export interface PolicyComponentFormData {
+    component_id?: number;
     assessment_category_id: number;
     weightage: number;
     rules: PolicyRuleFormData;
@@ -58,12 +73,79 @@ export default function PolicyDialog({
 
     const [errors, setErrors] = useState<{[key: string]: string}>({});
 
+    const addComponent = () => {
+        setFormData(prev => ({
+            ...prev,
+            components: [
+                ...prev.components,
+                {
+                    assessment_category_id: 1,
+                    weightage: 0,
+                    rules: {
+                        rule_type: 'ALL',
+                        rule_params: {}
+                    }
+                }
+            ]
+        }));
+    };
+
+    const removeComponent = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            components: prev.components.filter((_, i) => i !== index)
+        }));
+    };
+
+    const updateComponent = (index: number, field: string, value: any) => {
+        setFormData(prev => ({
+            ...prev,
+            components: prev.components.map((comp, i) => {
+                if (i === index) {
+                    if (field === 'rules_type') {
+                        return {
+                            ...comp,
+                            rules: {
+                                ...comp.rules,
+                                rule_type: value,
+                                rule_params: value === 'BEST_N' ? comp.rules.rule_params : {}
+                            }
+                        };
+                    } else if (field === 'rules_params') {
+                        return {
+                            ...comp,
+                            rules: {
+                                ...comp.rules,
+                                rule_params: value
+                            }
+                        };
+                    } else if (field.startsWith('rules_n_')) {
+                        return {
+                            ...comp,
+                            rules: {
+                                ...comp.rules,
+                                rule_params: { n: parseInt(value) || 0 }
+                            }
+                        };
+                    } else {
+                        return {
+                            ...comp,
+                            [field]: value
+                        };
+                    }
+                }
+                return comp;
+            })
+        }));
+    };
+
     useEffect(() => {
         if (policy) {
             setFormData({
                 policy_name: policy.policy_name,
                 total_weightage: policy.total_weightage,
                 components: [...policy.components].map(c => ({
+                    component_id: c.id,
                     assessment_category_id: c.assessment_category_id,
                     weightage: c.weightage,
                     rules: c.rules ? {
@@ -191,7 +273,116 @@ export default function PolicyDialog({
                         {errors.total_weightage && <p className="text-red-500 text-xs mt-1">{errors.total_weightage}</p>}
                     </div>
 
-                    
+                    {/* Components Section */}
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="block text-sm font-medium text-gray-700">
+                                Components
+                            </label>
+                            <button
+                                type="button"
+                                onClick={addComponent}
+                                disabled={isLoading}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Component
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {formData.components.map((component, idx) => (
+                                <div key={idx} className="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-gray-700">Component {idx + 1}</span>
+                                        {formData.components.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeComponent(idx)}
+                                                disabled={isLoading}
+                                                className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="grid gap-3 sm:grid-cols-3">
+                                        {/* Category */}
+                                        <div>
+                                            <label className="block text-xs text-gray-600 mb-1.5">Category</label>
+                                            <select
+                                                value={component.assessment_category_id}
+                                                onChange={(e) => updateComponent(idx, "assessment_category_id", Number(e.target.value))}
+                                                disabled={isLoading}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors bg-white disabled:opacity-50"
+                                            >
+                                                {CATEGORY_IDS.map((id: number) => (
+                                                    <option key={id} value={id}>
+                                                        {ASSESSMENT_CATEGORIES[id as keyof typeof ASSESSMENT_CATEGORIES]}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Weightage */}
+                                        <div>
+                                            <label className="block text-xs text-gray-600 mb-1.5">Weightage (%)</label>
+                                            <input
+                                                type="number"
+                                                value={component.weightage}
+                                                onChange={(e) => updateComponent(idx, "weightage", Number(e.target.value))}
+                                                min="0"
+                                                placeholder="0"
+                                                disabled={isLoading}
+                                                className={`w-full px-3 py-2 border rounded-lg text-sm outline-none transition-colors ${
+                                                    errors[`components_weightage_${idx}`] ? "border-red-500" : "border-gray-300 focus:border-blue-500"
+                                                } disabled:opacity-50`}
+                                            />
+                                            {errors[`components_weightage_${idx}`] && (
+                                                <p className="text-red-500 text-xs mt-1">{errors[`components_weightage_${idx}`]}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Rule Type */}
+                                        <div>
+                                            <label className="block text-xs text-gray-600 mb-1.5">Rule Type</label>
+                                            <select
+                                                value={component.rules.rule_type}
+                                                onChange={(e) => updateComponent(idx, "rules_type", e.target.value)}
+                                                disabled={isLoading}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors bg-white disabled:opacity-50"
+                                            >
+                                                <option value="ALL">ALL</option>
+                                                <option value="BEST_N">BEST_N</option>
+                                                <option value="CUSTOM">CUSTOM</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Rule Params - Only show for BEST_N */}
+                                    {component.rules.rule_type === 'BEST_N' && (
+                                        <div>
+                                            <label className="block text-xs text-gray-600 mb-1.5">N (Best N to consider)</label>
+                                            <input
+                                                type="number"
+                                                value={component.rules.rule_params.n || 0}
+                                                onChange={(e) => updateComponent(idx, "rules_n_value", e.target.value)}
+                                                min="1"
+                                                placeholder="e.g., 3"
+                                                disabled={isLoading}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors disabled:opacity-50"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
                     {/* Dialog Footer */}
                     <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">

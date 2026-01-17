@@ -2,6 +2,7 @@ import { PolicyDBObject } from "@/lib/types/policy";
 import React from "react";
 import { FaEdit } from "react-icons/fa";
 import { FaPencil } from "react-icons/fa6";
+import { MdDelete } from "react-icons/md";
 
 const getAssessmentTypeLabel = (typeId: number): string => {
   const types: { [key: number]: string } = {
@@ -16,10 +17,11 @@ const getAssessmentTypeLabel = (typeId: number): string => {
   return types[typeId] || `Type ${typeId}`;
 };
 
-export default function GradingPolicyCard({policy, onEdit}: 
+export default function GradingPolicyCard({policy, onEdit, onDelete}: 
     {
         policy: PolicyDBObject, 
-        onEdit: () => void
+        onEdit: () => void,
+        onDelete: () => void
     }) {
     return (
         <div className="bg-white rounded-lg border border-gray-200">
@@ -36,7 +38,8 @@ export default function GradingPolicyCard({policy, onEdit}:
                     </div>
                     <div className="flex flex-row gap-4 text-sm text-gray-500 items-center">
                         <p>Total Weightage: <span className="font-medium text-gray-900">{policy.total_weightage}%</span></p>
-                        <button onClick={onEdit} title="Edit Policy" className="cursor-pointer text-gray-600 hover:text-mms-indigo hover:underline"><FaPencil /></button>
+                        <button onClick={onEdit} title="Edit Policy" className="cursor-pointer text-gray-600 hover:text-mms-indigo hover:underline"><FaPencil className="size-4" /></button>
+                        <button onClick={onDelete} title="Delete Policy" className="cursor-pointer text-red-600 hover:text-red-800 hover:underline"><MdDelete className="size-4" /></button>
                     </div>
                 </div>
             </div>
