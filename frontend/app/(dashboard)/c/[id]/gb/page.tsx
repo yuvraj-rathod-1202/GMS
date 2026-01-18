@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import GradeSheet from "@/components/ui/GradeSheet";
 import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useCourseManagement } from "@/hooks/useCourseManagement";
-import GradeSheetButtons from "@/components/ui/GradeSheetButtons";
 import { useTACourse } from "@/hooks/useTACourse";
 import UnenrolledStudentsDialog from "@/components/ui/UnenrolledStudentsDialog";
+import BulkUploadDialog from "@/components/ui/BulkUploadDialog";
+import IGradeSheet from "@/components/ui/IGradeSheet";
+import IGradeSheetButtons from "@/components/Grade/IGradeSheetButtons";
 
 const getAssessmentTypeLabel = (typeId: number): string => {
   const types: { [key: number]: string } = {
@@ -55,8 +56,12 @@ export default function GradeSheetView() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [fileInputRef, setFileInputRef] = useState<{ [key: number]: HTMLInputElement | null }>({});
   
   // Bulk upload state
+  const [showBulkUploadDialog, setShowBulkUploadDialog] = useState(false);
+  const [selectedAssessmentForUpload, setSelectedAssessmentForUpload] = useState<any>(null);
   const [unenrolledStudents, setUnenrolledStudents] = useState<Array<{student_id: number; email: string; marks_obtained: number}>>([]);
   const [showUnenrolledDialog, setShowUnenrolledDialog] = useState(false);
   const [pendingMarksData, setPendingMarksData] = useState<Array<{student_id: number; email: string; marks_obtained: number}>>([]);
@@ -197,41 +202,56 @@ export default function GradeSheetView() {
 
   useEffect(() => {
     if (instructorData?.assessmentMarks && instructorData.assessments) {
-      const marksData = instructorData.assessmentMarks[assessmentId] || [];
       const merged = instructorData.CourseRoles?.students.map((student) => {
-        const markEntry = marksData.find(m => m.student_id === student.user_id);
-        return {
+        const studentData: any = {
           student_id: student.user_id,
           email: student.email || null,
-          marks_obtained: markEntry ? markEntry.marks_obtained : null,
         };
+        
+        // Add marks for each assessment
+        instructorData.assessments.forEach((assessment) => {
+          const marksData = instructorData.assessmentMarks[assessment.id] || [];
+          const markEntry = marksData.find(m => m.student_id === student.user_id);
+          studentData[String(assessment.id)] = markEntry ? markEntry.marks_obtained : null;
+        });
+        
+        return studentData;
       }) || [];
       setMergedData(merged);
     }
-  }, [instructorData, assessmentId]);
+  }, [instructorData]);
 
   const isLoadingData = managementLoading || isFetchingMarks || isFetchingRoles || isFetchingAssessments;
 
   // Handle local mark changes
-  const handleMarkChange = useCallback((newValue: any, oldValue: any, row: any) => {
-    const newMark = Number(newValue);
-    if (isNaN(newMark) || (currentAssessment && newMark > currentAssessment?.max_marks)) return;
-    
-    setChangedMarks(prev => {
-      const next = new Map(prev);
-      next.set([row.student_id, row.assessment_id], newMark);
-      return next;
-    });
-    setHasUnsavedChanges(true);
+  const handleMarkChange = useCallback((assessmentId: number, maxMarks: number) => {
+    return (newValue: any, oldValue: any, row: any) => {
+      const newMark = Number(newValue);
+      if (isNaN(newMark) || newMark > maxMarks) return;
+      
+      setChangedMarks(prev => {
+        const next = new Map(prev);
+        next.set([row.student_id, assessmentId], newMark);
+        return next;
+      });
+      setHasUnsavedChanges(true);
+    };
   }, []);
 
   // Merge server data with local changes
   const displayData = useMemo(() => {
     return mergedData.map(row => {
-      if (changedMarks.has([row.student_id, row.assessment_id])) {
-        return { ...row, marks_obtained: changedMarks.get([row.student_id, row.assessment_id])! };
-      }
-      return row;
+      const updatedRow: any = { ...row };
+      
+      // Check if there are any changed marks for this student
+      changedMarks.forEach((marks, key) => {
+        const [studentId, assessmentId] = key;
+        if (studentId === row.student_id) {
+          updatedRow[String(assessmentId)] = marks;
+        }
+      });
+      
+      return updatedRow;
     });
   }, [mergedData, changedMarks]);
 
@@ -281,14 +301,11 @@ export default function GradeSheetView() {
       
       Array.from(Object.entries(GroupedPayload)).map(async ([assessment_id, marks]) => {
         await saveMarks(courseId, Number(assessment_id), {marks: marks});
+        await getmarksofassessment(courseId, Number(assessment_id), true);
       });
-      await getmarksofassessment(courseId, assessmentId, true);
       // Clear local state after successful save
       setChangedMarks(new Map());
       setHasUnsavedChanges(false);
-      
-      // Refresh data
-      await getmarksofassessment(courseId, assessmentId);
     } catch (error) {
       console.error("Failed to save marks:", error);
       // alert("Failed to save marks. Please try again.");
@@ -316,8 +333,10 @@ export default function GradeSheetView() {
     try {
       if (assessment.is_marks_published) {
         await UnpublishMarks(assessment.course_id, assessment.id);
+        alert(`Marks for "${assessment.name}" unpublished successfully!`);
       } else {
         await PublishMarks(assessment.course_id, assessment.id);
+        alert(`Marks for "${assessment.name}" published successfully!`);
       }
       // Refresh assessment data
       await fetchAllAssessments(courseId, true);
@@ -325,6 +344,7 @@ export default function GradeSheetView() {
       if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
         console.error("Error toggling publish status:", error);
       }
+      alert(`Failed to ${action} marks. Please try again.`);
     } finally {
       setIsPublishing(false);
     }
@@ -389,10 +409,11 @@ export default function GradeSheetView() {
         return;
       }
 
-      if (currentAssessment?.max_marks) {
-        const invalidMarks = parsedData.filter(d => d.marks_obtained > currentAssessment.max_marks);
+      const assessment = instructorData?.assessments.find(a => a.id === assessmentId);
+      if (assessment?.max_marks) {
+        const invalidMarks = parsedData.filter(d => d.marks_obtained > assessment.max_marks);
         if (invalidMarks.length > 0) {
-          alert(`${invalidMarks.length} entries have marks exceeding maximum (${currentAssessment.max_marks}). Please correct the file.`);
+          alert(`${invalidMarks.length} entries have marks exceeding maximum (${assessment.max_marks}). Please correct the file.`);
           return;
         }
       }
@@ -468,14 +489,56 @@ export default function GradeSheetView() {
   const assessmentColumns = instructorData?.assessments.map(a => ({
     header: `${a.name}`,
     key: String(a.id),
+    width: "150px",
     editable: true,
-    onEditComplete: handleMarkChange,
+    onEditComplete: handleMarkChange(a.id, a.max_marks),
     max_marks: a.max_marks,
+    headerActions: (
+      <div className="relative">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpenMenuId(openMenuId === a.id ? null : a.id);
+          }}
+          className="p-1 hover:bg-gray-200 rounded transition-colors"
+        >
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+            <circle cx="8" cy="2" r="1.5"/>
+            <circle cx="8" cy="8" r="1.5"/>
+            <circle cx="8" cy="14" r="1.5"/>
+          </svg>
+        </button>
+        {openMenuId === a.id && (
+          <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedAssessmentForUpload(a);
+                setShowBulkUploadDialog(true);
+                setOpenMenuId(null);
+              }}
+              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+            >
+              Bulk Upload
+            </button>
+            <button
+              onClick={(e) => {
+                handlePublishToggle(a, e);
+                setOpenMenuId(null);
+              }}
+              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors border-t border-gray-200"
+            >
+              {a.is_marks_published ? 'Unpublish Marks' : 'Publish Marks'}
+            </button>
+          </div>
+        )}
+      </div>
+    ),
   })) || [];
 
   const columns = [
-    { header: "Student ID", key: "student_id"},
-    { header: "Email", key: "email"},
+    { header: "Student ID", key: "student_id", width: "120px"},
+    { header: "Email", key: "email", width: "250px"},
     // { header: "Assigned Policy", key: "policy", render: () => "Default Policy", selectable: true, options: ["Default Policy"], onEditComplete: () => {} },
     // { header: "Marks Obtained", key: "marks_obtained", editable: true, onEditComplete: handleMarkChange },
     ...assessmentColumns,
@@ -490,18 +553,23 @@ export default function GradeSheetView() {
     : "";
 
   return (
-    <div className="p-6 h-[calc(100vh-48px)] overflow-y-auto">
-      {/* <GradeSheetButtons
+    <div className="p-6 h-[calc(100vh-48px)] overflow-y-auto w-screen md:w-[calc((5/6)*100vw)]" onClick={() => setOpenMenuId(null)}>
+      <IGradeSheetButtons
         handleSave={handleSave}
         handleDiscard={handleDiscard}
         hasUnsavedChanges={hasUnsavedChanges}
         isSaving={isSaving}
-        assessment={currentAssessment}
-        handlePublishToggle={handlePublishToggle}
-        isPublishing={isPublishing}
-        handleBulkUpload={handleBulkUpload}
-      /> */}
-      <GradeSheet columns={columns} data={displayData} max_marks={currentAssessment ? currentAssessment.max_marks : undefined} />
+      />
+      <IGradeSheet columns={columns} data={displayData} />
+      
+      {/* Bulk Upload Dialog */}
+      {showBulkUploadDialog && selectedAssessmentForUpload && (
+        <BulkUploadDialog
+          assessmentName={selectedAssessmentForUpload.name}
+          onClose={() => setShowBulkUploadDialog(false)}
+          onFileSelect={(file) => handleBulkUpload(selectedAssessmentForUpload.id, file)}
+        />
+      )}
       
       {/* Unenrolled Students Dialog */}
       {showUnenrolledDialog && (
@@ -512,7 +580,6 @@ export default function GradeSheetView() {
           onSelectiveEnroll={(selected) => handleEnrollAndImport(assessmentId, selected)}
           onClose={() => setShowUnenrolledDialog(false)}
           isProcessing={isProcessingEnrollment}
-          assessmentId={assessmentId}
         />
       )}
     </div>

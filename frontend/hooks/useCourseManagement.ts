@@ -219,17 +219,8 @@ export function useCourseManagement(role: UserRole) {
   );
 
   const saveMarks = useCallback(async (courseId: number, assessmentId: number, marksData: AddMarksRequest) => {
-    const result = await executeRequest(
-      () => MarksApi.AddMarks(courseId, assessmentId, marksData),
-      "Failed to save marks"
-    );
-    
-    if (result) {
-      setHasFetchedInSession(`marks_${assessmentId}`, false);
-    }
-    
-    return result;
-  }, [executeRequest, setHasFetchedInSession]);
+    executeRequest(() => MarksApi.AddMarks(courseId, assessmentId, marksData), "Failed to save marks");
+  }, [executeRequest]);
 
   const fetchAllPolicy = useCallback(async (courseId: number, forceRefresh: boolean = false) => {
     const cacheKey = "policies";

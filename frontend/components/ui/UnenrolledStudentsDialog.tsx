@@ -13,7 +13,6 @@ interface UnenrolledStudentsDialogProps {
     onSelectiveEnroll: (selected: {student_id: number; email: string}[]) => void;
     onClose: () => void;
     isProcessing: boolean;
-    assessmentId: number;
 }
 
 export default function UnenrolledStudentsDialog({
@@ -23,7 +22,6 @@ export default function UnenrolledStudentsDialog({
     onSelectiveEnroll,
     onClose,
     isProcessing,
-    assessmentId
 }: UnenrolledStudentsDialogProps) {
     const [selectedStudents, setSelectedStudents] = React.useState<Set<number>>(
         new Set(students.map(s => s.student_id))
