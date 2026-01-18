@@ -435,7 +435,7 @@ async def initialize_total_recalculation(course_id: int, user_id: int):
             
             body = {
                 "course_id": course_id,
-                "changes": [{"student_id": student} for student in students],
+                "changes": [{"student_id": student.get("user_id"), "email": student.get("email")} for student in students],
                 "initiated_by": user_id
             }
             

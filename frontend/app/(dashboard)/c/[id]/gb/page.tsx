@@ -56,6 +56,7 @@ export default function GradeSheetView() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isRecalculating, setIsRecalculating] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [fileInputRef, setFileInputRef] = useState<{ [key: number]: HTMLInputElement | null }>({});
   
@@ -73,7 +74,7 @@ export default function GradeSheetView() {
     assessmentId,
   });
 
-  const {loading: managementLoading, getallassessmentmarks, getmarksofassessment, fetchCourseRoles, fetchAllAssessments, saveMarks, BulkEnrollStudent, fetchAllPolicy, fetchTotalMarks, fetchStudentPolicyMap} = useCourseManagement(role || 'instructor');
+  const {loading: managementLoading, getallassessmentmarks, getmarksofassessment, fetchCourseRoles, fetchAllAssessments, saveMarks, BulkEnrollStudent, fetchAllPolicy, fetchTotalMarks, fetchStudentPolicyMap, RecalculateTotal} = useCourseManagement(role || 'instructor');
   const {PublishMarks, UnpublishMarks} = useTACourse();
   const instructorData = useCourseDetailStore((s) => s.instructorData);
 
@@ -217,7 +218,7 @@ export default function GradeSheetView() {
         
         if (instructorData.totalMarks && Array.isArray(instructorData.totalMarks)) {
           const totalMarkEntry = instructorData.totalMarks.find(tm => tm.student_id === student.user_id);
-          studentData.total_marks = totalMarkEntry ? totalMarkEntry.total_marks : null;
+          studentData.total_marks = totalMarkEntry ? Number(totalMarkEntry.total_marks.toFixed(2)) : null;
         } else {
           studentData.total_marks = null;
         }
@@ -361,6 +362,21 @@ export default function GradeSheetView() {
     if (window.confirm("Are you sure you want to discard your changes?")) {
       setChangedMarks(new Map());
       setHasUnsavedChanges(false);
+    }
+  };
+
+  const handleRecalculateTotal = async () => {
+    if (window.confirm("Are you sure you want to recalculate total marks for all students? This will update the total marks based on the current grading policy.")) {
+      setIsRecalculating(true);
+      try {
+        await RecalculateTotal(courseId);
+        alert("Total marks recalculated successfully!");
+      } catch (error) {
+        console.error("Failed to recalculate total marks:", error);
+        alert("Failed to recalculate total marks. Please try again.");
+      } finally {
+        setIsRecalculating(false);
+      }
     }
   };
 
@@ -567,6 +583,8 @@ export default function GradeSheetView() {
         handleDiscard={handleDiscard}
         hasUnsavedChanges={hasUnsavedChanges}
         isSaving={isSaving}
+        handleRecalculateTotal={handleRecalculateTotal}
+        isRecalculating={isRecalculating}
       />
       <IGradeSheet columns={columns} data={displayData} />
       

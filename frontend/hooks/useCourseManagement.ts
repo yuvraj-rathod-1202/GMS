@@ -276,6 +276,11 @@ export function useCourseManagement(role: UserRole) {
     [executeRequest]
   );
 
+  const RecalculateTotal = useCallback((courseId: number) => 
+    executeRequest(() => PolicyApi.RecalculateTotal(courseId), "Failed to recalculate total marks"),
+    [executeRequest]
+  );
+
   return {
     loading,
     error,
@@ -299,6 +304,7 @@ export function useCourseManagement(role: UserRole) {
     AddPolicyComponent,
     AssignPolicyToStudent,
     DeletePolicy,
+    RecalculateTotal,
     courseRoles: taData?.CourseRoles || instructorData?.CourseRoles || null,
   };
 }
