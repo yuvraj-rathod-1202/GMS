@@ -158,7 +158,7 @@ export default function GradeSheetView() {
         }
     }
     fetchPolicy();
-  }, [isLoading, hasAccess, isFetchingPolicy, courseId]);
+  }, [isLoading, hasAccess, isFetchingPolicy, courseId, isAssessmentsFetched, isRolesFetched, isMarksFetched]);
 
   // // fetch total marks
   useEffect(() => {
@@ -178,7 +178,7 @@ export default function GradeSheetView() {
         }
     }
     TotalMarks();
-  }, [isLoading, hasAccess, isFetchingTotalMarks, courseId]);
+  }, [isLoading, hasAccess, isFetchingTotalMarks, courseId, isAssessmentsFetched, isRolesFetched, isMarksFetched, isPolicyFetched, isTotalMarksFetched]);
 
   // // fetch student policy map
   useEffect(() => {
@@ -198,7 +198,7 @@ export default function GradeSheetView() {
         }
     }
     StudentPolicyMap();
-  }, [isLoading, hasAccess, isFetchingStudentPolicyMap, courseId]);
+  }, [isLoading, hasAccess, isFetchingStudentPolicyMap, courseId, isAssessmentsFetched, isRolesFetched, isMarksFetched, isPolicyFetched, isTotalMarksFetched]);
 
   useEffect(() => {
     if (instructorData?.assessmentMarks && instructorData.assessments) {
@@ -214,6 +214,13 @@ export default function GradeSheetView() {
           const markEntry = marksData.find(m => m.student_id === student.user_id);
           studentData[String(assessment.id)] = markEntry ? markEntry.marks_obtained : null;
         });
+        
+        if (instructorData.totalMarks && Array.isArray(instructorData.totalMarks)) {
+          const totalMarkEntry = instructorData.totalMarks.find(tm => tm.student_id === student.user_id);
+          studentData.total_marks = totalMarkEntry ? totalMarkEntry.total_marks : null;
+        } else {
+          studentData.total_marks = null;
+        }
         
         return studentData;
       }) || [];
@@ -542,6 +549,7 @@ export default function GradeSheetView() {
     // { header: "Assigned Policy", key: "policy", render: () => "Default Policy", selectable: true, options: ["Default Policy"], onEditComplete: () => {} },
     // { header: "Marks Obtained", key: "marks_obtained", editable: true, onEditComplete: handleMarkChange },
     ...assessmentColumns,
+    { header: "Total Marks", key: "total_marks", width: "120px" },
   ];
 
   const formattedDate = currentAssessment 
