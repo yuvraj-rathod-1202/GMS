@@ -59,6 +59,7 @@ export default function GradeSheetView() {
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [fileInputRef, setFileInputRef] = useState<{ [key: number]: HTMLInputElement | null }>({});
+  const [isUpdatingPolicy, setIsUpdatingPolicy] = useState<number | null>(null);
   
   // Bulk upload state
   const [showBulkUploadDialog, setShowBulkUploadDialog] = useState(false);
@@ -74,7 +75,7 @@ export default function GradeSheetView() {
     assessmentId,
   });
 
-  const {loading: managementLoading, getallassessmentmarks, getmarksofassessment, fetchCourseRoles, fetchAllAssessments, saveMarks, BulkEnrollStudent, fetchAllPolicy, fetchTotalMarks, fetchStudentPolicyMap, RecalculateTotal} = useCourseManagement(role || 'instructor');
+  const {loading: managementLoading, getallassessmentmarks, getmarksofassessment, fetchCourseRoles, fetchAllAssessments, saveMarks, BulkEnrollStudent, fetchAllPolicy, fetchTotalMarks, fetchStudentPolicyMap, RecalculateTotal, updateStudentPolicy} = useCourseManagement(role || 'instructor');
   const {PublishMarks, UnpublishMarks} = useTACourse();
   const instructorData = useCourseDetailStore((s) => s.instructorData);
 
@@ -223,6 +224,15 @@ export default function GradeSheetView() {
           studentData.total_marks = null;
         }
         
+        // Add policy information
+        const assignedPolicyId = instructorData.studentPolicyMap?.[student.user_id];
+        const defaultPolicy = instructorData.policies?.find(p => p.is_default);
+        const assignedPolicy = assignedPolicyId 
+          ? instructorData.policies?.find(p => p.id === assignedPolicyId)
+          : defaultPolicy;
+        studentData.policy_id = assignedPolicy?.id || null;
+        studentData.policy_name = assignedPolicy?.policy_name || 'Default Policy';
+        
         return studentData;
       }) || [];
       setMergedData(merged);
@@ -245,6 +255,21 @@ export default function GradeSheetView() {
       setHasUnsavedChanges(true);
     };
   }, []);
+
+  // Handle policy change
+  const handlePolicyChange = useCallback(async (studentId: number, newPolicyId: number) => {
+    setIsUpdatingPolicy(studentId);
+    try {
+      await updateStudentPolicy(courseId, studentId, newPolicyId);
+      // Refresh student policy map and total marks after assignment
+      await fetchStudentPolicyMap(courseId, true);
+    } catch (error) {
+      console.error("Failed to update policy:", error);
+      alert("Failed to update policy. Please try again.");
+    } finally {
+      setIsUpdatingPolicy(null);
+    }
+  }, [courseId, updateStudentPolicy, fetchStudentPolicyMap, fetchTotalMarks]);
 
   // Merge server data with local changes
   const displayData = useMemo(() => {
@@ -562,8 +587,49 @@ export default function GradeSheetView() {
   const columns = [
     { header: "Student ID", key: "student_id", width: "120px"},
     { header: "Email", key: "email", width: "250px"},
-    // { header: "Assigned Policy", key: "policy", render: () => "Default Policy", selectable: true, options: ["Default Policy"], onEditComplete: () => {} },
-    // { header: "Marks Obtained", key: "marks_obtained", editable: true, onEditComplete: handleMarkChange },
+    { 
+      header: "Assigned Policy", 
+      key: "policy_name", 
+      width: "200px",
+      render: (value: any, row: any) => {
+        const policies = instructorData?.policies || [];
+        const currentPolicyId = row.policy_id;
+        const isLoading = isUpdatingPolicy === row.student_id;
+        
+        return (
+          <div className="relative">
+            <select
+              value={currentPolicyId || ''}
+              onChange={(e) => {
+                const newPolicyId = Number(e.target.value);
+                if (newPolicyId && newPolicyId !== currentPolicyId) {
+                  handlePolicyChange(row.student_id, newPolicyId);
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
+              disabled={isLoading}
+              className={`w-2/3 px-2 py-1 border border-gray-300 rounded bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {policies.map((policy) => (
+                <option key={policy.id} value={policy.id}>
+                  {policy.policy_name}{policy.is_default ? ' (Default)' : ''}
+                </option>
+              ))}
+            </select>
+            {isLoading && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <svg className="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            )}
+          </div>
+        );
+      }
+    },
     ...assessmentColumns,
     { header: "Total Marks", key: "total_marks", width: "120px" },
   ];
@@ -578,6 +644,31 @@ export default function GradeSheetView() {
 
   return (
     <div className="p-6 h-[calc(100vh-48px)] overflow-y-auto w-screen md:w-[calc((5/6)*100vw)]" onClick={() => setOpenMenuId(null)}>
+      {/* Header with Title and Navigation Buttons */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Grade Book</h1>
+        <div className="flex gap-3">
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-gray-600 cursor-pointer text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back
+          </button>
+          <button
+            onClick={() => router.push(`/c/${courseId}/gp`)}
+            className="px-4 py-2 bg-gray-300 rounded-xl cursor-pointer flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Policy Page
+          </button>
+        </div>
+      </div>
+      
       <IGradeSheetButtons
         handleSave={handleSave}
         handleDiscard={handleDiscard}

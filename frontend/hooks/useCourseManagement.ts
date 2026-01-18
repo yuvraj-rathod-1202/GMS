@@ -281,6 +281,27 @@ export function useCourseManagement(role: UserRole) {
     [executeRequest]
   );
 
+  const updateStudentPolicy = useCallback(async (courseId: number, studentId: number, policyId: number) => {
+    return executeRequest(async () => {
+      const response = await PolicyApi.AssignPolicyToStudent(courseId, {
+        mapping: [{ student_id: studentId, course_policy_id: policyId }]
+      });
+      
+      // Update local store with new mapping
+      const currentData = instructorData;
+      if (currentData) {
+        updateStoreData({
+          studentPolicyMap: {
+            ...currentData.studentPolicyMap,
+            [studentId]: policyId
+          }
+        });
+      }
+      
+      return response;
+    }, "Failed to update student policy");
+  }, [executeRequest, instructorData, updateStoreData]);
+
   return {
     loading,
     error,
@@ -305,6 +326,7 @@ export function useCourseManagement(role: UserRole) {
     AssignPolicyToStudent,
     DeletePolicy,
     RecalculateTotal,
+    updateStudentPolicy,
     courseRoles: taData?.CourseRoles || instructorData?.CourseRoles || null,
   };
 }

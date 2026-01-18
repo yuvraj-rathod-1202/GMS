@@ -410,7 +410,7 @@ export default function PolicyDialog({
                                     {policy ? "Updating..." : "Creating..."}
                                 </>
                             ) : (
-                                policy ? "Update Assessment" : "Create Assessment"
+                                policy ? "Update Policy" : "Create Policy"
                             )}
                         </button>
                     </div>
