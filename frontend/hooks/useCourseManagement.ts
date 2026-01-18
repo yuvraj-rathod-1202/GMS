@@ -160,6 +160,39 @@ export function useCourseManagement(role: UserRole) {
     }, "Failed to fetch all marks");
   }, [role, taData, instructorData, hasFetchedInSession, setHasFetchedInSession, updateStoreData, executeRequest]);
 
+  const fetchTotalMarks = useCallback(async (courseId: number, forceRefresh = false) => {
+    const cacheKey = 'total_marks';
+    const currentData = role == 'ta' ? taData : instructorData;
+    
+    if (!forceRefresh && hasFetchedInSession[cacheKey]) {
+      return currentData?.totalMarks || [];
+    }
+
+    return executeRequest(async () => {
+      const marks = await PolicyApi.GetTotalOfAllStudents(courseId);
+      const marksList = Array.isArray(marks) ? marks : (marks as any)?.totals || [];
+
+      updateStoreData({ totalMarks: marksList });
+      setHasFetchedInSession(cacheKey, true);
+      return marksList;
+    }, "Failed to fetch total marks");
+  }, [role, taData, instructorData, hasFetchedInSession, setHasFetchedInSession, updateStoreData, executeRequest]);
+
+  const fetchStudentPolicyMap = useCallback(async (courseId: number, forceRefresh = false) => {
+    const cacheKey = 'student_policy_map';
+    const currentData = instructorData;
+    if (!forceRefresh && hasFetchedInSession[cacheKey]) {
+      return currentData?.studentPolicyMap || {};
+    }
+    return executeRequest(async () => {
+      const policyMap = await PolicyApi.GetPolicyAssignments(courseId);
+      const policyMapData = (policyMap as any)?.assignments ?? {};
+      updateStoreData({ studentPolicyMap: policyMapData });
+      setHasFetchedInSession(cacheKey, true);
+      return policyMapData;
+    }, "Failed to fetch student policy map");
+  }, [role, taData, instructorData, hasFetchedInSession, setHasFetchedInSession, updateStoreData, executeRequest]);
+
   const enrollStudent = useCallback((courseId: number, enrollData: EnrollStudentRequest) => 
     executeRequest(() => CoursesApi.EnrollStudent(courseId, enrollData), "Failed to enroll student"),
     [executeRequest]
@@ -259,6 +292,8 @@ export function useCourseManagement(role: UserRole) {
     fetchAllAssessments,
     getmarksofassessment,
     getallassessmentmarks,
+    fetchTotalMarks,
+    fetchStudentPolicyMap,
     enrollStudent,
     BulkEnrollStudent,
     unenrollStudent,

@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import GradeSheet from "@/components/ui/GradeSheet";
 import { useCourseDetailStore } from "@/lib/store/courseDetail";
-import { GradeSheetHeader } from "@/components/ui/GradeSheetHeader";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useCourseManagement } from "@/hooks/useCourseManagement";
 import GradeSheetButtons from "@/components/ui/GradeSheetButtons";
@@ -28,23 +27,31 @@ export default function GradeSheetView() {
   const params = useParams();
   const router = useRouter();
   const courseId = Number(params.id);
-  const assessmentId = Number(params.assessmentid);
+  const [assessmentId, setAssessmentId] = useState<number>(Number(params.assessmentId));
+  const [currentAssessment, setCurrentAssessment] = useState<any>(null);
   const [isFetchingMarks, setIsFetchingMarks] = useState(false);
   const [isFetchingRoles, setIsFetchingRoles] = useState(false);
   const [isFetchingAssessments, setIsFetchingAssessments] = useState(false);
+  const [isFetchingPolicy, setIsFetchingPolicy] = useState(false);
+  const [isFetchingTotalMarks, setIsFetchingTotalMarks] = useState(false);
+  const [isFetchingStudentPolicyMap, setIsFetchingStudentPolicyMap] = useState(false);
 
   const [isAssessmentsFetched, setIsAssessmentsFetched] = useState(false);
   const [isRolesFetched, setIsRolesFetched] = useState(false);
   const [isMarksFetched, setIsMarksFetched] = useState(false);
+  const [isPolicyFetched, setIsPolicyFetched] = useState(false);
+  const [isTotalMarksFetched, setIsTotalMarksFetched] = useState(false);
+  const [isStudentPolicyMapFetched, setIsStudentPolicyMapFetched] = useState(false);
 
   const [mergedData, setMergedData] = useState<Array<{
     student_id: number;
     email: string | null;
+    assessment_id?: number;
     marks_obtained: number | null;
   }>>([]);
 
   // Local state for tracking changes
-  const [changedMarks, setChangedMarks] = useState<Map<number, number>>(new Map());
+  const [changedMarks, setChangedMarks] = useState<Map<[number, number | undefined], number>>(new Map());
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -55,17 +62,19 @@ export default function GradeSheetView() {
   const [pendingMarksData, setPendingMarksData] = useState<Array<{student_id: number; email: string; marks_obtained: number}>>([]);
   const [isProcessingEnrollment, setIsProcessingEnrollment] = useState(false);
   
-  const { role, course, assessment, isLoading, hasAccess } = useRoleAccess({
+  const { role, course, isLoading, hasAccess } = useRoleAccess({
     allowedRoles: ['instructor'],
     courseId,
     assessmentId,
   });
 
-  const {loading: managementLoading, getallassessmentmarks, getmarksofassessment, fetchCourseRoles, fetchAllAssessments, saveMarks, BulkEnrollStudent} = useCourseManagement(role || 'instructor');
+  const {loading: managementLoading, getallassessmentmarks, getmarksofassessment, fetchCourseRoles, fetchAllAssessments, saveMarks, BulkEnrollStudent, fetchAllPolicy, fetchTotalMarks, fetchStudentPolicyMap} = useCourseManagement(role || 'instructor');
   const {PublishMarks, UnpublishMarks} = useTACourse();
+  const instructorData = useCourseDetailStore((s) => s.instructorData);
 
+  // fetch all the assessments
   useEffect(() => {
-    if (!isLoading && hasAccess && !isFetchingAssessments) {  
+    if (!isLoading && hasAccess && !isFetchingAssessments) {
       const fetchAssessments = async () => {
         setIsFetchingAssessments(true);
         try {
@@ -84,11 +93,9 @@ export default function GradeSheetView() {
     };
   }, [isLoading, courseId, role]);
 
-  const currentAssessment = useCourseDetailStore((s) => s.currentAssessment);
-  const instructorData = useCourseDetailStore((s) => s.instructorData);
-
+  // // fetch courses roles
   useEffect(() => {
-    if (!isLoading && hasAccess && !isFetchingRoles && isAssessmentsFetched) {  
+    if (!isLoading && hasAccess && !isFetchingRoles && isAssessmentsFetched) {
       const fetchRoles = async () => {
         setIsFetchingRoles(true);
         try {
@@ -107,7 +114,8 @@ export default function GradeSheetView() {
     };
   }, [isLoading, courseId, role, isAssessmentsFetched]);
 
-    useEffect(() => {
+  // // fetch all assessment marks
+  useEffect(() => {
     const fetchMarks = async () => {
       if (!isLoading && hasAccess && !isFetchingMarks && isAssessmentsFetched && isRolesFetched) {
         setIsFetchingMarks(true);
@@ -126,6 +134,66 @@ export default function GradeSheetView() {
 
     fetchMarks();
   }, [isLoading, role, courseId, assessmentId, isAssessmentsFetched, isRolesFetched]);
+
+  // fetch all grading policies
+  useEffect(() => {
+    const fetchPolicy = async () => {
+        if (!isLoading && hasAccess && !isFetchingPolicy && isAssessmentsFetched && isRolesFetched && isMarksFetched) {
+            setIsFetchingPolicy(true);
+            try {
+                await fetchAllPolicy(courseId);
+                setIsPolicyFetched(true);
+            } catch (error) {
+                if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+                    console.error("Error fetching policies:", error);
+                }
+            } finally {
+                setIsFetchingPolicy(false);
+            }
+        }
+    }
+    fetchPolicy();
+  }, [isLoading, hasAccess, isFetchingPolicy, courseId]);
+
+  // // fetch total marks
+  useEffect(() => {
+    const TotalMarks = async () => {
+        if (!isLoading && hasAccess && !isFetchingTotalMarks && isAssessmentsFetched && isRolesFetched && isMarksFetched && isPolicyFetched) {
+            setIsFetchingTotalMarks(true);
+            try {
+                await fetchTotalMarks(courseId);
+                setIsTotalMarksFetched(true);
+            } catch (error) {
+                if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+                    console.error("Error fetching total marks:", error);
+                }                
+            } finally {
+                setIsFetchingTotalMarks(false);
+            }
+        }
+    }
+    TotalMarks();
+  }, [isLoading, hasAccess, isFetchingTotalMarks, courseId]);
+
+  // // fetch student policy map
+  useEffect(() => {
+    const StudentPolicyMap = async () => {
+        if (!isLoading && hasAccess && !isFetchingStudentPolicyMap && isAssessmentsFetched && isRolesFetched && isMarksFetched && isPolicyFetched && isTotalMarksFetched) {
+            setIsFetchingStudentPolicyMap(true);
+            try {
+                await fetchStudentPolicyMap(courseId);
+                setIsStudentPolicyMapFetched(true);
+            } catch (error) {
+                if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+                    console.error("Error fetching student policy map:", error);
+                }
+            } finally {
+                setIsFetchingStudentPolicyMap(false);
+            }
+        }
+    }
+    StudentPolicyMap();
+  }, [isLoading, hasAccess, isFetchingStudentPolicyMap, courseId]);
 
   useEffect(() => {
     if (instructorData?.assessmentMarks && instructorData.assessments) {
@@ -151,7 +219,7 @@ export default function GradeSheetView() {
     
     setChangedMarks(prev => {
       const next = new Map(prev);
-      next.set(row.student_id, newMark);
+      next.set([row.student_id, row.assessment_id], newMark);
       return next;
     });
     setHasUnsavedChanges(true);
@@ -160,8 +228,8 @@ export default function GradeSheetView() {
   // Merge server data with local changes
   const displayData = useMemo(() => {
     return mergedData.map(row => {
-      if (changedMarks.has(row.student_id)) {
-        return { ...row, marks_obtained: changedMarks.get(row.student_id)! };
+      if (changedMarks.has([row.student_id, row.assessment_id])) {
+        return { ...row, marks_obtained: changedMarks.get([row.student_id, row.assessment_id])! };
       }
       return row;
     });
@@ -180,7 +248,7 @@ export default function GradeSheetView() {
   }
 
   // Show loading while fetching assessments or if current assessment is not available yet
-  if (isFetchingAssessments || !currentAssessment) {
+  if (isFetchingAssessments) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900"></div>
@@ -193,12 +261,27 @@ export default function GradeSheetView() {
     
     setIsSaving(true);
     try {
-      const marksPayload = Array.from(changedMarks.entries()).map(([student_id, marks_obtained]) => ({
+      const marksPayload = Array.from(changedMarks.entries()).map(([[student_id, assessment_id], marks_obtained]) => ({
         student_id,
+        assessment_id,
         marks_obtained
       }));
+
+      const GroupedPayload = marksPayload.reduce((acc, curr) => { {
+        if (!acc[curr.assessment_id!]) {
+          acc[curr.assessment_id!] = [];
+        }
+        acc[curr.assessment_id!].push({
+          student_id: curr.student_id,
+          marks_obtained: curr.marks_obtained
+        });
+        return acc;
+      }
+      }, {} as { [key: number]: Array<{ student_id: number; marks_obtained: number }> });
       
-      await saveMarks(courseId, assessmentId, { marks: marksPayload });
+      Array.from(Object.entries(GroupedPayload)).map(async ([assessment_id, marks]) => {
+        await saveMarks(courseId, Number(assessment_id), {marks: marks});
+      });
       await getmarksofassessment(courseId, assessmentId, true);
       // Clear local state after successful save
       setChangedMarks(new Map());
@@ -214,7 +297,7 @@ export default function GradeSheetView() {
     }
   };
 
-  const handlePublishToggle = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handlePublishToggle = async (assessment: any,e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     
     const action = assessment.is_marks_published ? "unpublish" : "publish";
@@ -281,7 +364,7 @@ export default function GradeSheetView() {
     return data;
   };
 
-  const handleBulkUpload = async (file: File) => {
+  const handleBulkUpload = async (assessmentId: number, file: File) => {
     try {
       if (file.size > 5 * 1024 * 1024) {
         alert("File size exceeds 5MB limit");
@@ -324,7 +407,7 @@ export default function GradeSheetView() {
         setUnenrolledStudents(unenrolled);
         setShowUnenrolledDialog(true);
       } else {
-        await importMarks(enrolled);
+        await importMarks(assessmentId, enrolled);
       }
     } catch (error) {
       console.error("Bulk upload error:", error);
@@ -332,11 +415,11 @@ export default function GradeSheetView() {
     }
   };
 
-  const importMarks = async (marksData: Array<{student_id: number; email: string; marks_obtained: number}>) => {
+  const importMarks = async (assessmentId: number, marksData: Array<{student_id: number; email: string; marks_obtained: number}>) => {
     try {
       const newChanges = new Map(changedMarks);
       marksData.forEach(mark => {
-        newChanges.set(mark.student_id, mark.marks_obtained);
+        newChanges.set([mark.student_id, assessmentId], mark.marks_obtained);
       });
       
       setChangedMarks(newChanges);
@@ -349,7 +432,7 @@ export default function GradeSheetView() {
     }
   };
 
-  const handleEnrollAndImport = async (selected: {student_id: number; email: string}[]) => {
+  const handleEnrollAndImport = async (assessmentId: number, selected: {student_id: number; email: string}[]) => {
     setIsProcessingEnrollment(true);
     try {
       
@@ -363,7 +446,7 @@ export default function GradeSheetView() {
       );
       
       setShowUnenrolledDialog(false);
-      await importMarks(toImport);
+      await importMarks(assessmentId, toImport);
       
       await fetchCourseRoles(courseId);
     } catch (error) {
@@ -374,23 +457,29 @@ export default function GradeSheetView() {
     }
   };
 
-  const handleSkipUnenrolled = async () => {
+  const handleSkipUnenrolled = async (assessmentId: number) => {
     const enrolledIds = new Set(mergedData.map(s => s.student_id));
     const toImport = pendingMarksData.filter(d => enrolledIds.has(d.student_id));
     
     setShowUnenrolledDialog(false);
-    await importMarks(toImport);
+    await importMarks(assessmentId, toImport);
   };
+
+  const assessmentColumns = instructorData?.assessments.map(a => ({
+    header: `${a.name}`,
+    key: String(a.id),
+    editable: true,
+    onEditComplete: handleMarkChange,
+    max_marks: a.max_marks,
+  })) || [];
 
   const columns = [
     { header: "Student ID", key: "student_id"},
     { header: "Email", key: "email"},
-    { header: "Marks Obtained", key: "marks_obtained", editable: true, onEditComplete: handleMarkChange },
+    // { header: "Assigned Policy", key: "policy", render: () => "Default Policy", selectable: true, options: ["Default Policy"], onEditComplete: () => {} },
+    // { header: "Marks Obtained", key: "marks_obtained", editable: true, onEditComplete: handleMarkChange },
+    ...assessmentColumns,
   ];
-
-  const handleBackClick = () => {
-    router.push(`/c/${courseId}/g`);
-  };
 
   const formattedDate = currentAssessment 
     ? new Date(currentAssessment.assessment_date).toLocaleDateString("en-US", {
@@ -402,7 +491,7 @@ export default function GradeSheetView() {
 
   return (
     <div className="p-6 h-[calc(100vh-48px)] overflow-y-auto">
-      <GradeSheetButtons
+      {/* <GradeSheetButtons
         handleSave={handleSave}
         handleDiscard={handleDiscard}
         hasUnsavedChanges={hasUnsavedChanges}
@@ -411,18 +500,19 @@ export default function GradeSheetView() {
         handlePublishToggle={handlePublishToggle}
         isPublishing={isPublishing}
         handleBulkUpload={handleBulkUpload}
-      />
+      /> */}
       <GradeSheet columns={columns} data={displayData} max_marks={currentAssessment ? currentAssessment.max_marks : undefined} />
       
       {/* Unenrolled Students Dialog */}
       {showUnenrolledDialog && (
         <UnenrolledStudentsDialog
           students={unenrolledStudents}
-          onEnrollAll={() => handleEnrollAndImport(unenrolledStudents.map(s => ({ student_id: s.student_id, email: s.email })))}
-          onSkipAll={handleSkipUnenrolled}
-          onSelectiveEnroll={handleEnrollAndImport}
+          onEnrollAll={() => handleEnrollAndImport(assessmentId, unenrolledStudents.map(s => ({ student_id: s.student_id, email: s.email })))}
+          onSkipAll={() => handleSkipUnenrolled(assessmentId)}
+          onSelectiveEnroll={(selected) => handleEnrollAndImport(assessmentId, selected)}
           onClose={() => setShowUnenrolledDialog(false)}
           isProcessing={isProcessingEnrollment}
+          assessmentId={assessmentId}
         />
       )}
     </div>

@@ -25,6 +25,7 @@ export interface InstructorCourseData {
   marksChanges: Record<number, MarksChanges[]>;
   CourseRoles: InstructorCourseRoles | null;
   policies: PolicyDBObject[];
+  studentPolicyMap: Record<number, number>;
 }
 
 // Shared course detail state
