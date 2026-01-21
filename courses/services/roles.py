@@ -1,5 +1,12 @@
 from fastapi import status, HTTPException
 from utils.db import get_db
+from dotenv import load_dotenv
+import logging, os
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
 
 def enroll_student_in_course_in_db(course_id: int, student_id: int, email: str | None = None, enroll: bool = True, assign_ta: bool = False, assign_instructor: bool = False) -> int | None:
     db = get_db()
@@ -17,6 +24,7 @@ def enroll_student_in_course_in_db(course_id: int, student_id: int, email: str |
         )
         role_id = cursor.fetchone()
     except Exception as e:
+        logger.error(f"Database query error in enroll_student_in_course_in_db: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database query error"
@@ -39,10 +47,10 @@ def enroll_student_in_course_in_db(course_id: int, student_id: int, email: str |
                 return role_id[0]
             except Exception as e:
                 db.rollback()
-                print(f"Error unenrolling student: {e}")
+                logger.error(f"Error unenrolling student: {str(e)}")    
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Failed to unenroll student: {str(e)}"
+                    detail="An error occurred while unenrolling student" if IS_PRODUCTION else f"Failed to unenroll student: {str(e)}"
                 )
             
     if not enroll:
@@ -56,7 +64,7 @@ def enroll_student_in_course_in_db(course_id: int, student_id: int, email: str |
                 (student_id, email)
             )
         except Exception as e:
-            print(f"Warning: Could not store email mapping: {e}")
+            logger.error(f"Error inserting into id_email_map: {str(e)}")
     
     try:
         cursor.execute(
@@ -74,8 +82,8 @@ def enroll_student_in_course_in_db(course_id: int, student_id: int, email: str |
         return id
     except Exception as e:
         db.rollback()
-        print(f"Error enrolling student: {e}")
+        logger.error(f"Error enrolling student: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to enroll: {str(e)}"
+            detail="An error occurred while enrolling student" if IS_PRODUCTION else f"Failed to enroll student: {str(e)}"
         )

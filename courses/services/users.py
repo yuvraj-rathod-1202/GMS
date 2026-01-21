@@ -1,6 +1,13 @@
 from fastapi import status, HTTPException
 from utils.db import get_db
 from models.dbobj.users import CourseDBObject
+from dotenv import load_dotenv
+import logging, os
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
 
 def fetch_course_roles_from_db(course_id: int, user_id: int):
     db = get_db()
@@ -26,9 +33,10 @@ def fetch_course_roles_from_db(course_id: int, user_id: int):
             return result[0]
         return None
     except Exception as e:
+        logger.error(f"Error fetching course roles: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching course roles: {e}"
+            detail="An error occurred while fetching course roles" if IS_PRODUCTION else f"Error fetching course roles: {str(e)}"
         ) from e
 
 def fetch_all_course_from_db(user_id: int, course_status: str | None = None, course_role: str | None = None):
@@ -69,7 +77,8 @@ def fetch_all_course_from_db(user_id: int, course_status: str | None = None, cou
         
         return courses
     except Exception as e:
+        logger.error(f"Error fetching user courses: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching user courses: {e}"
+            detail="An error occurred while fetching user courses" if IS_PRODUCTION else f"Error fetching user courses: {str(e)}"
         ) from e
