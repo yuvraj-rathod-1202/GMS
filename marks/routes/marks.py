@@ -2,6 +2,12 @@ from fastapi import APIRouter, HTTPException, status, Query
 from utils.auth import verifyInstructorOrTa, verifyRoleInCourse, verifyRoleInCourseAndPublish
 from models.schemas.marks import AddMarksRequest
 from services.marks import add_marks_to_db, get_all_assessment_marks_from_db, get_marks_from_db, delete_marks_from_db, publish_marks_in_db, get_all_marks_from_db
+import httpx, os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+ANALYTICS_SERVICE_URL = os.getenv("ANALYTICS_SERVICE_URL", "http://localhost:8002")
 
 router = APIRouter()
 
@@ -130,8 +136,19 @@ async def get_all_marks_for_student(course_id: int, student_id: int, user_id: in
     user_role = verified.get('role', 'student')
     check_published = user_role == 'student'
     marks = get_all_marks_from_db(student_id, course_id, check_published=check_published)
+    analytics = []
+    for mark in marks:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(f"{ANALYTICS_SERVICE_URL}/{course_id}/assessments/{mark.assessment_id}/analytics", params={"user_id": user_id})
+                if response.status_code == 200:
+                    data = response.json()
+                    analytics.append(data.get("assessment_analytics", None))
+            except:
+                continue
     
-    return {"marks": marks}
+    
+    return {"marks": marks, "analytics": analytics}
 
 @router.get("/{course_id}/all/assessment/marks")
 async def get_all_marks(course_id: int, user_id: int = Query(...)):

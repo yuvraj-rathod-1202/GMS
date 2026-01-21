@@ -8,3 +8,4 @@ data:
   DB_NAME: marks
   DB_PORT: "3306"
   COURSES_SERVICE_URL: "http://courses:8080"
+  ANALYTICS_SERVICE_URL: "http://analytics:7000"

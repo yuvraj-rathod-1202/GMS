@@ -30,11 +30,16 @@ export function useStudentCourse() {
     try {
       // Fetch student's marks for this course
       const marksData = await MarksApi.GetStudentMarks(courseId, user.id);
-      const marksList = Array.isArray(marksData) ? marksData : (marksData as any)?.marks || [];
+      const marksList = (marksData as any)?.marks || [];
+      const analyticsList = (marksData as any)?.analytics || [];
+
+      console.log("Fetched student marks data:", marksList);
+      console.log("Fetched student analytics data:", analyticsList);
       
       // Store in the shared store
       setStudentData({
         marks: marksList,
+        analytics: analyticsList,
       });
       
       // Mark as fetched in this session

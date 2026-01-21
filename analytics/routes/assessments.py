@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query, status
-from utils.auth import verifyInstructor
+from utils.auth import verifyInstructor, verifyRoleInCourse
 from services.assessments import get_course_overview_from_db, get_assessment_analytics_from_db, get_assessment_frequencies_from_db
 
 router = APIRouter()
@@ -25,7 +25,7 @@ async def get_course_analytics_overview(course_id: int, user_id: int = Query(...
 
 @router.get("/{course_id}/assessments/{assessment_id}/analytics")
 async def get_assessment_analytics(course_id: int, assessment_id: int, user_id: int = Query(...)):
-    verified = await verifyInstructor(user_id, course_id)
+    verified = await verifyRoleInCourse(user_id, course_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

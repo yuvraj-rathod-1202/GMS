@@ -4,10 +4,12 @@ import {AllMarksDBObject, MarksChanges, CourseRoles, InstructorCourseRoles} from
 import {AssessmentDBObject} from '@/lib/types/assessments';
 import { PolicyDBObject, TotalScoreDBObject } from "../types/policy";
 import { MarksDBObject } from "../types/marks";
+import { AssessmentAnalyticsDBObject } from "../types/analytics";
 
 // Role-specific data types
 export interface StudentCourseData {
   marks: AllMarksDBObject[];
+  analytics: AssessmentAnalyticsDBObject[] | [];
 }
 
 export interface TACourseData {
