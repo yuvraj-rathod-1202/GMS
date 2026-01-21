@@ -1,6 +1,11 @@
+import os
+import logging
 from fastapi import HTTPException, status
 from utils.db import get_db
 from models.dbobj.assessments import AssessmentRangeBDObj, CourseOverviewBDObj, AssessmentAnalyticsBDObj, AssessmentMarkFrequencyBDObj
+
+logger = logging.getLogger(__name__)
+IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
 
 def get_course_overview_from_db(course_id: int):
     db = get_db()
@@ -18,9 +23,10 @@ def get_course_overview_from_db(course_id: int):
         overview = cursor.fetchone()
         return CourseOverviewBDObj(id=overview[0], course_id=overview[1], mean=overview[2], median=overview[3], max=overview[4], min=overview[5], std=overview[6], total_students=overview[7], computed_at=overview[8], version=overview[9]) if overview else None
     except Exception as e:
+        logger.error(f"Database error in get_course_overview_from_db: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while retrieving course overview" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def get_assessment_analytics_from_db(course_id: int, assessment_id: int):
@@ -39,9 +45,10 @@ def get_assessment_analytics_from_db(course_id: int, assessment_id: int):
         analytics = cursor.fetchone()
         return AssessmentAnalyticsBDObj(id=analytics[0], course_id=analytics[1], assessment_id=analytics[2], mean=analytics[3], median=analytics[4], max=analytics[5], min=analytics[6], std=analytics[7], total_students=analytics[8], computed_at=analytics[9], version=analytics[10]) if analytics else None
     except Exception as e:
+        logger.error(f"Database error in get_assessment_analytics_from_db: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while retrieving assessment analytics" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def get_assessment_range_from_db(course_id: int, assessment_id: int):
@@ -77,9 +84,10 @@ def get_assessment_range_from_db(course_id: int, assessment_id: int):
         
         return range_objs
     except Exception as e:
+        logger.error(f"Database error in get_assessment_range_from_db: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while retrieving assessment range data" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def get_assessment_frequencies_from_db(course_id: int, assessment_id: int):
@@ -116,7 +124,8 @@ def get_assessment_frequencies_from_db(course_id: int, assessment_id: int):
         
         return frequency_objs
     except Exception as e:
+        logger.error(f"Database error in get_assessment_frequencies_from_db: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while retrieving assessment frequency data" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
