@@ -10,6 +10,7 @@ import UnenrolledStudentsDialog from "@/components/ui/UnenrolledStudentsDialog";
 import BulkUploadDialog from "@/components/ui/BulkUploadDialog";
 import IGradeSheet from "@/components/ui/IGradeSheet";
 import IGradeSheetButtons from "@/components/Grade/IGradeSheetButtons";
+import * as XLSX from 'xlsx';
 
 const getAssessmentTypeLabel = (typeId: number): string => {
   const types: { [key: number]: string } = {
@@ -432,6 +433,48 @@ export default function GradeSheetView() {
     return data;
   };
 
+  const parseExcel = async (file: File): Promise<Array<{student_id: number; email: string; marks_obtained: number}>> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const data = e.target?.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
+          
+          const parsedData: Array<{student_id: number; email: string; marks_obtained: number}> = [];
+          
+          // Skip header row (index 0)
+          for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row || row.length < 3) continue;
+            
+            const studentId = parseInt(String(row[0]));
+            const email = String(row[1]);
+            const marks = parseFloat(String(row[2]));
+            
+            if (!isNaN(studentId) && !isNaN(marks)) {
+              parsedData.push({
+                student_id: studentId,
+                email: email,
+                marks_obtained: marks
+              });
+            }
+          }
+          
+          resolve(parsedData);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsBinaryString(file);
+    });
+  };
+
   const handleBulkUpload = async (assessmentId: number, file: File) => {
     try {
       if (file.size > 5 * 1024 * 1024) {
@@ -445,8 +488,7 @@ export default function GradeSheetView() {
       if (file.name.endsWith('.csv')) {
         parsedData = parseCSV(text);
       } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-        alert("Excel file support is not implemented yet. Please upload a CSV file.");
-        return;
+        parsedData = await parseExcel(file);
       } else {
         alert("Only CSV and Excel files are supported.");
         return;
