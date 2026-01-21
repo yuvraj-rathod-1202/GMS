@@ -72,7 +72,7 @@ def verifyRoleInCourse(user_id: int, course_id: int):
     try:
         cursor = db.cursor()
         cursor.execute(
-            "SELECT id FROM courses_role WHERE user_id = %s AND course_id = %s",
+            "SELECT role FROM courses_role WHERE user_id = %s AND course_id = %s",
             (user_id, course_id)
         )
         role = cursor.fetchone()
@@ -81,7 +81,7 @@ def verifyRoleInCourse(user_id: int, course_id: int):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User does not have a role in this course"
             )
-        return role
+        return role[0]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

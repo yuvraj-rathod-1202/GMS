@@ -127,8 +127,9 @@ async def get_all_marks_for_student(course_id: int, student_id: int, user_id: in
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
         )
-        
-    marks = get_all_marks_from_db(student_id, course_id, check_published=verified.get('role', 'student') == 'student')
+    user_role = verified.get('role', 'student')
+    check_published = user_role == 'student'
+    marks = get_all_marks_from_db(student_id, course_id, check_published=check_published)
     
     return {"marks": marks}
 

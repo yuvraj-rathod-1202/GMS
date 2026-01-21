@@ -277,15 +277,24 @@ def get_all_marks_from_db(student_id: int, course_id: int, check_published: bool
     try:
         cursor = db.cursor()
         
-        query = """
-            SELECT m.assessment_id, m.marks_obtained, m.recorded_by_id, m.updated_at, a.name, a.assessment_type_id, a.max_marks, a.assessment_date
-            FROM marks m
-            JOIN assessments a ON m.assessment_id = a.id
-            WHERE a.course_id = %s AND m.student_id = %s AND a.is_marks_published = COALESCE(%s, a.is_marks_published)
-            ORDER BY a.assessment_date DESC
-        """
-        
-        cursor.execute(query, (course_id, student_id, None if check_published == False else True))
+        if check_published:
+            query = """
+                SELECT m.assessment_id, m.marks_obtained, m.recorded_by_id, m.updated_at, a.name, a.assessment_type_id, a.max_marks, a.assessment_date
+                FROM marks m
+                JOIN assessments a ON m.assessment_id = a.id
+                WHERE a.course_id = %s AND m.student_id = %s AND a.is_marks_published = 1
+                ORDER BY a.assessment_date DESC
+            """
+            cursor.execute(query, (course_id, student_id))
+        else:
+            query = """
+                SELECT m.assessment_id, m.marks_obtained, m.recorded_by_id, m.updated_at, a.name, a.assessment_type_id, a.max_marks, a.assessment_date
+                FROM marks m
+                JOIN assessments a ON m.assessment_id = a.id
+                WHERE a.course_id = %s AND m.student_id = %s
+                ORDER BY a.assessment_date DESC
+            """
+            cursor.execute(query, (course_id, student_id))
         results = cursor.fetchall()
         
         marks = [
