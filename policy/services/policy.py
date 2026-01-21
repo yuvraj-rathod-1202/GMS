@@ -1,4 +1,5 @@
 import json
+import logging
 import os, pika
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
@@ -7,6 +8,12 @@ from models.schema.policy import AssignPolicyRequest, CreatePolicyRequest, Updat
 from utils.db import get_db
 from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj, TotalScoreDBObj
 import httpx
+from dotenv import load_dotenv
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
 
 # Thread pool for blocking RabbitMQ operations
 executor = ThreadPoolExecutor(max_workers=5)
@@ -23,9 +30,10 @@ def get_rabbitmq_connection():
         )
         return connection
     except Exception as e:
+        logger.error(f"Error connecting to RabbitMQ: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"RabbitMQ connection error: {str(e)}"
+            detail="Failed to connect to RabbitMQ" if IS_PRODUCTION else f"RabbitMQ connection error: {str(e)}"
         )
 
 def publish_message(routing_key: str, body: dict):
@@ -85,9 +93,10 @@ def add_policy_to_db(course_id: int, data: CreatePolicyRequest):
         return policy_id
     except Exception as e:
         db.rollback()
+        logger.error(f"Error adding policy to database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while adding policy" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
             
 def get_policy_from_db(course_id: int, policy_id: int | None = None):
@@ -132,9 +141,10 @@ def get_policy_from_db(course_id: int, policy_id: int | None = None):
             policy.components = components
         return policies
     except Exception as e:
+        logger.error(f"Database error in get_policy_from_db: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while retrieving policy" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def delete_policy_from_db(course_id: int, policy_id: int):
@@ -188,9 +198,10 @@ def delete_policy_from_db(course_id: int, policy_id: int):
         return True
     except Exception as e:
         db.rollback()
+        logger.error(f"Error deleting policy from database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while deleting policy" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def update_policy_in_db(data: UpdatePolicyRequest):
@@ -213,9 +224,10 @@ def update_policy_in_db(data: UpdatePolicyRequest):
         return True
     except Exception as e:
         db.rollback()
+        logger.error(f"Error updating policy in database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while updating policy" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def set_policy_as_default_in_db(course_id: int, policy_id: int):
@@ -242,9 +254,10 @@ def set_policy_as_default_in_db(course_id: int, policy_id: int):
         return True
     except Exception as e:
         db.rollback()
+        logger.error(f"Error setting policy as default in database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while setting default policy" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def delete_policy_component_from_db(course_id: int, policy_id: int, component_id: int):
@@ -281,9 +294,10 @@ def delete_policy_component_from_db(course_id: int, policy_id: int, component_id
         return True
     except Exception as e:
         db.rollback()
+        logger.error(f"Error deleting policy component from database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while deleting policy component" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
 
 def add_policy_component_to_db(course_id: int, policy_id: int, data: CreatePolicyComponentRequest):
@@ -329,9 +343,10 @@ def add_policy_component_to_db(course_id: int, policy_id: int, data: CreatePolic
         return component_id
     except Exception as e:
         db.rollback()
+        logger.error(f"Error adding policy component to database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while adding policy component" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def update_component_in_db(data: UpdatePolicyComponentRequest, policy_id: int, component_id: int):
@@ -367,9 +382,10 @@ def update_component_in_db(data: UpdatePolicyComponentRequest, policy_id: int, c
         return True
     except Exception as e:
         db.rollback()
+        logger.error(f"Error updating policy component in database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while updating policy component" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def assign_policy_to_student_in_db(course_id: int, data: AssignPolicyRequest):
@@ -392,9 +408,10 @@ def assign_policy_to_student_in_db(course_id: int, data: AssignPolicyRequest):
         return True
     except Exception as e:
         db.rollback()
+        logger.error(f"Error assigning policy to student in database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while assigning policy to student" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
      
 def get_student_policy_mapping_from_db(course_id: int):
@@ -418,9 +435,10 @@ def get_student_policy_mapping_from_db(course_id: int):
         
         return mapping
     except Exception as e:
+        logger.error(f"Database error in get_student_policy_mapping_from_db: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while retrieving student policy mapping" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 async def initialize_total_recalculation(course_id: int, user_id: int):      
@@ -449,9 +467,10 @@ async def initialize_total_recalculation(course_id: int, user_id: int):
             )
             
         except httpx.HTTPError as e:
+            logger.error(f"Compute service error: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Compute service error: {str(e)}"
+                detail="An error occurred while communicating with the compute service" if IS_PRODUCTION else f"Compute service error: {str(e)}"
             )
         
 def fetch_total_scores_from_db(course_id: int, student_id: int | None = None):
@@ -485,8 +504,9 @@ def fetch_total_scores_from_db(course_id: int, student_id: int | None = None):
         
         return result
     except Exception as e:
+        logger.error(f"Database error in fetch_total_scores_from_db: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while retrieving total scores" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         

@@ -1,3 +1,4 @@
+import logging
 from utils.db import get_db
 from models.schema.compute import ComputeQueueMessage, AllMarksDBObj
 from models.dbobj.policy import PolicyDBObj
@@ -8,6 +9,9 @@ from fastapi import status, HTTPException
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
+IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
 
 # Thread pool for blocking RabbitMQ operations
 executor = ThreadPoolExecutor(max_workers=5)
@@ -24,9 +28,10 @@ def get_rabbitmq_connection():
         )
         return connection
     except Exception as e:
+        logger.error(f"Error connecting to RabbitMQ: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"RabbitMQ connection error: {str(e)}"
+            detail='Failed to connect to RabbitMQ' if IS_PRODUCTION else f'Error connecting to RabbitMQ: {str(e)}'
         )
 
 def publish_message(routing_key: str, body: dict):
@@ -46,7 +51,7 @@ def publish_message(routing_key: str, body: dict):
             )
         )
     except Exception as e:
-        print(f"Failed to publish message to RabbitMQ: {e}")
+        logger.error(f"Failed to publish message to RabbitMQ: {e}")
     finally:
         if connection and not connection.is_closed:
             connection.close()
