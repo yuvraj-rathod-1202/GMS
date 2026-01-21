@@ -68,6 +68,7 @@ export function useCourseManagement(role: UserRole) {
       marksChanges: currentData?.marksChanges || {},
       CourseRoles: currentData?.CourseRoles || null,
       ...(role === 'instructor' && { policies: instructorData?.policies || [] }),
+      ...(role === 'instructor' && { studentPolicyMap: instructorData?.studentPolicyMap || {} }),
       ...updates,
     } as any);
   }, [role, taData, instructorData, setTaData, setInstructorData]);
@@ -150,9 +151,9 @@ export function useCourseManagement(role: UserRole) {
       const marks = await MarksApi.GetAllAssessmentMarks(courseId);
       const marksDict = Array.isArray(marks) ? marks : (marks as any)?.marks?.marks || [];
       
-      
+      console.log("Fetched all assessment marks:", marksDict);
       updateStoreData({
-        assessmentMarks: { ...(currentData?.assessmentMarks || {}), ...marksDict },
+        assessmentMarks: marksDict,
       });
       
       setHasFetchedInSession(cacheKey, true);

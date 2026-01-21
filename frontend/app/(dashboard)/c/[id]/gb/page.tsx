@@ -30,7 +30,6 @@ export default function GradeSheetView() {
   const router = useRouter();
   const courseId = Number(params.id);
   const [assessmentId, setAssessmentId] = useState<number>(Number(params.assessmentId));
-  const [currentAssessment, setCurrentAssessment] = useState<any>(null);
   const [isFetchingMarks, setIsFetchingMarks] = useState(false);
   const [isFetchingRoles, setIsFetchingRoles] = useState(false);
   const [isFetchingAssessments, setIsFetchingAssessments] = useState(false);
@@ -59,7 +58,6 @@ export default function GradeSheetView() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const [fileInputRef, setFileInputRef] = useState<{ [key: number]: HTMLInputElement | null }>({});
   const [isUpdatingPolicy, setIsUpdatingPolicy] = useState<number | null>(null);
   
   // Bulk upload state
@@ -333,16 +331,18 @@ export default function GradeSheetView() {
       }
       }, {} as { [key: number]: Array<{ student_id: number; marks_obtained: number }> });
       
-      Array.from(Object.entries(GroupedPayload)).map(async ([assessment_id, marks]) => {
-        await saveMarks(courseId, Number(assessment_id), {marks: marks});
-        await getmarksofassessment(courseId, Number(assessment_id), true);
-      });
-      // Clear local state after successful save
+      await Promise.all(
+        Object.entries(GroupedPayload).map(async ([assessment_id, marks]) => {
+          await saveMarks(courseId, Number(assessment_id), {marks: marks});
+        })
+      );
+      
       setChangedMarks(new Map());
       setHasUnsavedChanges(false);
+      
+      await getallassessmentmarks(courseId, true);
     } catch (error) {
-      console.error("Failed to save marks:", error);
-      // alert("Failed to save marks. Please try again.");
+      alert("Failed to save marks. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -675,14 +675,6 @@ export default function GradeSheetView() {
     ...assessmentColumns,
     { header: "Total Marks", key: "total_marks", width: "120px" },
   ];
-
-  const formattedDate = currentAssessment 
-    ? new Date(currentAssessment.assessment_date).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : "";
 
   return (
     <div className="p-6 h-[calc(100vh-48px)] overflow-y-auto w-screen md:w-[calc((5/6)*100vw)]" onClick={() => setOpenMenuId(null)}>
