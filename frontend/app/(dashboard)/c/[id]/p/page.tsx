@@ -86,7 +86,7 @@ export default function PeoplePage() {
     if (!confirmed) return;
     try {
       await unenrollStudent(courseId, studentIdToRemove);
-      await fetchCourseRoles(courseId, true);
+      await fetchCourseRoles(courseId, true, role === 'instructor');
       alert("Student removed successfully!");
     } catch (error: any) {
       alert(error?.message || "Failed to remove student");
