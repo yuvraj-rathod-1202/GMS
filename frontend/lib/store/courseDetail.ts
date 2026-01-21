@@ -92,5 +92,8 @@ export const useCourseDetailStore = create<CourseDetailState>((set) => ({
     instructorData: null,
     isLoading: false,
     error: null,
+    hasFetchedStudentDataInSession: false,
+    hasFetchedTADataInSession: {},
+    hasFetchedInstructorDataInSession: false,
   }),
 }));
