@@ -2,13 +2,29 @@ from fastapi import status, HTTPException
 from utils.db import get_db
 from dotenv import load_dotenv
 import logging, os
+import httpx
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:5000")
 
-def enroll_student_in_course_in_db(course_id: int, student_id: int, email: str | None = None, enroll: bool = True, assign_ta: bool = False, assign_instructor: bool = False) -> int | None:
+async def ensure_user_exists(user_id: int, email: str):
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                f"{AUTH_SERVICE_URL}/signup",
+                auth=httpx.BasicAuth(str(user_id), str(user_id)),
+                json={"id": user_id, "email": email, "password": str(user_id)}
+            )
+            if response.status_code == 400:
+                return True  # User already exists
+        except Exception as e:
+            return False
+
+async def enroll_student_in_course_in_db(course_id: int, student_id: int, email: str | None = None, enroll: bool = True, assign_ta: bool = False, assign_instructor: bool = False) -> int | None:
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -55,6 +71,9 @@ def enroll_student_in_course_in_db(course_id: int, student_id: int, email: str |
             
     if not enroll:
         return None # Student not enrolled, cannot unenroll
+    
+    if email:
+        await ensure_user_exists(student_id, email)
     
     # Store email in id_email_map if provided and not already exists
     if email:

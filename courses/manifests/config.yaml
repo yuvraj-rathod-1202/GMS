@@ -7,3 +7,4 @@ data:
   DB_USER: mms_user
   DB_NAME: courses
   DB_PORT: "3306"
+  AUTH_SERVICE_URL: "http://auth:5000"

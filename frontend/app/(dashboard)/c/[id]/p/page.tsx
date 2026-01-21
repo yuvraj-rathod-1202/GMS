@@ -76,6 +76,7 @@ export default function PeoplePage() {
       await enrollStudent(courseId, { student_id: Number(studentId), email: email.trim() });
       alert("Student enrolled successfully!");
       setShowEnrollDialog(false);
+      await fetchCourseRoles(courseId, true, role === 'instructor');
     } catch (error: any) {
       if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
         console.error("Error enrolling student:", error);
