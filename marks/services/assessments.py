@@ -2,6 +2,13 @@ from fastapi import HTTPException, status
 from utils.db import get_db
 from models.schemas.assessments import CreateAssessmentRequest, UpdateAssessmentRequest
 from models.dbobj.assessments import AssessmentsBDObj
+from dotenv import load_dotenv
+import os, logging
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
 
 def add_assessment_to_db(course_id: int, data: CreateAssessmentRequest):
     db = get_db()
@@ -32,9 +39,10 @@ def add_assessment_to_db(course_id: int, data: CreateAssessmentRequest):
         return assessment_id
     except Exception as e:
         db.rollback()
+        logger.error(f"Error adding assessment: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while adding assessment" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def get_all_assessments_from_db(course_id: int, assessment_id: int | None = None):
@@ -82,9 +90,10 @@ def get_all_assessments_from_db(course_id: int, assessment_id: int | None = None
         
         return assessments
     except Exception as e:
+        logger.error(f"Database error in get_all_assessments_from_db: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while retrieving assessments" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def update_assessment_in_db(course_id: int, assessment_id: int, data: UpdateAssessmentRequest):
@@ -136,9 +145,10 @@ def update_assessment_in_db(course_id: int, assessment_id: int, data: UpdateAsse
         return cursor.rowcount > 0
     except Exception as e:
         db.rollback()
+        logger.error(f"Error updating assessment: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while updating assessment" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def delete_assessment_from_db(course_id: int, assessment_id: int):
@@ -162,7 +172,8 @@ def delete_assessment_from_db(course_id: int, assessment_id: int):
         return cursor.rowcount > 0
     except Exception as e:
         db.rollback()
+        logger.error(f"Error deleting assessment: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while deleting assessment" if IS_PRODUCTION else f"Database error: {str(e)}"
         )

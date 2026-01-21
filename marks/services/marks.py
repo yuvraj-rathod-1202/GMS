@@ -5,6 +5,13 @@ from fastapi import status, HTTPException
 from utils.db import get_db
 from models.schemas.marks import AddMarksRequest
 from models.dbobj.marks import MarksDBObj, AllMarksDBObj, AllAssessmentMarksDBObj
+from dotenv import load_dotenv
+import os, logging
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
 
 # Thread pool for blocking RabbitMQ operations
 executor = ThreadPoolExecutor(max_workers=5)
@@ -21,9 +28,10 @@ def get_rabbitmq_connection():
         )
         return connection
     except Exception as e:
+        logger.error(f"RabbitMQ connection error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"RabbitMQ connection error: {str(e)}"
+            detail="RabbitMQ connection error" if IS_PRODUCTION else f"RabbitMQ connection error: {str(e)}"
         )
 
 def publish_message(routing_key: str, body: dict):
@@ -43,7 +51,7 @@ def publish_message(routing_key: str, body: dict):
             )
         )
     except Exception as e:
-        print(f"Failed to publish message to RabbitMQ: {e}")
+        logger.error(f"Error publishing message to RabbitMQ: {str(e)}")
     finally:
         if connection and not connection.is_closed:
             connection.close()
@@ -88,9 +96,10 @@ def get_marks_of_students_from_db(assessment_id: int, studentids: list[int]):
         return marks
         
     except Exception as e:
+        logger.error(f"Error retrieving marks of students: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve marks from the database : {e}"
+            detail="An error occurred while retrieving marks" if IS_PRODUCTION else f"Failed to retrieve marks from the database : {e}"
         )
 
 async def add_marks_to_db(course_id: int, assessment_id: int, data: AddMarksRequest):
@@ -149,9 +158,10 @@ async def add_marks_to_db(course_id: int, assessment_id: int, data: AddMarksRequ
         
     except Exception as e:
         db.rollback()
+        logger.error(f"Error adding marks to database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to add marks to the database : {e}"
+            detail="An error occurred while adding marks" if IS_PRODUCTION else f"Failed to add marks to the database : {e}"
         )
         
 def get_marks_from_db(assessment_id: int, student_id: int | None = None):
@@ -187,9 +197,10 @@ def get_marks_from_db(assessment_id: int, student_id: int | None = None):
         return marks
         
     except Exception as e:
+        logger.error(f"Error retrieving marks from database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve marks from the database : {e}"
+            detail="An error occurred while retrieving marks" if IS_PRODUCTION else f"Failed to retrieve marks from the database : {e}"
         )
         
 async def delete_marks_from_db(course_id: int, assessment_id: int, student_id: int):
@@ -232,9 +243,10 @@ async def delete_marks_from_db(course_id: int, assessment_id: int, student_id: i
         
     except Exception as e:
         db.rollback()
+        logger.error(f"Error deleting marks from database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete marks from the database : {e}"
+            detail="An error occurred while deleting marks" if IS_PRODUCTION else f"Failed to delete marks from the database : {e}"
         )
         
 def publish_marks_in_db(assessment_id: int, publish: bool):
@@ -261,9 +273,10 @@ def publish_marks_in_db(assessment_id: int, publish: bool):
         
     except Exception as e:
         db.rollback()
+        logger.error(f"Error updating marks publication status: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update marks publication status in the database : {e}"
+            detail="An error occurred while updating marks publication status" if IS_PRODUCTION else f"Failed to update marks publication status in the database : {e}"
         )
         
 def get_all_marks_from_db(student_id: int, course_id: int, check_published: bool = True):
@@ -314,9 +327,10 @@ def get_all_marks_from_db(student_id: int, course_id: int, check_published: bool
         return marks
         
     except Exception as e:
+        logger.error(f"Error retrieving all marks from database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve all marks from the database : {e}"
+            detail="An error occurred while retrieving all marks" if IS_PRODUCTION else f"Failed to retrieve all marks from the database : {e}"
         )
         
 def MarksPublished(assessment_id: int) -> bool:
@@ -341,9 +355,10 @@ def MarksPublished(assessment_id: int) -> bool:
             )
         return result[0]
     except Exception as e:
+        logger.error(f"Error checking marks published status: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail="An error occurred while checking marks published status" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def get_all_assessment_marks_from_db(course_id: int):
@@ -384,7 +399,8 @@ def get_all_assessment_marks_from_db(course_id: int):
         return marks
         
     except Exception as e:
+        logger.error(f"Error retrieving all assessment marks from database: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve all assessment marks from the database : {e}"
+            detail="An error occurred while retrieving all assessment marks" if IS_PRODUCTION else f"Failed to retrieve all assessment marks from the database : {e}"
         )
