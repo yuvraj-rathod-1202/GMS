@@ -12,7 +12,7 @@ metadata:
   name: mysql-initdb
 data:
   init.sql: |
-    CREATE USER IF NOT EXISTS 'mms_user'@'%' IDENTIFIED BY 'MmsUserPass123';
+    CREATE USER IF NOT EXISTS 'mms_user'@'%' IDENTIFIED BY 'MMS2026User';
 
     CREATE DATABASE auth;
 
@@ -117,8 +117,7 @@ data:
         UNIQUE KEY unique_assessment_student (assessment_id, student_id),
         FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE,
         INDEX idx_student_id (student_id),
-        INDEX idx_assessment_id (assessment_id),
-        
+        INDEX idx_assessment_id (assessment_id)
     );
 
     CREATE TABLE IF NOT EXISTS challenges (
@@ -135,27 +134,6 @@ data:
         responded_at TIMESTAMP,
         FOREIGN KEY (assessment_id) REFERENCES assessments(id)
     );
-
-    DELIMITER $$
-
-    CREATE TRIGGER before_marks_insert
-    BEFORE INSERT ON marks
-    FOR EACH ROW
-    BEGIN
-        DECLARE max_m INT;
-
-        SELECT max_marks
-        INTO max_m
-        FROM assessments
-        WHERE id = NEW.assessment_id;
-
-        IF NEW.marks_obtained > max_m THEN
-            SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Marks exceed maximum allowed';
-        END IF;
-    END$$
-
-    DELIMITER ;
 
     CREATE INDEX idx_assessment ON marks (assessment_id);
     CREATE INDEX idx_student ON marks (student_id);
@@ -305,3 +283,26 @@ data:
     CREATE INDEX idx_course ON course_analytics (course_id);
     CREATE INDEX idx_course_mark ON course_mark_frequency (course_id);
     CREATE INDEX idx_assessment_mark ON assessment_mark_frequency (assessment_id);
+
+    USE marks;
+
+    DELIMITER $$
+
+    CREATE TRIGGER before_marks_insert
+    BEFORE INSERT ON marks
+    FOR EACH ROW
+    BEGIN
+        DECLARE max_m INT;
+
+        SELECT max_marks
+        INTO max_m
+        FROM assessments
+        WHERE id = NEW.assessment_id;
+
+        IF NEW.marks_obtained > max_m THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Marks exceed maximum allowed';
+        END IF;
+    END$$
+
+    DELIMITER ;
