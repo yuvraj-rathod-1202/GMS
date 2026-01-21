@@ -3,6 +3,9 @@ import logging
 from fastapi import HTTPException, status
 from utils.db import get_db
 from models.dbobj.assessments import AssessmentRangeBDObj, CourseOverviewBDObj, AssessmentAnalyticsBDObj, AssessmentMarkFrequencyBDObj
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
