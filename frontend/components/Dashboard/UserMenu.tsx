@@ -18,7 +18,7 @@ export default function UserMenu() {
 	useEffect(() => {
 		const handleMouseEnter = () => setUserMenuOpen(true);
 		const handleMouseLeave = () => {
-			setTimeout(() => setUserMenuOpen(false), 500);
+			setTimeout(() => setUserMenuOpen(false), 1000);
 		};
 
 		const element = menuRef.current;
