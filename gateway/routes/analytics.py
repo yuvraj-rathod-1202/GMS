@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 import httpx, os
 from dotenv import load_dotenv
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from utils.auth import verify_token
 
 router = APIRouter()
 load_dotenv()
+limiter = Limiter(key_func=get_remote_address)
 
 ANALYTICS_SERVICE_URL = os.getenv("ANALYTICS_SERVICE_URL", "http://localhost:7000")
 
@@ -17,7 +20,8 @@ def _error_detail(response, default_msg: str) -> str:
         return text or default_msg
 
 @router.get("/{course_id}/analytics/overview")
-async def get_course_analytics_overview(course_id: int, user_info: dict = Depends(verify_token)):
+@limiter.limit("100/minute")
+async def get_course_analytics_overview(request: Request, course_id: int, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
@@ -39,7 +43,8 @@ async def get_course_analytics_overview(course_id: int, user_info: dict = Depend
             )
         
 @router.get("/{course_id}/assessments/{assessment_id}/analytics")
-async def get_assessment_analytics(course_id: int, assessment_id: int, user_info: dict = Depends(verify_token)):
+@limiter.limit("100/minute")
+async def get_assessment_analytics(request: Request, course_id: int, assessment_id: int, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(

@@ -1,13 +1,16 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 import httpx, os
 from dotenv import load_dotenv
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from utils.auth import verify_token
 from models.schema import GetAllCourseRoleRequest
 
 load_dotenv()
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 COURSES_SERVICE_URL = os.getenv("COURSES_SERVICE_URL", "http://localhost:8080")
 
@@ -20,7 +23,8 @@ def _error_detail(response, default_msg: str) -> str:
         return text or default_msg
 
 @router.get("/user/{course_id}/roles")
-async def get_user_roles(course_id: str, user_info: dict = Depends(verify_token)):
+@limiter.limit("100/minute")
+async def get_user_roles(request: Request, course_id: str, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{COURSES_SERVICE_URL}/user/{course_id}/roles",
@@ -39,7 +43,8 @@ async def get_user_roles(course_id: str, user_info: dict = Depends(verify_token)
         return {"course_id": course_id, "role": role.get("role", "")}
     
 @router.get("/me/courses")
-async def get_user_courses(course_status: Optional[str] = None, user_info: dict = Depends(verify_token)):
+@limiter.limit("100/minute")
+async def get_user_courses(request: Request, course_status: Optional[str] = None, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         params = {}
         if course_status:

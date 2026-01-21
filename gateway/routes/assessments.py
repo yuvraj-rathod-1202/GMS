@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 import httpx, os
 from dotenv import load_dotenv
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from utils.auth import verify_token
 from models.schema import UpdateAssessmentRequest, AddMarksRequest
 
@@ -9,6 +11,7 @@ load_dotenv()
 MARKS_SERVICE_URL = os.getenv("MARKS_SERVICE_URL", "http://localhost:6000")
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 def _error_detail(response, default_msg: str) -> str:
     try:
@@ -19,7 +22,8 @@ def _error_detail(response, default_msg: str) -> str:
         return text or default_msg
 
 @router.get("/{course_id}/{assessment_id}")
-async def get_assessment(course_id: str, assessment_id: str, user_info: dict = Depends(verify_token)):
+@limiter.limit("100/minute")
+async def get_assessment(request: Request, course_id: str, assessment_id: str, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
@@ -39,7 +43,8 @@ async def get_assessment(course_id: str, assessment_id: str, user_info: dict = D
             )
             
 @router.put("/{course_id}/{assessment_id}")
-async def update_assessment(course_id: str, assessment_id: str, data: UpdateAssessmentRequest, user_info: dict = Depends(verify_token)):
+@limiter.limit("100/minute")
+async def update_assessment(request: Request, course_id: str, assessment_id: str, data: UpdateAssessmentRequest, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.put(

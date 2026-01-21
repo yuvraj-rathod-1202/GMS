@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import httpx, os
 from dotenv import load_dotenv
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from models.schema import SignUpUser, ChangePasswordRequest, ForgotPasswordRequest
 from utils.auth import verify_token
 
@@ -9,6 +11,7 @@ load_dotenv()
 
 router = APIRouter()
 basic_auth = HTTPBasic()
+limiter = Limiter(key_func=get_remote_address)
 
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:5000")
 
@@ -21,7 +24,8 @@ def _error_detail(response, default_msg: str) -> str:
         return text or default_msg
 
 @router.post("/login")
-async def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
+@limiter.limit("10/minute")
+async def login(request: Request, credentials: HTTPBasicCredentials = Depends(basic_auth)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
@@ -46,7 +50,7 @@ async def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
             )
 
 @router.post("/signup")
-async def signup(user: SignUpUser):
+async def signup(request: Request, user: SignUpUser):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
@@ -94,7 +98,8 @@ async def logout(credentials: HTTPBasicCredentials = Depends(basic_auth)):
             )
             
 @router.post("/change-password", dependencies=[Depends(verify_token)])
-async def change_password(data: ChangePasswordRequest):
+@limiter.limit("5/minute")
+async def change_password(request: Request, data: ChangePasswordRequest):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.put(
@@ -116,7 +121,8 @@ async def change_password(data: ChangePasswordRequest):
             )
             
 @router.post("/forgot-password", dependencies=[Depends(verify_token)])
-async def forgot_password(data: ForgotPasswordRequest):
+@limiter.limit("3/hour")
+async def forgot_password(request: Request, data: ForgotPasswordRequest):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(

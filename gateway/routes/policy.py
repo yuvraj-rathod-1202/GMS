@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 import httpx, os
 from dotenv import load_dotenv
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from utils.auth import verify_token
 from models.schema import CreatePolicyRequest, UpdatePolicyRequest, CreatePolicyComponentRequest, UpdatePolicyComponentRequest, AssignPolicyRequest
 
 load_dotenv()
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 POLICY_SERVICE_URL = os.getenv("POLICY_SERVICE_URL", "http://localhost:7070")
 
@@ -18,7 +21,8 @@ def _error_detail(response, default_msg: str) -> str:
         return text or default_msg
 
 @router.post("/{course_id}/policy")
-async def create_policy(course_id: int, data: CreatePolicyRequest, user_info: dict = Depends(verify_token)):
+@limiter.limit("100/minute")
+async def create_policy(request: Request, course_id: int, data: CreatePolicyRequest, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
@@ -39,7 +43,8 @@ async def create_policy(course_id: int, data: CreatePolicyRequest, user_info: di
             )
             
 @router.get("/{course_id}/policy")
-async def get_policy(course_id: int, user_info: dict = Depends(verify_token)):
+@limiter.limit("100/minute")
+async def get_policy(request: Request, course_id: int, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(

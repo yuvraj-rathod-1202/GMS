@@ -1,12 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 import httpx, os
 from dotenv import load_dotenv
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from utils.auth import verify_token
 from models.schema import AddCourseRequest, UpdateCourseStatusRequest, EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest, CreateAssessmentRequest
 
 load_dotenv()
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 COURSES_SERVICE_URL = os.getenv("COURSES_SERVICE_URL", "http://localhost:8080")
 MARKS_SERVICE_URL = os.getenv("MARKS_SERVICE_URL", "http://localhost:6000")
@@ -20,7 +23,8 @@ def _error_detail(response, default_msg: str) -> str:
         return text or default_msg
 
 @router.get("/")
-async def get_courses(user_info: dict = Depends(verify_token)):
+@limiter.limit("100/minute")
+async def get_courses(request: Request, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
@@ -42,7 +46,8 @@ async def get_courses(user_info: dict = Depends(verify_token)):
             )
             
 @router.post("/")
-async def create_course(course: AddCourseRequest, user_info: dict = Depends(verify_token)):
+@limiter.limit("100/minute")
+async def create_course(request: Request, course: AddCourseRequest, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
