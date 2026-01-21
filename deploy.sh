@@ -63,7 +63,7 @@ docker push yrrathod/mms_analytics:latest
 kubectl delete -f ./manifests || true
 kubectl apply -f ./manifests
 
-print_yellow "Deployment process completed."
+print_yellow "Policy Service Deployment"
 
 cd ../policy
 
@@ -72,3 +72,5 @@ docker push yrrathod/mms_policy:latest
 
 kubectl delete -f ./manifests || true
 kubectl apply -f ./manifests
+
+print_yellow "Deployment process completed."

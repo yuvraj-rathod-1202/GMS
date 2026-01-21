@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: analytics-config
 data:
-  DB_HOST: host.minikube.internal
+  DB_HOST: mysql
   DB_USER: mms_user
   DB_NAME: analytics
   DB_PORT: "3306"
