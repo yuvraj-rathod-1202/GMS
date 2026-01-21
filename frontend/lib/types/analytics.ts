@@ -25,16 +25,6 @@ export interface AssessmentAnalyticsDBObject {
     version: number;
 }
 
-export interface AssessmentRangeDBObject {
-    id: number;
-    course_id: number;
-    assessment_id: number;
-    range_start: number;
-    range_end: number;
-    student_count: number;
-    computed_at: Date;
-};
-
 export interface AssessmentMarkFrequencyDBObject {
     id: number;
     course_id: number;

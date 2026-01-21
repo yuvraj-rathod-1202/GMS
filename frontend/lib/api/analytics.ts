@@ -14,12 +14,6 @@ export const AnalyticsApi = {
         );
     },
 
-    GetAssessmentRanges: async (courseId: number, assessmentId: number) => {
-        return handleRequest(
-            apiClient.get(`/courses/${courseId}/assessments/${assessmentId}/ranges`)
-        );
-    },
-
     GetAssessmentFrequencies: async (courseId: number, assessmentId: number) => {
         return handleRequest(
             apiClient.get(`/courses/${courseId}/assessments/${assessmentId}/frequencies`)

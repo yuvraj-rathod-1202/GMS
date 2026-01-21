@@ -1,5 +1,5 @@
-student_id,email
-2411015,student10@gmail.com
-2411016,student11@gmail.com
-2411017,student12@gmail.com
-2411018,student13@gmail.com
+student_id,email,marks_obtained
+2411004,student1@gmail.com,29
+2411005,student2@gmail.com,22
+2411006,student3@gmail.com,30
+2411007,student4@gmail.com,15

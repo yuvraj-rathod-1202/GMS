@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AnalyticsApi } from "@/lib/api/analytics";
 import { MarksApi } from "@/lib/api/marks";
-import { CourseOverviewDBObject, AssessmentAnalyticsDBObject, AssessmentRangeDBObject, AssessmentMarkFrequencyDBObject } from "@/lib/types/analytics";
+import { CourseOverviewDBObject, AssessmentAnalyticsDBObject, AssessmentMarkFrequencyDBObject } from "@/lib/types/analytics";
 import { AssessmentDBObject } from "@/lib/types/assessments";
 import {
   Chart as ChartJS,

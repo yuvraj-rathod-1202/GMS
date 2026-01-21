@@ -26,15 +26,6 @@ class AssessmentAnalyticsBDObj(BaseModel):
     computed_at: datetime
     version: int
     
-class AssessmentRangeBDObj(BaseModel):
-    id: int
-    course_id: int
-    assessment_id: int
-    range_start: float
-    range_end: float
-    student_count: int
-    computed_at: datetime
-    
 class AssessmentMarkFrequencyBDObj(BaseModel):
     id: int
     course_id: int

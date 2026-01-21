@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import HTTPException, status
 from utils.db import get_db
-from models.dbobj.assessments import AssessmentRangeBDObj, CourseOverviewBDObj, AssessmentAnalyticsBDObj, AssessmentMarkFrequencyBDObj
+from models.dbobj.assessments import CourseOverviewBDObj, AssessmentAnalyticsBDObj, AssessmentMarkFrequencyBDObj
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -52,45 +52,6 @@ def get_assessment_analytics_from_db(course_id: int, assessment_id: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while retrieving assessment analytics" if IS_PRODUCTION else f"Database error: {str(e)}"
-        )
-        
-def get_assessment_range_from_db(course_id: int, assessment_id: int):
-    db = get_db()
-    if db is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error"
-        )
-    
-    try:
-        cursor = db.cursor()
-        query = """
-        SELECT id, course_id, assessment_id, range_start, range_end, student_count, computed_at FROM assessment_range 
-        WHERE course_id = %s AND assessment_id = %s AND student_count > 0
-        ORDER BY range_start ASC
-        """
-        
-        cursor.execute(query, (course_id, assessment_id))
-        ranges = cursor.fetchall()
-        
-        range_objs = []
-        for range_record in ranges:
-            range_objs.append(AssessmentRangeBDObj(
-                id=range_record[0],
-                course_id=range_record[1],
-                assessment_id=range_record[2],
-                range_start=range_record[3],
-                range_end=range_record[4],
-                student_count=range_record[5],
-                computed_at=range_record[6]
-            ))
-        
-        return range_objs
-    except Exception as e:
-        logger.error(f"Database error in get_assessment_range_from_db: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while retrieving assessment range data" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def get_assessment_frequencies_from_db(course_id: int, assessment_id: int):

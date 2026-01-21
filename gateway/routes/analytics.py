@@ -60,26 +60,6 @@ async def get_assessment_analytics(course_id: int, assessment_id: int, user_info
                 detail=f"Error connecting to Analytics Service: {str(e)}"
             )
             
-@router.get("/{course_id}/assessments/{assessment_id}/ranges")
-async def get_assessment_ranges(course_id: int, assessment_id: int, user_info: dict = Depends(verify_token)):
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                f"{ANALYTICS_SERVICE_URL}/{course_id}/assessments/{assessment_id}/ranges",
-                params={"user_id": user_info["user_id"]}
-            )
-            if response.status_code != 200:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=_error_detail(response, "Failed to retrieve assessment ranges")
-                )
-            return response.json()
-        except httpx.RequestError as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error connecting to Analytics Service: {str(e)}"
-            )
-            
 @router.get("/{course_id}/assessments/{assessment_id}/frequencies")
 async def get_assessment_frequencies(course_id: int, assessment_id: int, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:

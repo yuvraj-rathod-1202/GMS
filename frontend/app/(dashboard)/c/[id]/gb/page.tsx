@@ -396,7 +396,7 @@ export default function GradeSheetView() {
       setIsRecalculating(true);
       try {
         await RecalculateTotal(courseId);
-        alert("Total marks recalculated successfully!");
+        alert("Total marks recalculated successfully!. Try refreshing the page after some time to see the updated totals.");
       } catch (error) {
         console.error("Failed to recalculate total marks:", error);
         alert("Failed to recalculate total marks. Please try again.");

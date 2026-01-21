@@ -37,16 +37,6 @@ CREATE TABLE IF NOT EXISTS assessment_analytics (
     version INT DEFAULT 1
 );
 
-CREATE TABLE IF NOT EXISTS assessment_range (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    course_id INT NOT NULL,
-    assessment_id INT NOT NULL,
-    range_start DECIMAL(5,2) NOT NULL,
-    range_end DECIMAL(5,2) NOT NULL,
-    student_count INT NOT NULL,
-    computed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
 CREATE TABLE IF NOT EXISTS course_mark_frequency (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
@@ -70,6 +60,5 @@ CREATE TABLE IF NOT EXISTS assessment_mark_frequency (
 
 CREATE INDEX idx_course_assessment ON assessment_analytics (course_id, assessment_id);
 CREATE INDEX idx_course ON course_analytics (course_id);
-CREATE INDEX idx_assessment ON assessment_range (assessment_id);
 CREATE INDEX idx_course_mark ON course_mark_frequency (course_id);
 CREATE INDEX idx_assessment_mark ON assessment_mark_frequency (assessment_id);

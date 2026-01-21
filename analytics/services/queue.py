@@ -100,6 +100,13 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
             """,
             freq_update
         )
+        cursor.execute(
+            """
+            DELETE FROM course_mark_frequency
+            WHERE course_id = %s AND frequency = 0
+            """,
+            (course_id,)
+        )
         
         if recompute_needed:
             candidates = []
@@ -282,6 +289,13 @@ def update_assessment_analytics_in_db(course_id: int, assessment_id: int | None,
             ON DUPLICATE KEY UPDATE frequency = GREATEST(frequency + VALUES(frequency), 0)
             """,
             freq_update
+        )
+        cursor.execute(
+            """
+            DELETE FROM assessment_mark_frequency
+            WHERE course_id = %s AND assessment_id = %s AND frequency = 0
+            """,
+            (course_id, assessment_id)
         )
         
         if recompute_needed:
