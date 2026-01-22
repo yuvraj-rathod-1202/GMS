@@ -19,11 +19,14 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: read
       packages: write
     
     strategy:
+      max-parallel: 3
+      fail-fast: false
       matrix:
         service:
           - analytics
@@ -32,7 +35,6 @@ jobs:
           - frontend
           - gateway
           - marks
-          - notifications
           - policy
     
     steps:
@@ -61,6 +63,7 @@ jobs:
       
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
+        timeout-minutes: 30
         with:
           context: ./${{ matrix.service }}
           push: true
@@ -68,6 +71,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:latest
           cache-to: type=inline
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
   deploy:
     runs-on: ubuntu-latest
@@ -97,7 +102,7 @@ jobs:
           IMAGE_TAG=${{ steps.image_tag.outputs.tag }}
           
           # Update all deployment manifests with new image tags
-          for service in analytics auth_user courses frontend gateway marks notifications policy; do
+          for service in analytics auth_user courses frontend gateway marks policy; do
             manifest_dir="${service}/manifests"
             if [ -d "$manifest_dir" ]; then
               # Update image in deployment files
@@ -135,14 +140,6 @@ jobs:
           kubectl rollout status deployment/marks -n default --timeout=300s || true
           kubectl rollout status deployment/analytics -n default --timeout=300s || true
           kubectl rollout status deployment/policy -n default --timeout=300s || true
-      
-      - name: Deploy Notifications Service
-        run: |
-          if [ -d "notifications/manifests" ]; then
-            echo "Deploying notifications..."
-            kubectl apply -f notifications/manifests/
-            kubectl rollout status deployment/notifications -n default --timeout=300s || true
-          fi
       
       - name: Deploy Frontend
         run: |

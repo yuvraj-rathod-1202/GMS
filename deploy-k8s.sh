@@ -38,7 +38,7 @@ check_cluster() {
 update_manifests() {
     echo "Updating image tags in manifests..."
     
-    for service in analytics auth_user courses frontend gateway marks notifications policy; do
+    for service in analytics auth_user courses frontend gateway marks policy; do
         manifest_dir="${service}/manifests"
         if [ -d "$manifest_dir" ]; then
             find "$manifest_dir" -name "*-deploy.yaml" -o -name "*deploy.yaml" | while read file; do
@@ -112,7 +112,6 @@ wait_for_deployments() {
         "marks"
         "analytics"
         "policy"
-        "notifications"
         "frontend"
     )
     
