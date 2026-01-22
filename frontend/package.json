@@ -7,7 +7,9 @@
     "build": "next build",
     "build:docker": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "axios": "^1.13.2",
@@ -28,6 +30,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "prettier": "^3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
