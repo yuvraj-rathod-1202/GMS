@@ -66,6 +66,7 @@ jobs:
         timeout-minutes: 30
         with:
           context: ./${{ matrix.service }}
+          file: ./${{ matrix.service }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -73,6 +74,7 @@ jobs:
           cache-to: type=inline
           build-args: |
             BUILDKIT_INLINE_CACHE=1
+          no-cache: ${{ matrix.service == 'frontend' }}
 
   deploy:
     runs-on: ubuntu-latest
