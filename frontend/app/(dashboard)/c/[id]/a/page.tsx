@@ -22,7 +22,7 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js';
-import { Bar, Line } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import InstructorNavbar from '@/components/Course/InstructorNavbar';
 
 // Register Chart.js components
@@ -40,7 +40,8 @@ ChartJS.register(
 
 export default function AnalyticsPage() {
   const router = useRouter();
-  const courseId = useParams()?.id ? Number(useParams().id) : null;
+  const params = useParams();
+  const courseId = params?.id ? Number(params.id) : null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
