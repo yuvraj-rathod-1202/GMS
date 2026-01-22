@@ -1,6 +1,6 @@
-"use client";
-import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+'use client';
+import Link from 'next/link';
+import { useParams, usePathname } from 'next/navigation';
 
 export default function TANavbar() {
   const params = useParams();
@@ -8,9 +8,9 @@ export default function TANavbar() {
   const courseId = params.id;
 
   const navItems = [
-    { label: "Overview", href: `/c/${courseId}` },
-    { label: "Students", href: `/c/${courseId}/p` },
-    { label: "Grades", href: `/c/${courseId}/g` },
+    { label: 'Overview', href: `/c/${courseId}` },
+    { label: 'Students', href: `/c/${courseId}/p` },
+    { label: 'Grades', href: `/c/${courseId}/g` },
   ];
 
   const isActive = (href: string) => {
@@ -31,8 +31,8 @@ export default function TANavbar() {
                 href={item.href}
                 className={`px-3 sm:px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
                   isActive(item.href)
-                    ? "border-b-4 border-b-mms-blue"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? 'border-b-4 border-b-mms-blue'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
                 {item.label}

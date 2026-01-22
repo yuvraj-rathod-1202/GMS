@@ -1,9 +1,9 @@
-"use client";
-import { useState } from "react";
-import { Authapi } from "@/lib/api/auth";
-import { useAuthStore } from "@/lib/store/auth";
-import { useCoursesStore } from "@/lib/store/courses";
-import { useCourseDetailStore } from "@/lib/store/courseDetail";
+'use client';
+import { useState } from 'react';
+import { Authapi } from '@/lib/api/auth';
+import { useAuthStore } from '@/lib/store/auth';
+import { useCoursesStore } from '@/lib/store/courses';
+import { useCourseDetailStore } from '@/lib/store/courseDetail';
 
 export function useAuth() {
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -18,10 +18,10 @@ export function useAuth() {
     setError(null);
     try {
       const data = await Authapi.login(id, password);
-      // Expecting { user, token } 
+      // Expecting { user, token }
       const user = (data as any).user ?? null;
       const token = (data as any).token ?? null;
-      if (!token) throw new Error("Invalid login response");
+      if (!token) throw new Error('Invalid login response');
       setAuth(user, token);
       const lastLogin = new Date().toISOString();
       // Persist last login locally
@@ -38,7 +38,7 @@ export function useAuth() {
       } catch {}
       return { user, token };
     } catch (err: any) {
-      setError(err?.message || "Login failed");
+      setError(err?.message || 'Login failed');
       throw err;
     } finally {
       setLoading(false);
@@ -53,7 +53,9 @@ export function useAuth() {
         clearCourses();
         clearCourseDetail();
       } catch {}
-      try { localStorage.removeItem('lastLogin'); } catch {}
+      try {
+        localStorage.removeItem('lastLogin');
+      } catch {}
       logout();
     },
     loading,

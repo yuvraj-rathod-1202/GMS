@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #ffffff;
@@ -10,15 +10,15 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  
+
   --color-mms-grayLight: #f3f4f6;
-  --color-mms-blue: #92BFFF;
-  --color-mms-indigoLight: #EDEEFC;
-  --color-mms-tealLight: #96E2D6;
-  --color-mms-indigo: #9F9FF8;
-  --color-mms-greenLight: #94E9B8;
+  --color-mms-blue: #92bfff;
+  --color-mms-indigoLight: #edeefc;
+  --color-mms-tealLight: #96e2d6;
+  --color-mms-indigo: #9f9ff8;
+  --color-mms-greenLight: #94e9b8;
   --color-mms-black: #000000;
-  --color-mms-white: #FFFFFF;
+  --color-mms-white: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {

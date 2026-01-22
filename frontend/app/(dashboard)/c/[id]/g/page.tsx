@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import TAGradePage from "@/components/Grade/TAGradePage";
-import { useUserRoleInCourse } from "@/hooks/useUserRoleInCourse";
-import { useCourseDetailStore } from "@/lib/store/courseDetail";
-import { useParams, useRouter } from "next/navigation";
-import InstructorGradePage from "@/components/Grade/InstructorGradePage";
+import React, { useEffect, useState } from 'react';
+import TAGradePage from '@/components/Grade/TAGradePage';
+import { useUserRoleInCourse } from '@/hooks/useUserRoleInCourse';
+import { useCourseDetailStore } from '@/lib/store/courseDetail';
+import { useParams, useRouter } from 'next/navigation';
+import InstructorGradePage from '@/components/Grade/InstructorGradePage';
 
 export default function TAGradersView() {
   const params = useParams();
@@ -19,7 +19,7 @@ export default function TAGradersView() {
 
   useEffect(() => {
     if (!isLoading && !course) {
-      router.push("/");
+      router.push('/');
       return;
     }
 
@@ -33,7 +33,7 @@ export default function TAGradersView() {
 
   useEffect(() => {
     if (isTimeout && !course) {
-      router.push("/");
+      router.push('/');
     }
   }, [isTimeout, course, router]);
 
@@ -51,7 +51,7 @@ export default function TAGradersView() {
     case 'instructor':
       return <InstructorGradePage />;
     default:
-      router.push("/");
+      router.push('/');
       return null;
   }
 }

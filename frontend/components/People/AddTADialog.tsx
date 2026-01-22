@@ -1,6 +1,6 @@
-"use client";
-import { useState } from "react";
-import { BiX } from "react-icons/bi";
+'use client';
+import { useState } from 'react';
+import { BiX } from 'react-icons/bi';
 
 interface AddTADialogProps {
   isOpen: boolean;
@@ -9,26 +9,21 @@ interface AddTADialogProps {
   isLoading: boolean;
 }
 
-export default function AddTADialog({
-  isOpen,
-  onClose,
-  onSubmit,
-  isLoading,
-}:  AddTADialogProps) {
-  const [taId, setTaId] = useState("");
-  const [email, setEmail] = useState("");
+export default function AddTADialog({ isOpen, onClose, onSubmit, isLoading }: AddTADialogProps) {
+  const [taId, setTaId] = useState('');
+  const [email, setEmail] = useState('');
 
   const handleClose = () => {
-    setTaId("");
-    setEmail("");
+    setTaId('');
+    setEmail('');
     onClose();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSubmit(taId, email);
-    setTaId("");
-    setEmail("");
+    setTaId('');
+    setEmail('');
   };
 
   if (!isOpen) return null;
@@ -93,7 +88,7 @@ export default function AddTADialog({
               className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isLoading}
             >
-              {isLoading ? "Enrolling..." : "Enroll"}
+              {isLoading ? 'Enrolling...' : 'Enroll'}
             </button>
           </div>
         </form>

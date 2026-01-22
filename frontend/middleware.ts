@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
-const publicRoutes = ["/login"];
+const publicRoutes = ['/login'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get("authToken")?.value;
-  const lastLogin = request.cookies.get("lastLogin")?.value;
+  const token = request.cookies.get('authToken')?.value;
+  const lastLogin = request.cookies.get('lastLogin')?.value;
 
   // Always allow API routes (e.g., session cookie management)
   if (pathname.startsWith('/api/')) {
@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith('/login')) {
     const msInDay = 24 * 60 * 60 * 1000;
     const last = lastLogin ? Date.parse(lastLogin) : NaN;
-    const expired = Number.isFinite(last) ? (Date.now() - last > msInDay) : true;
+    const expired = Number.isFinite(last) ? Date.now() - last > msInDay : true;
     if (token && !expired) {
       return NextResponse.redirect(new URL('/', request.url));
     }
@@ -30,10 +30,10 @@ export function middleware(request: NextRequest) {
 
   // If user is on a protected route and has no token OR expired
   if (!token) {
-    const res = NextResponse.redirect(new URL("/login", request.url));
+    const res = NextResponse.redirect(new URL('/login', request.url));
     // Clear any stale cookies
-    res.cookies.set("authToken", "", { path: "/", maxAge: 0 });
-    res.cookies.set("lastLogin", "", { path: "/", maxAge: 0 });
+    res.cookies.set('authToken', '', { path: '/', maxAge: 0 });
+    res.cookies.set('lastLogin', '', { path: '/', maxAge: 0 });
     return res;
   }
 
@@ -44,9 +44,9 @@ export function middleware(request: NextRequest) {
     if (Number.isFinite(last)) {
       const expired = Date.now() - last > msInDay;
       if (expired) {
-        const res = NextResponse.redirect(new URL("/login", request.url));
-        res.cookies.set("authToken", "", { path: "/", maxAge: 0 });
-        res.cookies.set("lastLogin", "", { path: "/", maxAge: 0 });
+        const res = NextResponse.redirect(new URL('/login', request.url));
+        res.cookies.set('authToken', '', { path: '/', maxAge: 0 });
+        res.cookies.set('lastLogin', '', { path: '/', maxAge: 0 });
         return res;
       }
     }
@@ -56,5 +56,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|static|favicon.ico).*)"],
+  matcher: ['/((?!_next|static|favicon.ico).*)'],
 };

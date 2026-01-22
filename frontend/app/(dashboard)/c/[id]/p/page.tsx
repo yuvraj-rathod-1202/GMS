@@ -6,7 +6,7 @@ import { useCourseDetailStore } from "@/lib/store/courseDetail";
 import { useCourseManagement } from "@/hooks/useCourseManagement";
 import { TAPeopleView } from "@/components/People/TAPeopleView";
 import { InstructorPeopleView } from "@/components/People/InstructorPeopleView";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 export default function PeoplePage() {
   const params = useParams();
@@ -17,12 +17,12 @@ export default function PeoplePage() {
   const [isFetchingData, setIsFetchingData] = useState(false);
 
   const { role, course, isLoading, hasAccess } = useRoleAccess({
-    allowedRoles: ['ta', 'instructor'],
+    allowedRoles: ["ta", "instructor"],
     courseId,
   });
 
   const currentCourse = useCourseDetailStore((s) => s.currentCourse);
-  
+
   const {
     loading: managementLoading,
     fetchCourseRoles,
@@ -30,17 +30,17 @@ export default function PeoplePage() {
     unenrollStudent,
     AddTA,
     RemoveTA,
-    BulkEnrollStudent
-  } = useCourseManagement(role || 'ta');
+    BulkEnrollStudent,
+  } = useCourseManagement(role || "ta");
 
   useEffect(() => {
     if (!isLoading && hasAccess && !isFetchingData) {
       const fetchStudents = async () => {
         setIsFetchingData(true);
         try {
-          await fetchCourseRoles(courseId, false, role=== 'instructor');
+          await fetchCourseRoles(courseId, false, role === "instructor");
         } catch (error) {
-          if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+          if (process.env.NEXT_PUBLIC_ENVIRONMENT === "development") {
             console.error("Error fetching students:", error);
           }
         } finally {
@@ -69,16 +69,18 @@ export default function PeoplePage() {
       return;
     }
 
-    const confirmed = window.confirm(`Are you sure you want to enroll student with ID: ${studentId}?`);
+    const confirmed = window.confirm(
+      `Are you sure you want to enroll student with ID: ${studentId}?`
+    );
     if (!confirmed) return;
 
     try {
       await enrollStudent(courseId, { student_id: Number(studentId), email: email.trim() });
       alert("Student enrolled successfully!");
       setShowEnrollDialog(false);
-      await fetchCourseRoles(courseId, true, role === 'instructor');
+      await fetchCourseRoles(courseId, true, role === "instructor");
     } catch (error: any) {
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === "development") {
         console.error("Error enrolling student:", error);
       }
       alert(error?.message || "Failed to enroll student");
@@ -86,11 +88,13 @@ export default function PeoplePage() {
   };
 
   const handleRemoveStudent = async (studentIdToRemove: number) => {
-    const confirmed = window.confirm(`Are you sure you want to remove student with ID: ${studentIdToRemove} from the course?`);
+    const confirmed = window.confirm(
+      `Are you sure you want to remove student with ID: ${studentIdToRemove} from the course?`
+    );
     if (!confirmed) return;
     try {
       await unenrollStudent(courseId, studentIdToRemove);
-      await fetchCourseRoles(courseId, true, role === 'instructor');
+      await fetchCourseRoles(courseId, true, role === "instructor");
       alert("Student removed successfully!");
     } catch (error: any) {
       alert(error?.message || "Failed to remove student");
@@ -107,13 +111,12 @@ export default function PeoplePage() {
     if (!confirmed) return;
 
     try {
-
       await AddTA(courseId, { ta_id: Number(taId), email: email.trim() });
       await fetchCourseRoles(courseId, true, true);
       alert("TA added successfully!");
       setShowAddDialog(false);
     } catch (error: any) {
-      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === "development") {
         console.error("Error adding TA:", error);
       }
       alert(error?.message || "Failed to add TA");
@@ -121,7 +124,9 @@ export default function PeoplePage() {
   };
 
   const handleRemoveTA = async (taId: number) => {
-    const confirmed = window.confirm(`Are you sure you want to remove TA with ID: ${taId} from the course?`);
+    const confirmed = window.confirm(
+      `Are you sure you want to remove TA with ID: ${taId} from the course?`
+    );
     if (!confirmed) return;
     try {
       await RemoveTA(courseId, taId);
@@ -132,66 +137,66 @@ export default function PeoplePage() {
     }
   };
 
-  const parseCSV = (text: string): Array<{student_id: number; email: string}> => {
-    const lines = text.trim().split('\n');
-    const data: Array<{student_id: number; email: string}> = [];
-    
+  const parseCSV = (text: string): Array<{ student_id: number; email: string }> => {
+    const lines = text.trim().split("\n");
+    const data: Array<{ student_id: number; email: string }> = [];
+
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
-      
-      const values = line.split(',').map(v => v.trim());
+
+      const values = line.split(",").map((v) => v.trim());
       if (values.length >= 2) {
         const studentId = parseInt(values[0]);
         const email = values[1];
-        
+
         if (!isNaN(studentId) && email) {
           data.push({
             student_id: studentId,
-            email: email
+            email: email,
           });
         }
       }
     }
-    
+
     return data;
   };
 
-  const parseExcel = async (file: File): Promise<Array<{student_id: number; email: string}>> => {
+  const parseExcel = async (file: File): Promise<Array<{ student_id: number; email: string }>> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
-          const workbook = XLSX.read(data, { type: 'binary' });
+          const workbook = XLSX.read(data, { type: "binary" });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
-          
-          const parsedData: Array<{student_id: number; email: string}> = [];
-          
+
+          const parsedData: Array<{ student_id: number; email: string }> = [];
+
           for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i];
             if (!row || row.length < 2) continue;
-            
+
             const studentId = parseInt(String(row[0]));
             const email = String(row[1]);
-            
+
             if (!isNaN(studentId) && email) {
               parsedData.push({
                 student_id: studentId,
-                email: email
+                email: email,
               });
             }
           }
-          
+
           resolve(parsedData);
         } catch (error) {
           reject(error);
         }
       };
-      
-      reader.onerror = () => reject(new Error('Failed to read file'));
+
+      reader.onerror = () => reject(new Error("Failed to read file"));
       reader.readAsBinaryString(file);
     });
   };
@@ -203,12 +208,12 @@ export default function PeoplePage() {
         return;
       }
 
-      let parsedData: Array<{student_id: number; email: string}> = [];
+      let parsedData: Array<{ student_id: number; email: string }> = [];
 
-      if (file.name.endsWith('.csv')) {
+      if (file.name.endsWith(".csv")) {
         const text = await file.text();
         parsedData = parseCSV(text);
-      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      } else if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
         parsedData = await parseExcel(file);
       } else {
         alert("Only CSV and Excel files are supported.");
@@ -220,43 +225,53 @@ export default function PeoplePage() {
         return;
       }
 
-      const confirmed = window.confirm(`Are you sure you want to enroll ${parsedData.length} student${parsedData.length > 1 ? 's' : ''}?`);
+      const confirmed = window.confirm(
+        `Are you sure you want to enroll ${parsedData.length} student${parsedData.length > 1 ? "s" : ""}?`
+      );
       if (!confirmed) return;
 
       await BulkEnrollStudent(courseId, parsedData);
-      await fetchCourseRoles(courseId, true, role === 'instructor');
-      
-      alert(`Successfully enrolled ${parsedData.length} student${parsedData.length > 1 ? 's' : ''}!`);
+      await fetchCourseRoles(courseId, true, role === "instructor");
+
+      alert(
+        `Successfully enrolled ${parsedData.length} student${parsedData.length > 1 ? "s" : ""}!`
+      );
       setShowBulkEnrollDialog(false);
     } catch (error: any) {
       console.error("Bulk enrollment error:", error);
-      alert(error?.message || "Failed to enroll students. Please check the file format and try again.");
+      alert(
+        error?.message || "Failed to enroll students. Please check the file format and try again."
+      );
     }
   };
 
   switch (role) {
-    case 'ta':
-      return <TAPeopleView 
-                setShowEnrollDialog={setShowEnrollDialog}
-                showEnrollDialog={showEnrollDialog}
-                handleEnrollStudent={handleEnrollStudent}
-                handleRemoveStudent={handleRemoveStudent}
-                managementLoading={managementLoading}
-              />;
-    case 'instructor':
-      return <InstructorPeopleView
-                setShowEnrollDialog={setShowEnrollDialog}
-                showEnrollDialog={showEnrollDialog}
-                showAddDialog={showAddDialog}
-                setShowAddDialog={setShowAddDialog}
-                showBulkEnrollDialog={showBulkEnrollDialog}
-                setShowBulkEnrollDialog={setShowBulkEnrollDialog}
-                handleEnrollStudent={handleEnrollStudent}
-                handleRemoveStudent={handleRemoveStudent}
-                handleAddTA={handleAddTA}
-                handleRemoveTA={handleRemoveTA}
-                handleBulkEnroll={handleBulkEnroll}
-                managementLoading={managementLoading}
-              />;
+    case "ta":
+      return (
+        <TAPeopleView
+          setShowEnrollDialog={setShowEnrollDialog}
+          showEnrollDialog={showEnrollDialog}
+          handleEnrollStudent={handleEnrollStudent}
+          handleRemoveStudent={handleRemoveStudent}
+          managementLoading={managementLoading}
+        />
+      );
+    case "instructor":
+      return (
+        <InstructorPeopleView
+          setShowEnrollDialog={setShowEnrollDialog}
+          showEnrollDialog={showEnrollDialog}
+          showAddDialog={showAddDialog}
+          setShowAddDialog={setShowAddDialog}
+          showBulkEnrollDialog={showBulkEnrollDialog}
+          setShowBulkEnrollDialog={setShowBulkEnrollDialog}
+          handleEnrollStudent={handleEnrollStudent}
+          handleRemoveStudent={handleRemoveStudent}
+          handleAddTA={handleAddTA}
+          handleRemoveTA={handleRemoveTA}
+          handleBulkEnroll={handleBulkEnroll}
+          managementLoading={managementLoading}
+        />
+      );
   }
 }

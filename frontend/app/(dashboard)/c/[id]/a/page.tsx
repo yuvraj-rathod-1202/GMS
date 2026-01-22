@@ -1,11 +1,15 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { AnalyticsApi } from "@/lib/api/analytics";
-import { MarksApi } from "@/lib/api/marks";
-import { CourseOverviewDBObject, AssessmentAnalyticsDBObject, AssessmentMarkFrequencyDBObject } from "@/lib/types/analytics";
-import { AssessmentDBObject } from "@/lib/types/assessments";
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { AnalyticsApi } from '@/lib/api/analytics';
+import { MarksApi } from '@/lib/api/marks';
+import {
+  CourseOverviewDBObject,
+  AssessmentAnalyticsDBObject,
+  AssessmentMarkFrequencyDBObject,
+} from '@/lib/types/analytics';
+import { AssessmentDBObject } from '@/lib/types/assessments';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -19,7 +23,7 @@ import {
   ArcElement,
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
-import InstructorNavbar from "@/components/Course/InstructorNavbar";
+import InstructorNavbar from '@/components/Course/InstructorNavbar';
 
 // Register Chart.js components
 ChartJS.register(
@@ -39,14 +43,16 @@ export default function AnalyticsPage() {
   const courseId = useParams()?.id ? Number(useParams().id) : null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Data states
   const [courseOverview, setCourseOverview] = useState<CourseOverviewDBObject | null>(null);
   const [assessments, setAssessments] = useState<AssessmentDBObject[]>([]);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<number | null>(null);
-  const [assessmentAnalytics, setAssessmentAnalytics] = useState<AssessmentAnalyticsDBObject | null>(null);
-  const [assessmentFrequencies, setAssessmentFrequencies] = useState<AssessmentMarkFrequencyDBObject[]>([]);
-
+  const [assessmentAnalytics, setAssessmentAnalytics] =
+    useState<AssessmentAnalyticsDBObject | null>(null);
+  const [assessmentFrequencies, setAssessmentFrequencies] = useState<
+    AssessmentMarkFrequencyDBObject[]
+  >([]);
 
   // Fetch course overview and assessments
   useEffect(() => {
@@ -57,23 +63,23 @@ export default function AnalyticsPage() {
       try {
         const [overviewData, assessmentsData] = await Promise.all([
           AnalyticsApi.GetCourseAnalytics(courseId),
-          MarksApi.GetAllAssessments(courseId)
+          MarksApi.GetAllAssessments(courseId),
         ]);
 
         // Handle overview response - it might be wrapped in an object
         const overview = (overviewData as any)?.overview || overviewData;
         setCourseOverview(overview as CourseOverviewDBObject);
-        
-        const assessmentList = Array.isArray(assessmentsData) 
-          ? assessmentsData 
+
+        const assessmentList = Array.isArray(assessmentsData)
+          ? assessmentsData
           : (assessmentsData as any)?.assessments || [];
         setAssessments(assessmentList);
-        
+
         if (assessmentList.length > 0) {
           setSelectedAssessmentId(assessmentList[0].id);
         }
       } catch (err: any) {
-        setError(err?.message || "Failed to fetch analytics data");
+        setError(err?.message || 'Failed to fetch analytics data');
       } finally {
         setLoading(false);
       }
@@ -90,21 +96,20 @@ export default function AnalyticsPage() {
       try {
         const [analytics, frequencies] = await Promise.all([
           AnalyticsApi.GetAssessmentAnalytics(courseId, selectedAssessmentId),
-          AnalyticsApi.GetAssessmentFrequencies(courseId, selectedAssessmentId)
+          AnalyticsApi.GetAssessmentFrequencies(courseId, selectedAssessmentId),
         ]);
 
         // Handle analytics response - extract from assessment_analytics key
         const analyticsData = (analytics as any)?.assessment_analytics || analytics;
         setAssessmentAnalytics(analyticsData as AssessmentAnalyticsDBObject);
-        
+
         // Handle frequencies response
-        const frequenciesData = Array.isArray(frequencies) 
-          ? frequencies 
-          : (frequencies as any)?.frequencies || 
-            (frequencies as any)?.data || [];
+        const frequenciesData = Array.isArray(frequencies)
+          ? frequencies
+          : (frequencies as any)?.frequencies || (frequencies as any)?.data || [];
         setAssessmentFrequencies(frequenciesData);
       } catch (err: any) {
-        console.error("Failed to fetch assessment analytics:", err);
+        console.error('Failed to fetch assessment analytics:', err);
       }
     };
 
@@ -134,15 +139,17 @@ export default function AnalyticsPage() {
   }
 
   const frequencyChartData = {
-    labels: assessmentFrequencies.map(f => f.mark.toString()),
-    datasets: [{
-      label: 'Frequency',
-      data: assessmentFrequencies.map(f => f.frequency),
-      backgroundColor: 'rgba(34, 197, 94, 0.6)',
-      borderColor: 'rgba(34, 197, 94, 1)',
-      borderWidth: 2,
-      tension: 0.4,
-    }],
+    labels: assessmentFrequencies.map((f) => f.mark.toString()),
+    datasets: [
+      {
+        label: 'Frequency',
+        data: assessmentFrequencies.map((f) => f.frequency),
+        backgroundColor: 'rgba(34, 197, 94, 0.6)',
+        borderColor: 'rgba(34, 197, 94, 1)',
+        borderWidth: 2,
+        tension: 0.4,
+      },
+    ],
   };
 
   const chartOptions = {
@@ -165,85 +172,117 @@ export default function AnalyticsPage() {
 
   return (
     <>
-        <InstructorNavbar />
-        <div className="p-6 overflow-y-auto h-[calc(100vh-96px)] bg-gray-50">
+      <InstructorNavbar />
+      <div className="p-6 overflow-y-auto h-[calc(100vh-96px)] bg-gray-50">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Course Analytics</h1>
-            <button
+          <h1 className="text-3xl font-bold text-gray-800">Course Analytics</h1>
+          <button
             onClick={() => router.back()}
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
-            >
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
             </svg>
             Back
-            </button>
+          </button>
         </div>
 
         {/* Course Overview Stats */}
         {courseOverview && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             <StatCard label="Total Students" value={courseOverview.total_students ?? 0} />
             <StatCard label="Mean" value={courseOverview.mean?.toFixed(2) ?? 'N/A'} />
             <StatCard label="Median" value={courseOverview.median?.toFixed(2) ?? 'N/A'} />
             <StatCard label="Max" value={courseOverview.max?.toFixed(2) ?? 'N/A'} />
             <StatCard label="Min" value={courseOverview.min?.toFixed(2) ?? 'N/A'} />
             <StatCard label="Std Dev" value={courseOverview.std?.toFixed(2) ?? 'N/A'} />
-            </div>
+          </div>
         )}
 
         {/* Assessment Selection */}
         {assessments.length > 0 && (
-            <div className="mb-6">
+          <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Assessment
+              Select Assessment
             </label>
             <select
-                value={selectedAssessmentId || ''}
-                onChange={(e) => setSelectedAssessmentId(Number(e.target.value))}
-                className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedAssessmentId || ''}
+              onChange={(e) => setSelectedAssessmentId(Number(e.target.value))}
+              className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-                {assessments.map((assessment) => (
+              {assessments.map((assessment) => (
                 <option key={assessment.id} value={assessment.id}>
-                    {assessment.name}
+                  {assessment.name}
                 </option>
-                ))}
+              ))}
             </select>
-            </div>
+          </div>
         )}
 
         {/* Assessment Analytics */}
         {assessmentAnalytics && (
-            <div className="mb-8">
+          <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Assessment Statistics</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <StatCard label="Mean" value={assessmentAnalytics.mean?.toFixed(2) ?? 'N/A'} color="bg-blue-50" />
-                <StatCard label="Median" value={assessmentAnalytics.median?.toFixed(2) ?? 'N/A'} color="bg-blue-50" />
-                <StatCard label="Max" value={assessmentAnalytics.max?.toFixed(2) ?? 'N/A'} color="bg-blue-50" />
-                <StatCard label="Min" value={assessmentAnalytics.min?.toFixed(2) ?? 'N/A'} color="bg-blue-50" />
-                <StatCard label="Std Dev" value={assessmentAnalytics.std?.toFixed(2) ?? 'N/A'} color="bg-blue-50" />
+              <StatCard
+                label="Mean"
+                value={assessmentAnalytics.mean?.toFixed(2) ?? 'N/A'}
+                color="bg-blue-50"
+              />
+              <StatCard
+                label="Median"
+                value={assessmentAnalytics.median?.toFixed(2) ?? 'N/A'}
+                color="bg-blue-50"
+              />
+              <StatCard
+                label="Max"
+                value={assessmentAnalytics.max?.toFixed(2) ?? 'N/A'}
+                color="bg-blue-50"
+              />
+              <StatCard
+                label="Min"
+                value={assessmentAnalytics.min?.toFixed(2) ?? 'N/A'}
+                color="bg-blue-50"
+              />
+              <StatCard
+                label="Std Dev"
+                value={assessmentAnalytics.std?.toFixed(2) ?? 'N/A'}
+                color="bg-blue-50"
+              />
             </div>
-            </div>
+          </div>
         )}
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            {/* Frequency Distribution Chart */}
-            {assessmentFrequencies.length > 0 && (
+          {/* Frequency Distribution Chart */}
+          {assessmentFrequencies.length > 0 && (
             <ChartCard title="Mark Frequency Distribution">
-                <Line data={frequencyChartData} options={chartOptions} />
+              <Line data={frequencyChartData} options={chartOptions} />
             </ChartCard>
-            )}
+          )}
         </div>
-        </div>
+      </div>
     </>
   );
 }
 
 // Reusable Components
-function StatCard({ label, value, color = "bg-white" }: { label: string; value: string | number; color?: string }) {
+function StatCard({
+  label,
+  value,
+  color = 'bg-white',
+}: {
+  label: string;
+  value: string | number;
+  color?: string;
+}) {
   return (
     <div className={`${color} p-4 rounded-lg shadow-sm border border-gray-200`}>
       <p className="text-sm text-gray-600 mb-1">{label}</p>
@@ -256,9 +295,7 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
-      <div className="h-80">
-        {children}
-      </div>
+      <div className="h-80">{children}</div>
     </div>
   );
 }

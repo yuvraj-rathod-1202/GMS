@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from 'react';
 
 export interface GradeSheetColumn<T = any> {
   header: string;
@@ -29,22 +29,24 @@ export default function IGradeSheet<T extends Record<string, any>>({
   data = [],
   searchable = true,
   searchKeys,
-  emptyMessage = "No data available",
-  className = "",
+  emptyMessage = 'No data available',
+  className = '',
   onRowClick,
 }: GradeSheetProps<T>) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnKey: string } | null>(null);
-  const [editValue, setEditValue] = useState<any>("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnKey: string } | null>(
+    null
+  );
+  const [editValue, setEditValue] = useState<any>('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [validationError, setValidationError] = useState<string>("");
+  const [validationError, setValidationError] = useState<string>('');
 
   // Filter data based on search term
   const filteredData = useMemo(() => {
     if (!data || data.length === 0) {
       return [];
     }
-    
+
     if (!searchable || !searchTerm.trim()) {
       return data;
     }
@@ -65,7 +67,7 @@ export default function IGradeSheet<T extends Record<string, any>>({
   const handleEditStart = (rowIndex: number, column: GradeSheetColumn<T>, currentValue: any) => {
     if (!column.editable) return;
     setEditingCell({ rowIndex, columnKey: column.key as string });
-    setEditValue(currentValue ?? "");
+    setEditValue(currentValue ?? '');
   };
 
   // Handle edit save
@@ -81,7 +83,7 @@ export default function IGradeSheet<T extends Record<string, any>>({
       setValidationError(`Marks cannot exceed ${column.max_marks}`);
       return;
     }
-    setValidationError("");
+    setValidationError('');
 
     // Prevent multiple saves
     if (isProcessing) return;
@@ -99,9 +101,9 @@ export default function IGradeSheet<T extends Record<string, any>>({
       }
 
       setEditingCell(null);
-      setEditValue("");
+      setEditValue('');
     } catch (error) {
-      console.error("Error saving edit:", error);
+      console.error('Error saving edit:', error);
       // You might want to show an error message to the user here
     } finally {
       setIsProcessing(false);
@@ -111,34 +113,36 @@ export default function IGradeSheet<T extends Record<string, any>>({
   // Handle edit cancel
   const handleEditCancel = () => {
     setEditingCell(null);
-    setEditValue("");
-    setValidationError("");
+    setEditValue('');
+    setValidationError('');
   };
 
   // Handle keyboard events in edit mode
   const handleKeyDown = (e: React.KeyboardEvent, rowIndex: number, column: GradeSheetColumn<T>) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.preventDefault();
       handleEditSave(rowIndex, column);
-    } else if (e.key === "Escape") {
+    } else if (e.key === 'Escape') {
       e.preventDefault();
       handleEditCancel();
     }
   };
 
   // Calculate grid template columns
-  const gridTemplateColumns = columns
-    .map((col) => col.width || "1fr")
-    .join(" ");
+  const gridTemplateColumns = columns.map((col) => col.width || '1fr').join(' ');
 
-    {filteredData === undefined && (
-        <div className="px-6 py-8 text-xs sm:text-sm md:text-base text-center text-gray-500">
+  {
+    filteredData === undefined && (
+      <div className="px-6 py-8 text-xs sm:text-sm md:text-base text-center text-gray-500">
         Loading...
-        </div>
-    )}
+      </div>
+    );
+  }
 
   return (
-    <div className={`flex flex-col overflow-x-auto max-w-[100vw] md:max-w-[calc((5/6)*100vw)] gap-4 ${className}`}>
+    <div
+      className={`flex flex-col overflow-x-auto max-w-[100vw] md:max-w-[calc((5/6)*100vw)] gap-4 ${className}`}
+    >
       {/* Search Bar */}
       {searchable && (
         <div className="relative">
@@ -176,9 +180,7 @@ export default function IGradeSheet<T extends Record<string, any>>({
             <div key={index} className="text-gray-900 text-left flex items-center gap-4">
               <span>{column.header}</span>
               {column.headerActions && (
-                <div onClick={(e) => e.stopPropagation()}>
-                  {column.headerActions}
-                </div>
+                <div onClick={(e) => e.stopPropagation()}>{column.headerActions}</div>
               )}
             </div>
           ))}
@@ -194,16 +196,15 @@ export default function IGradeSheet<T extends Record<string, any>>({
             <div
               key={rowIndex}
               className={`grid gap-4 px-6 py-4 text-xs sm:text-sm md:text-base items-center min-w-max ${
-                rowIndex !== filteredData.length - 1 ? "border-b border-gray-200" : ""
-              } ${onRowClick ? "hover:bg-gray-50 cursor-pointer" : ""} transition-colors`}
+                rowIndex !== filteredData.length - 1 ? 'border-b border-gray-200' : ''
+              } ${onRowClick ? 'hover:bg-gray-50 cursor-pointer' : ''} transition-colors`}
               style={{ gridTemplateColumns }}
               onClick={() => onRowClick && onRowClick(row, rowIndex)}
             >
               {columns.map((column, colIndex) => {
                 const cellValue = row[column.key];
                 const isEditing =
-                  editingCell?.rowIndex === rowIndex &&
-                  editingCell?.columnKey === column.key;
+                  editingCell?.rowIndex === rowIndex && editingCell?.columnKey === column.key;
 
                 return (
                   <div key={colIndex} className="text-gray-700">
@@ -223,9 +224,7 @@ export default function IGradeSheet<T extends Record<string, any>>({
                           />
                         </div>
                         {validationError && (
-                          <div className="text-xs text-red-600">
-                            {validationError}
-                          </div>
+                          <div className="text-xs text-red-600">{validationError}</div>
                         )}
                       </div>
                     ) : (
@@ -233,8 +232,8 @@ export default function IGradeSheet<T extends Record<string, any>>({
                       <div
                         className={`group ${
                           column.editable
-                            ? "cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
-                            : ""
+                            ? 'cursor-pointer hover:bg-gray-100 px-2 py-1 rounded'
+                            : ''
                         }`}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -243,7 +242,7 @@ export default function IGradeSheet<T extends Record<string, any>>({
                       >
                         {column.render
                           ? column.render(cellValue, row, rowIndex)
-                          : cellValue ?? "-"}
+                          : (cellValue ?? '-')}
 
                         {column.editable && column.max_marks !== undefined && (
                           <span className="ml-1 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">

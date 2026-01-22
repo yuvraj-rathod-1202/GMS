@@ -1,6 +1,6 @@
-"use client";
-import { useState } from "react";
-import { BiX } from "react-icons/bi";
+'use client';
+import { useState } from 'react';
+import { BiX } from 'react-icons/bi';
 
 interface EnrollStudentDialogProps {
   isOpen: boolean;
@@ -15,20 +15,20 @@ export default function EnrollStudentDialog({
   onSubmit,
   isLoading,
 }: EnrollStudentDialogProps) {
-  const [studentId, setStudentId] = useState("");
-  const [email, setEmail] = useState("");
+  const [studentId, setStudentId] = useState('');
+  const [email, setEmail] = useState('');
 
   const handleClose = () => {
-    setStudentId("");
-    setEmail("");
+    setStudentId('');
+    setEmail('');
     onClose();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSubmit(studentId, email);
-    setStudentId("");
-    setEmail("");
+    setStudentId('');
+    setEmail('');
   };
 
   if (!isOpen) return null;
@@ -93,7 +93,7 @@ export default function EnrollStudentDialog({
               className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isLoading}
             >
-              {isLoading ? "Enrolling..." : "Enroll"}
+              {isLoading ? 'Enrolling...' : 'Enroll'}
             </button>
           </div>
         </form>

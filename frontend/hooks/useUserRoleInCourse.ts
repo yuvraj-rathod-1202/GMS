@@ -1,14 +1,17 @@
-"use client";
-import { useEffect } from "react";
-import { useCoursesStore } from "@/lib/store/courses";
-import { useCourseDetailStore } from "@/lib/store/courseDetail";
-import { CourseDBObject } from "@/lib/types/courses";
+'use client';
+import { useEffect } from 'react';
+import { useCoursesStore } from '@/lib/store/courses';
+import { useCourseDetailStore } from '@/lib/store/courseDetail';
+import { CourseDBObject } from '@/lib/types/courses';
 
 /**
  * Hook to get user's role in the current course
  * Returns the role and the course object
  */
-export function useUserRoleInCourse(courseId: number, assessmentId?: number): {
+export function useUserRoleInCourse(
+  courseId: number,
+  assessmentId?: number
+): {
   role: 'instructor' | 'ta' | 'student' | null;
   course: CourseDBObject | null;
   assessment: any | null;
@@ -20,7 +23,7 @@ export function useUserRoleInCourse(courseId: number, assessmentId?: number): {
   const setCurrentAssessment = useCourseDetailStore((s) => s.setCurrentAssessment);
 
   const course = courses.find((c) => c.id === courseId) || null;
-  const assessment = assessments?.find(a => a.id === assessmentId) || null;
+  const assessment = assessments?.find((a) => a.id === assessmentId) || null;
   const role = course?.role || null;
 
   // Update the shared store whenever course changes

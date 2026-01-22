@@ -10,11 +10,18 @@ interface AssessmentTableProps {
   emptyMessage?: string;
 }
 
-export default function AssessmentTable({ columns, data, emptyMessage = "No data available" }: AssessmentTableProps) {
+export default function AssessmentTable({
+  columns,
+  data,
+  emptyMessage = 'No data available',
+}: AssessmentTableProps) {
   return (
     <div className="border border-gray-300 rounded-2xl overflow-hidden bg-white">
       {/* Table Header */}
-      <div className="grid gap-4 px-6 py-4 text-xs sm:text-sm md:text-base bg-gray-50 border-b border-gray-300" style={{ gridTemplateColumns: `repeat(${columns.length}, 1fr)` }}>
+      <div
+        className="grid gap-4 px-6 py-4 text-xs sm:text-sm md:text-base bg-gray-50 border-b border-gray-300"
+        style={{ gridTemplateColumns: `repeat(${columns.length}, 1fr)` }}
+      >
         {columns.map((column, index) => (
           <div key={index} className="font-semibold text-gray-900 text-left">
             {column.header}
@@ -32,7 +39,7 @@ export default function AssessmentTable({ columns, data, emptyMessage = "No data
           <div
             key={rowIndex}
             className={`grid gap-4 px-6 py-4 text-xs sm:text-sm md:text-base items-center ${
-              rowIndex !== data.length - 1 ? "border-b border-gray-200" : ""
+              rowIndex !== data.length - 1 ? 'border-b border-gray-200' : ''
             }`}
             style={{ gridTemplateColumns: `repeat(${columns.length}, 1fr)` }}
           >

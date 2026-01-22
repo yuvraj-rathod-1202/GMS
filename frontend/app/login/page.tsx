@@ -1,8 +1,8 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import LoginForm from "@/components/LoginForm";
-import { useAuth } from "@/hooks/useAuth";
+'use client';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import LoginForm from '@/components/LoginForm';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function LoginPage() {
     const hasToken = /(?:^|;\s*)authToken=/.test(cookie);
     const last = typeof window !== 'undefined' ? localStorage.getItem('lastLogin') : null;
     const msInDay = 24 * 60 * 60 * 1000;
-    const expired = last ? (Date.now() - Date.parse(last)) > msInDay : true;
+    const expired = last ? Date.now() - Date.parse(last) > msInDay : true;
     if (hasToken && !expired) {
       router.replace('/');
     }

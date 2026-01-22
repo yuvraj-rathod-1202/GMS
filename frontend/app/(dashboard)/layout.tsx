@@ -1,7 +1,7 @@
-"use client";
-import ProtectedLayout from "@/components/ProtectedLayout";
-import DashboardSidebar from "@/components/Dashboard/DashboardSidebar";
-import NavBar from "@/components/NavBar";
+'use client';
+import ProtectedLayout from '@/components/ProtectedLayout';
+import DashboardSidebar from '@/components/Dashboard/DashboardSidebar';
+import NavBar from '@/components/NavBar';
 
 export default function DashboardLayout({
   children,

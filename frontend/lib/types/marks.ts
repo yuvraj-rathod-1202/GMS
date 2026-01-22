@@ -1,15 +1,15 @@
 export interface StudentMark {
-    student_id: number;
-    marks_obtained: number;
-};
+  student_id: number;
+  marks_obtained: number;
+}
 
 export interface AddMarksRequest {
-    marks: StudentMark[];
-};
+  marks: StudentMark[];
+}
 
 export interface MarksDBObject {
-    student_id: number;
-    marks_obtained: number;
-    recorded_by_id: number;
-    updated_at: Date;
-};
+  student_id: number;
+  marks_obtained: number;
+  recorded_by_id: number;
+  updated_at: Date;
+}

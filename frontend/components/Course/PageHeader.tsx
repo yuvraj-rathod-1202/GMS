@@ -1,5 +1,5 @@
-"use client";
-import { BiUserPlus } from "react-icons/bi";
+'use client';
+import { BiUserPlus } from 'react-icons/bi';
 
 interface PageHeaderProps {
   title: string;
@@ -17,12 +17,8 @@ export default function PageHeader({
   return (
     <div className="flex flex-col items-center sm:flex-row sm:items-start sm:justify-between gap-3">
       <div>
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-          {title}
-        </h1>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600">
-          {description}
-        </p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">{title}</h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600">{description}</p>
       </div>
       <button
         onClick={onButtonClick}

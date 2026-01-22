@@ -1,7 +1,7 @@
-"use client";
-import { useCourseDetailStore } from "@/lib/store/courseDetail";
-import InstructorCourseOverview from "./InstructorCourseOverview";
-import InstructorNavbar from "./InstructorNavbar";
+'use client';
+import { useCourseDetailStore } from '@/lib/store/courseDetail';
+import InstructorCourseOverview from './InstructorCourseOverview';
+import InstructorNavbar from './InstructorNavbar';
 
 export default function InstructorCourseView() {
   const currentCourse = useCourseDetailStore((s) => s.currentCourse);
@@ -10,8 +10,8 @@ export default function InstructorCourseView() {
 
   return (
     <div>
-        <InstructorNavbar />
-        <InstructorCourseOverview course={currentCourse} />
+      <InstructorNavbar />
+      <InstructorCourseOverview course={currentCourse} />
     </div>
   );
 }

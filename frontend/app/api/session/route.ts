@@ -1,22 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   const { token, lastLogin } = await request.json();
   const res = NextResponse.json({ ok: true });
   // Set cookie accessible to middleware
-  res.cookies.set("authToken", String(token), {
+  res.cookies.set('authToken', String(token), {
     httpOnly: false,
-    path: "/",
+    path: '/',
     maxAge: 60 * 60 * 24, // 1 day
-    sameSite: "lax",
+    sameSite: 'lax',
   });
   // Save last login time as ISO string
   const ts = typeof lastLogin === 'string' ? lastLogin : new Date().toISOString();
-  res.cookies.set("lastLogin", ts, {
+  res.cookies.set('lastLogin', ts, {
     httpOnly: false,
-    path: "/",
+    path: '/',
     maxAge: 60 * 60 * 24, // 1 day
-    sameSite: "lax",
+    sameSite: 'lax',
   });
   return res;
 }
@@ -24,17 +24,17 @@ export async function POST(request: Request) {
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
   // Clear cookie
-  res.cookies.set("authToken", "", {
+  res.cookies.set('authToken', '', {
     httpOnly: false,
-    path: "/",
+    path: '/',
     maxAge: 0,
-    sameSite: "lax",
+    sameSite: 'lax',
   });
-  res.cookies.set("lastLogin", "", {
+  res.cookies.set('lastLogin', '', {
     httpOnly: false,
-    path: "/",
+    path: '/',
     maxAge: 0,
-    sameSite: "lax",
+    sameSite: 'lax',
   });
   return res;
 }

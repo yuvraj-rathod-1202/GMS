@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { useCourseDetailStore } from "@/lib/store/courseDetail";
-import { useRoleAccess } from "@/hooks/useRoleAccess";
-import { useCourseManagement } from "@/hooks/useCourseManagement";
-import InstructorNavbar from "../Course/InstructorNavbar";
-import InstructorAssessmentCard from "./InstructorAssessmentCard";
-import AssessmentDialog, { AssessmentFormData } from "./AssessmentDialog";
-import { MarksApi } from "@/lib/api/marks";
-import { AssessmentDBObject } from "@/lib/types/assessments";
-import Link from "next/link";
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useCourseDetailStore } from '@/lib/store/courseDetail';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { useCourseManagement } from '@/hooks/useCourseManagement';
+import InstructorNavbar from '../Course/InstructorNavbar';
+import InstructorAssessmentCard from './InstructorAssessmentCard';
+import AssessmentDialog, { AssessmentFormData } from './AssessmentDialog';
+import { MarksApi } from '@/lib/api/marks';
+import { AssessmentDBObject } from '@/lib/types/assessments';
+import Link from 'next/link';
 
 export default function InstructorGradePage() {
   const params = useParams();
@@ -27,7 +27,9 @@ export default function InstructorGradePage() {
 
   const currentCourse = useCourseDetailStore((s) => s.currentCourse);
   const instructorData = useCourseDetailStore((s) => s.instructorData);
-  const {loading: managementLoading, fetchAllAssessments} = useCourseManagement(role || 'instructor');
+  const { loading: managementLoading, fetchAllAssessments } = useCourseManagement(
+    role || 'instructor'
+  );
 
   // Fetch assessments and course roles when TA role is confirmed
   useEffect(() => {
@@ -37,15 +39,15 @@ export default function InstructorGradePage() {
         try {
           await fetchAllAssessments(courseId);
         } catch (error) {
-          if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
-            console.error("Error fetching TA data:", error);
+          if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+            console.error('Error fetching TA data:', error);
           }
         } finally {
           setIsFetchingData(false);
         }
-      }
+      };
       fetchData();
-    };
+    }
   }, [role, isLoading, courseId]);
 
   if (isLoading || !currentCourse || !role) {
@@ -67,8 +69,8 @@ export default function InstructorGradePage() {
     try {
       await fetchAllAssessments(courseId, true);
     } catch (error) {
-      if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
-        console.error("Error refreshing assessments:", error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error refreshing assessments:', error);
       }
     }
   };
@@ -94,19 +96,19 @@ export default function InstructorGradePage() {
       if (editingAssessment) {
         // Update existing assessment
         await MarksApi.UpdateAssessment(courseId, editingAssessment.id, assessmentData);
-        alert("Assessment updated successfully!");
+        alert('Assessment updated successfully!');
       } else {
         // Create new assessment
         await MarksApi.CreateAssessment(courseId, assessmentData);
-        alert("Assessment created successfully!");
+        alert('Assessment created successfully!');
       }
 
       // Refresh assessments list
       await fetchAllAssessments(courseId, true);
       setShowAssessmentDialog(false);
     } catch (error: any) {
-      console.error("Error submitting assessment:", error);
-      alert(error?.message || "Failed to save assessment");
+      console.error('Error submitting assessment:', error);
+      alert(error?.message || 'Failed to save assessment');
     } finally {
       setIsSubmitting(false);
     }
@@ -120,18 +122,26 @@ export default function InstructorGradePage() {
           {/* Page Header */}
           <div className="flex flex-row justify-between items-center mb-4">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Grades</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                Grades
+              </h1>
               <p className="text-xs sm:text-sm md:text-base text-gray-600">
                 View and manage student grades for assessments in this course.
               </p>
             </div>
             <div>
-              <Link href={`/c/${courseId}/gb`}><button className="flex cursor-pointer flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400">Open Grade Sheet</button></Link>
+              <Link href={`/c/${courseId}/gb`}>
+                <button className="flex cursor-pointer flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400">
+                  Open Grade Sheet
+                </button>
+              </Link>
             </div>
           </div>
 
           <div>
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Course Overview</h2>
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">
+              Course Overview
+            </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
                 <div className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide mb-2">
@@ -154,7 +164,7 @@ export default function InstructorGradePage() {
                   Published Assessments
                 </div>
                 <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {instructorData?.assessments?.filter(a => a.is_marks_published).length || 0}
+                  {instructorData?.assessments?.filter((a) => a.is_marks_published).length || 0}
                 </div>
               </div>
               <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
@@ -162,7 +172,7 @@ export default function InstructorGradePage() {
                   Unpublished Assessments
                 </div>
                 <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {instructorData?.assessments?.filter(a => !a.is_marks_published).length || 0}
+                  {instructorData?.assessments?.filter((a) => !a.is_marks_published).length || 0}
                 </div>
               </div>
             </div>
@@ -171,13 +181,20 @@ export default function InstructorGradePage() {
           {/* Assessments Section */}
           <div>
             <div className="flex items-center justify-between mb-3 md:mb-4">
-              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">Assessments</h2>
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
+                Assessments
+              </h2>
               <button
                 onClick={handleCreateAssessment}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
                 Create Assessment
               </button>
@@ -204,7 +221,6 @@ export default function InstructorGradePage() {
               </div>
             )}
           </div>
-
         </div>
       </div>
 

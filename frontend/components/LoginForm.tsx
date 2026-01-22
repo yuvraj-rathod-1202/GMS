@@ -1,5 +1,5 @@
-"use client";
-import React, { useState } from "react";
+'use client';
+import React, { useState } from 'react';
 
 type Props = {
   onSubmit: (id: number, password: string) => Promise<any>;
@@ -8,8 +8,8 @@ type Props = {
 };
 
 export default function LoginForm({ onSubmit, loading, error }: Props) {
-  const [id, setId] = useState<string>("");
-  const [password, setPassword] = useState("");
+  const [id, setId] = useState<string>('');
+  const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -18,11 +18,11 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
 
     const parsed = Number(id);
     if (!id || Number.isNaN(parsed)) {
-      setLocalError("Please enter a valid numeric ID");
+      setLocalError('Please enter a valid numeric ID');
       return;
     }
     if (!password) {
-      setLocalError("Please enter your password");
+      setLocalError('Please enter your password');
       return;
     }
 

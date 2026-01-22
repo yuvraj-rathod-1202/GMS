@@ -1,7 +1,7 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useUserRoleInCourse } from "./useUserRoleInCourse";
+'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUserRoleInCourse } from './useUserRoleInCourse';
 
 type UserRole = 'instructor' | 'ta' | 'student';
 
@@ -12,14 +12,19 @@ interface UseRoleAccessOptions {
   assessmentId?: number;
 }
 
-export function useRoleAccess({ allowedRoles, redirectTo, courseId, assessmentId }: UseRoleAccessOptions) {
+export function useRoleAccess({
+  allowedRoles,
+  redirectTo,
+  courseId,
+  assessmentId,
+}: UseRoleAccessOptions) {
   const router = useRouter();
   const { role, course, assessment, isLoading } = useUserRoleInCourse(courseId, assessmentId);
   const [isTimeout, setIsTimeout] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !course) {
-      router.push("/");
+      router.push('/');
       return;
     }
 
@@ -33,7 +38,7 @@ export function useRoleAccess({ allowedRoles, redirectTo, courseId, assessmentId
 
   useEffect(() => {
     if (isTimeout && !course) {
-      router.push("/");
+      router.push('/');
     }
   }, [isTimeout, course, router]);
 

@@ -1,11 +1,11 @@
-"use client";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useCourseDetailStore } from "@/lib/store/courseDetail";
-import TANavbar from "@/components/Course/TANavbar";
-import AssessmentCard from "@/components/Grade/AssessmentCard";
-import { useRoleAccess } from "@/hooks/useRoleAccess";
-import { useCourseManagement } from "@/hooks/useCourseManagement";
+'use client';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useCourseDetailStore } from '@/lib/store/courseDetail';
+import TANavbar from '@/components/Course/TANavbar';
+import AssessmentCard from '@/components/Grade/AssessmentCard';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { useCourseManagement } from '@/hooks/useCourseManagement';
 
 export default function TAGradePage() {
   const params = useParams();
@@ -19,7 +19,7 @@ export default function TAGradePage() {
 
   const currentCourse = useCourseDetailStore((s) => s.currentCourse);
   const taData = useCourseDetailStore((s) => s.taData);
-  const {loading: managementLoading, fetchAllAssessments} = useCourseManagement(role || 'ta');
+  const { loading: managementLoading, fetchAllAssessments } = useCourseManagement(role || 'ta');
 
   // Fetch assessments and course roles when TA role is confirmed
   useEffect(() => {
@@ -29,15 +29,15 @@ export default function TAGradePage() {
         try {
           await fetchAllAssessments(courseId);
         } catch (error) {
-          if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
-            console.error("Error fetching TA data:", error);
+          if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+            console.error('Error fetching TA data:', error);
           }
         } finally {
           setIsFetchingData(false);
         }
-      }
+      };
       fetchData();
-    };
+    }
   }, [role, isLoading, courseId]);
 
   if (isLoading || !currentCourse || !role) {
@@ -59,8 +59,8 @@ export default function TAGradePage() {
     try {
       await fetchAllAssessments(courseId, true);
     } catch (error) {
-      if(process.env.NEXT_PUBLIC_ENVIRONMENT === 'development'){
-        console.error("Error refreshing assessments:", error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error refreshing assessments:', error);
       }
     }
   };
@@ -79,7 +79,9 @@ export default function TAGradePage() {
           </div>
 
           <div>
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Course Overview</h2>
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">
+              Course Overview
+            </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
                 <div className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide mb-2">
@@ -102,7 +104,7 @@ export default function TAGradePage() {
                   Published Assessments
                 </div>
                 <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {taData?.assessments?.filter(a => a.is_marks_published).length || 0}
+                  {taData?.assessments?.filter((a) => a.is_marks_published).length || 0}
                 </div>
               </div>
               <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
@@ -110,7 +112,7 @@ export default function TAGradePage() {
                   Unpublished Assessments
                 </div>
                 <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {taData?.assessments?.filter(a => !a.is_marks_published).length || 0}
+                  {taData?.assessments?.filter((a) => !a.is_marks_published).length || 0}
                 </div>
               </div>
             </div>
@@ -118,7 +120,9 @@ export default function TAGradePage() {
 
           {/* Assessments Section */}
           <div>
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Assessments</h2>
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">
+              Assessments
+            </h2>
             {isLoadingData ? (
               <div className="border border-gray-300 rounded-2xl bg-white px-4 sm:px-6 py-6 sm:py-8 text-xs sm:text-sm md:text-base text-center text-gray-500">
                 <div className="animate-pulse">Loading assessments...</div>
@@ -142,7 +146,6 @@ export default function TAGradePage() {
               </div>
             )}
           </div>
-
         </div>
       </div>
     </div>

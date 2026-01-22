@@ -1,5 +1,5 @@
-import { CourseDBObject } from "@/lib/types/courses";
-import Link from "next/link";
+import { CourseDBObject } from '@/lib/types/courses';
+import Link from 'next/link';
 
 interface CourseOverviewProps {
   course: CourseDBObject;
@@ -7,10 +7,10 @@ interface CourseOverviewProps {
 
 export default function InstructorCourseOverview({ course }: CourseOverviewProps) {
   const stats = [
-    { label: "Course Code", value: course.course_code },
-    { label: "Semester", value: course.semester },
-    { label: "Credits", value: course.credits },
-    { label: "Total Students", value: course.total_students },
+    { label: 'Course Code', value: course.course_code },
+    { label: 'Semester', value: course.semester },
+    { label: 'Credits', value: course.credits },
+    { label: 'Total Students', value: course.total_students },
   ];
 
   return (
@@ -46,9 +46,11 @@ export default function InstructorCourseOverview({ course }: CourseOverviewProps
           })}
         </div>
         <div className="border-t border-gray-200 p-4 sm:p-6 md:p-8 bg-gray-50">
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Quick Actions</h2>
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
+            Quick Actions
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <Link 
+            <Link
               href={`/c/${course.id}/gb`}
               className="flex items-center gap-3 p-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all duration-200 group"
             >
@@ -59,7 +61,7 @@ export default function InstructorCourseOverview({ course }: CourseOverviewProps
               </div>
             </Link>
 
-            <Link 
+            <Link
               href={`/c/${course.id}/g`}
               className="flex items-center gap-3 p-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all duration-200 group"
             >
@@ -70,18 +72,18 @@ export default function InstructorCourseOverview({ course }: CourseOverviewProps
               </div>
             </Link>
 
-            <Link 
+            <Link
               href={`/c/${course.id}/p`}
               className="flex items-center gap-3 p-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all duration-200 group"
             >
-                <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors" />
+              <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors" />
               <div>
                 <p className="font-medium text-gray-900">Manage Students & TAs</p>
                 <p className="text-xs text-gray-500">Add or remove participants</p>
               </div>
             </Link>
 
-            <Link 
+            <Link
               href={`/c/${course.id}/gp`}
               className="flex items-center gap-3 p-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all duration-200 group"
             >
@@ -92,7 +94,7 @@ export default function InstructorCourseOverview({ course }: CourseOverviewProps
               </div>
             </Link>
 
-            <Link 
+            <Link
               href={`/c/${course.id}/a`}
               className="flex items-center gap-3 p-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all duration-200 group"
             >

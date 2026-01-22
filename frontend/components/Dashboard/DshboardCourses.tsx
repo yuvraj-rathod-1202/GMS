@@ -1,12 +1,12 @@
-import React, { useMemo, useState } from "react";
-import CoursesStatusSelection from "../ui/CoursesStatusSelection";
-import { useCoursesStore } from "@/lib/store/courses";
-import { useAuthStore } from "@/lib/store/auth";
-import { useCourses } from "@/hooks/useCourses";
-import CourseCard from "./CourseCard";
+import React, { useMemo, useState } from 'react';
+import CoursesStatusSelection from '../ui/CoursesStatusSelection';
+import { useCoursesStore } from '@/lib/store/courses';
+import { useAuthStore } from '@/lib/store/auth';
+import { useCourses } from '@/hooks/useCourses';
+import CourseCard from './CourseCard';
 
 export default function DashboardCourses() {
-  const [statusFilter, setStatusFilter] = useState<"ongoing" | "completed">("ongoing");
+  const [statusFilter, setStatusFilter] = useState<'ongoing' | 'completed'>('ongoing');
   const [open, setOpen] = useState(false);
   const { loading, error } = useCourses();
   const courses = useCoursesStore((s) => s.courses);
@@ -21,7 +21,12 @@ export default function DashboardCourses() {
     <div className="p-2 sm:p-4 md:p-6">
       <div className="justify-between flex items-center mb-6">
         <h4 className="text-md md:text-lg font-semibold">Courses</h4>
-        <CoursesStatusSelection setOpen={setOpen} open={open} statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
+        <CoursesStatusSelection
+          setOpen={setOpen}
+          open={open}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+        />
       </div>
 
       {loading && (

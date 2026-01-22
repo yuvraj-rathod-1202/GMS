@@ -1,5 +1,5 @@
-import { CourseDBObject } from "@/lib/types/courses";
-import Link from "next/link";
+import { CourseDBObject } from '@/lib/types/courses';
+import Link from 'next/link';
 
 interface CourseOverviewProps {
   course: CourseDBObject;
@@ -7,10 +7,10 @@ interface CourseOverviewProps {
 
 export default function CourseOverview({ course }: CourseOverviewProps) {
   const stats = [
-    { label: "Course Code", value: course.course_code },
-    { label: "Semester", value: course.semester },
-    { label: "Credits", value: course.credits },
-    { label: "Total Students", value: course.total_students },
+    { label: 'Course Code', value: course.course_code },
+    { label: 'Semester', value: course.semester },
+    { label: 'Credits', value: course.credits },
+    { label: 'Total Students', value: course.total_students },
   ];
 
   return (
@@ -54,9 +54,9 @@ export default function CourseOverview({ course }: CourseOverviewProps) {
                 </h2>
               </Link>
               <p className="text-sm text-gray-600">
-                View and manage all grade assessments for this course, including
-                assignments, quizzes, and exams. Track student performance and
-                generate reports to analyze overall class progress.
+                View and manage all grade assessments for this course, including assignments,
+                quizzes, and exams. Track student performance and generate reports to analyze
+                overall class progress.
               </p>
             </div>
           </div>
@@ -68,9 +68,9 @@ export default function CourseOverview({ course }: CourseOverviewProps) {
                 </h2>
               </Link>
               <p className="text-sm text-gray-600">
-                Access the student roster for this course, view individual student
-                profiles, and manage enrollments. Communicate with students and
-                monitor their academic progress throughout the semester.
+                Access the student roster for this course, view individual student profiles, and
+                manage enrollments. Communicate with students and monitor their academic progress
+                throughout the semester.
               </p>
             </div>
           </div>

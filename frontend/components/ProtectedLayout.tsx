@@ -1,7 +1,7 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/store/auth";
+'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/store/auth';
 
 type Props = {
   children: React.ReactNode;
@@ -21,13 +21,13 @@ export default function ProtectedLayout({ children }: Props) {
     // Client-side failsafe: token required and not expired
     const msInDay = 24 * 60 * 60 * 1000;
     const lastLogin = typeof window !== 'undefined' ? localStorage.getItem('lastLogin') : null;
-    const expired = lastLogin ? (Date.now() - Date.parse(lastLogin)) > msInDay : false;
+    const expired = lastLogin ? Date.now() - Date.parse(lastLogin) > msInDay : false;
     if (hydrated && (!token || expired)) {
       // Clear server cookie if expired
       if (expired) {
         fetch('/api/session', { method: 'DELETE' }).catch(() => {});
       }
-      router.push("/login");
+      router.push('/login');
     }
   }, [token, router, hydrated]);
 

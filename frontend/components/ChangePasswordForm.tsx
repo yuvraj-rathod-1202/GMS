@@ -1,5 +1,5 @@
-"use client";
-import React, { useState } from "react";
+'use client';
+import React, { useState } from 'react';
 
 type Props = {
   onSubmit: (oldPassword: string, newPassword: string) => Promise<any>;
@@ -9,9 +9,9 @@ type Props = {
 };
 
 export default function ChangePasswordForm({ onSubmit, loading, error, success }: Props) {
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -19,33 +19,32 @@ export default function ChangePasswordForm({ onSubmit, loading, error, success }
     setLocalError(null);
 
     if (!oldPassword) {
-      setLocalError("Please enter your current password");
+      setLocalError('Please enter your current password');
       return;
     }
     if (!newPassword) {
-      setLocalError("Please enter a new password");
+      setLocalError('Please enter a new password');
       return;
     }
     if (newPassword.length < 6) {
-      setLocalError("New password must be at least 6 characters");
+      setLocalError('New password must be at least 6 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
-      setLocalError("New passwords do not match");
+      setLocalError('New passwords do not match');
       return;
     }
     if (oldPassword === newPassword) {
-      setLocalError("New password must be different from current password");
+      setLocalError('New password must be different from current password');
       return;
     }
 
     try {
       await onSubmit(oldPassword, newPassword);
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (err) {
-    }
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {}
   }
 
   return (
