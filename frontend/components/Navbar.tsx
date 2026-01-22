@@ -8,7 +8,7 @@ import { MdLogout } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function Navbar() {
+export default function NavBar() {
     const pathname = usePathname();
     const router = useRouter();
     const { logout } = useAuth();
