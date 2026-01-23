@@ -25,6 +25,7 @@ export default function GPView() {
   const [isTimeout, setIsTimeout] = useState(false);
   const [isFetchingPolicy, setIsFetchingPolicy] = useState(false);
   const [showPolicyDialog, setShowPolicyDialog] = useState(false);
+  const [isPolicyFetched, setIsPolicyFetched] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<PolicyDBObject | null | undefined>(null);
   const [settingDefaultPolicyId, setSettingDefaultPolicyId] = useState<boolean>(false);
   const [creatingPolicy, setCreatingPolicy] = useState<boolean>(false);
@@ -46,6 +47,7 @@ export default function GPView() {
     updatePolicy,
     updatePolicyComponent,
     AddPolicyComponent,
+    fetchAllAssessments,
     DeletePolicy,
   } = useCourseManagement(role || 'instructor');
 
@@ -75,6 +77,7 @@ export default function GPView() {
         setIsFetchingPolicy(true);
         try {
           await fetchAllPolicy(courseId);
+          setIsPolicyFetched(true);
         } catch (error) {
           if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
             console.error('Error fetching Policy data:', error);
@@ -86,6 +89,21 @@ export default function GPView() {
       fetchPolicy();
     }
   }, [role, isLoading, courseId]);
+
+  useEffect(() => {
+    if (!isLoading && hasAccess && isPolicyFetched) {
+      const fetchAssessments = async () => {
+        try {
+          await fetchAllAssessments(courseId);
+        } catch (error) {
+          if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+            console.error('Error fetching Assessments data:', error);
+          }
+        }
+      }
+      fetchAssessments();
+    }
+  }, [role, isLoading, hasAccess, isPolicyFetched, courseId]);
 
   if (isLoading || !currentCourse || !role) {
     return (
@@ -228,7 +246,6 @@ export default function GPView() {
             });
           }
         });
-        alert('Policy updated successfully.');
       } else {
         await handleAddPolicy({
           policy_name: policyData.policy_name,
@@ -242,7 +259,6 @@ export default function GPView() {
             },
           })),
         });
-        alert('Policy created successfully.');
       }
     } catch (error) {
       if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
@@ -302,6 +318,7 @@ export default function GPView() {
         onClose={() => setShowPolicyDialog(false)}
         onSubmit={handleSubmitPolicy}
         policy={editingPolicy}
+        assessments={instructorData?.assessments || []}
         isLoading={creatingPolicy || updatingPolicyId || updatingPolicyComponentId}
       />
     </>

@@ -96,11 +96,9 @@ export default function InstructorGradePage() {
       if (editingAssessment) {
         // Update existing assessment
         await MarksApi.UpdateAssessment(courseId, editingAssessment.id, assessmentData);
-        alert('Assessment updated successfully!');
       } else {
         // Create new assessment
         await MarksApi.CreateAssessment(courseId, assessmentData);
-        alert('Assessment created successfully!');
       }
 
       // Refresh assessments list

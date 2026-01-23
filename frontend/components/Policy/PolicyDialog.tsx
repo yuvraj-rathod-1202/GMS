@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PolicyDBObject } from '@/lib/types/policy';
+import { AssessmentDBObject } from '@/lib/types/assessments';
 
 export const ASSESSMENT_CATEGORIES = {
   1: 'Quiz',
@@ -20,12 +21,13 @@ interface PolicyDialogProps {
   onClose: () => void;
   onSubmit: (data: PolicyFormData) => Promise<void>;
   policy?: PolicyDBObject | null;
+  assessments: AssessmentDBObject[] | [];
   isLoading: boolean;
 }
 
 export interface PolicyRuleFormData {
   id?: number;
-  rule_type: 'ALL' | 'BEST_N' | 'CUSTOM';
+  rule_type: 'CUMULATIVE' | 'EQUAL_WEIGHTAGE' | 'BEST_N' | 'CUSTOM';
   rule_params: Record<any, any>;
 }
 
@@ -57,6 +59,7 @@ export default function PolicyDialog({
   onClose,
   onSubmit,
   policy,
+  assessments,
   isLoading,
 }: PolicyDialogProps) {
   const [formData, setFormData] = useState<PolicyFormData>({
@@ -67,7 +70,7 @@ export default function PolicyDialog({
         assessment_category_id: 1,
         weightage: 100,
         rules: {
-          rule_type: 'ALL',
+          rule_type: 'CUMULATIVE',
           rule_params: {},
         },
       },
@@ -85,7 +88,7 @@ export default function PolicyDialog({
           assessment_category_id: 1,
           weightage: 0,
           rules: {
-            rule_type: 'ALL',
+            rule_type: 'CUMULATIVE',
             rule_params: {},
           },
         },
@@ -111,7 +114,7 @@ export default function PolicyDialog({
               rules: {
                 ...comp.rules,
                 rule_type: value,
-                rule_params: value === 'BEST_N' ? comp.rules.rule_params : {},
+                rule_params: value === 'BEST_N' || value === 'CUSTOM' ? comp.rules.rule_params : {},
               },
             };
           } else if (field === 'rules_params') {
@@ -158,7 +161,7 @@ export default function PolicyDialog({
                 rule_params: c.rules.rule_params,
               }
             : {
-                rule_type: 'ALL',
+                rule_type: 'CUMULATIVE',
                 rule_params: {},
               },
         })),
@@ -172,7 +175,7 @@ export default function PolicyDialog({
             assessment_category_id: 1,
             weightage: 100,
             rules: {
-              rule_type: 'ALL',
+              rule_type: 'CUMULATIVE',
               rule_params: {},
             },
           },
@@ -194,6 +197,19 @@ export default function PolicyDialog({
     formData.components.forEach((component, index) => {
       if (component.weightage <= 0) {
         newErrors[`components_weightage_${index}`] = 'Component weightage must be greater than 0';
+      }
+      
+      // Validate CUSTOM rule type weightages
+      if (component.rules.rule_type === 'CUSTOM') {
+        const customWeightages = component.rules.rule_params || {};
+        const totalCustomWeightage = Object.values(customWeightages).reduce(
+          (sum: number, val: any) => sum + (Number(val) || 0),
+          0
+        );
+        if (totalCustomWeightage > component.weightage) {
+          newErrors[`components_custom_${index}`] = 
+            `Custom weightages total (${totalCustomWeightage}%) exceeds component limit (${component.weightage}%)`;
+        }
       }
     });
 
@@ -396,7 +412,8 @@ export default function PolicyDialog({
                         disabled={isLoading}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors bg-white disabled:opacity-50"
                       >
-                        <option value="ALL">ALL</option>
+                        <option value="CUMULATIVE">CUMULATIVE</option>
+                        <option value="EQUAL_WEIGHTAGE">EQUAL_WEIGHTAGE</option>
                         <option value="BEST_N">BEST_N</option>
                         <option value="CUSTOM">CUSTOM</option>
                       </select>
@@ -420,6 +437,88 @@ export default function PolicyDialog({
                       />
                     </div>
                   )}
+
+                  {component.rules.rule_type === 'CUSTOM' && (
+                    <div className="space-y-2">
+                      <label className="block text-xs text-gray-600 mb-1.5">
+                        Custom Weightage per Assessment
+                      </label>
+                      {(() => {
+                        const categoryAssessments = assessments.filter(
+                          (a) => a.assessment_type_id === component.assessment_category_id
+                        );
+                        const customWeightages = component.rules.rule_params || {};
+                        const totalCustomWeightage = Object.values(customWeightages).reduce(
+                          (sum: number, val: any) => sum + (Number(val) || 0),
+                          0
+                        );
+                        const exceedsLimit = totalCustomWeightage > component.weightage;
+
+                        if (categoryAssessments.length === 0) {
+                          return (
+                            <p className="text-xs text-gray-500 italic py-2">
+                              No assessments found for this category. First Create assessments to set Custom policy.
+                            </p>
+                          );
+                        }
+
+                        return (
+                          <div className="space-y-2">
+                            {categoryAssessments.map((assessment) => (
+                              <div key={assessment.id} className="flex items-center gap-2">
+                                <label className="text-xs text-gray-700 flex-1 truncate">
+                                  {assessment.name}
+                                </label>
+                                <input
+                                  type="number"
+                                  value={customWeightages[assessment.id] || 0}
+                                  onChange={(e) => {
+                                    const newWeightages = {
+                                      ...customWeightages,
+                                      [assessment.id]: Number(e.target.value) || 0,
+                                    };
+                                    updateComponent(idx, 'rules_params', newWeightages);
+                                  }}
+                                  min="0"
+                                  max={component.weightage}
+                                  placeholder="0"
+                                  disabled={isLoading}
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none disabled:opacity-50"
+                                />
+                                <span className="text-xs text-gray-500">%</span>
+                              </div>
+                            ))}
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                              <span className="text-xs font-medium text-gray-700">Total:</span>
+                              <span
+                                className={`text-xs font-medium ${
+                                  exceedsLimit
+                                    ? 'text-red-600'
+                                    : totalCustomWeightage === component.weightage
+                                    ? 'text-green-600'
+                                    : 'text-gray-700'
+                                }`}
+                              >
+                                {totalCustomWeightage}% / {component.weightage}%
+                              </span>
+                            </div>
+                            {exceedsLimit && (
+                              <p className="text-xs text-red-600 mt-1">
+                                Total weightage exceeds component limit
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                  
+                  {errors[`components_custom_${idx}`] && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors[`components_custom_${idx}`]}
+                    </p>
+                  )}
+
                 </div>
               ))}
             </div>

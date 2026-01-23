@@ -1,7 +1,7 @@
 import { JSONValue } from 'next/dist/server/config-shared';
 
 export interface GradingRule {
-  rule_type: 'ALL' | 'BEST_N' | 'CUSTOM';
+  rule_type: 'CUMULATIVE' | 'EQUAL_WEIGHTAGE' | 'BEST_N' | 'CUSTOM';
   rule_params: Record<any, any>;
 }
 
@@ -19,7 +19,7 @@ export interface CreatePolicyRequest {
 
 export interface GradingRuleDBObject {
   id: number;
-  rule_type: 'ALL' | 'BEST_N' | 'CUSTOM';
+  rule_type: 'CUMULATIVE' | 'EQUAL_WEIGHTAGE' | 'BEST_N' | 'CUSTOM';
   rule_params: Record<any, any>;
 }
 
@@ -53,7 +53,7 @@ export interface UpdatePolicyRequest {
 
 export interface UpdateGradingRuleRequest {
   id?: number;
-  rule_type: 'ALL' | 'BEST_N' | 'CUSTOM';
+  rule_type: 'CUMULATIVE' | 'EQUAL_WEIGHTAGE' | 'BEST_N' | 'CUSTOM';
   rule_params: Record<any, any>;
 }
 
@@ -64,7 +64,7 @@ export interface UpdatePolicyComponentsRequest {
 }
 
 export interface AddGradingRuleRequest {
-  rule_type: 'ALL' | 'BEST_N' | 'CUSTOM';
+  rule_type: 'CUMULATIVE' | 'EQUAL_WEIGHTAGE' | 'BEST_N' | 'CUSTOM';
   rule_params: Record<any, any>;
 }
 

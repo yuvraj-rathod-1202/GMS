@@ -82,7 +82,14 @@ def execute_policy_calculation(student_marks: list[AllMarksDBObj], policy: Polic
         
         marks_in_category = [mark for mark in student_marks if mark.assessment_type_id == component.assessment_category_id]
         
-        if component_rule_type == "ALL":
+        if component_rule_type == "CUMULATIVE":
+            component_total_score = 0.0
+            for mark in marks_in_category:
+                component_score += mark.marks_obtained
+                component_total_score += mark.max_marks
+            total_score += (component_score * component_total_weightage) / component_total_score if component_total_score else 0
+        
+        elif component_rule_type == "EQUAL_WEIGHTAGE":
             for mark in marks_in_category:
                 component_score += mark.marks_obtained*100/mark.max_marks
             total_score += (component_score * component_total_weightage) / (100*len(marks_in_category)) if marks_in_category else 0

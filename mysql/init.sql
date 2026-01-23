@@ -182,10 +182,11 @@ CREATE TABLE IF NOT EXISTS grading_rule (
     id int AUTO_INCREMENT PRIMARY KEY,
     grading_component_id int NOT NULL,
     rule_type ENUM(
-        'ALL',
+        'CUMULATIVE',
+        'EQUAL_WEIGHTAGE',
         'BEST_N',
         'CUSTOM'
-    ) NOT NULL DEFAULT 'ALL',
+    ) NOT NULL DEFAULT 'CUMULATIVE',
     rule_params JSON NOT NULL
 );
 
