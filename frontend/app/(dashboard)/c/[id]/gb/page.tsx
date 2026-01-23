@@ -202,6 +202,7 @@ export default function GradeSheetView() {
         !isLoading &&
         hasAccess &&
         !isFetchingTotalMarks &&
+        !isTotalMarksFetched &&
         isAssessmentsFetched &&
         isRolesFetched &&
         isMarksFetched &&
@@ -224,7 +225,6 @@ export default function GradeSheetView() {
   }, [
     isLoading,
     hasAccess,
-    isFetchingTotalMarks,
     courseId,
     isAssessmentsFetched,
     isRolesFetched,
@@ -240,6 +240,7 @@ export default function GradeSheetView() {
         !isLoading &&
         hasAccess &&
         !isFetchingStudentPolicyMap &&
+        !isStudentPolicyMapFetched &&
         isAssessmentsFetched &&
         isRolesFetched &&
         isMarksFetched &&
@@ -263,13 +264,13 @@ export default function GradeSheetView() {
   }, [
     isLoading,
     hasAccess,
-    isFetchingStudentPolicyMap,
     courseId,
     isAssessmentsFetched,
     isRolesFetched,
     isMarksFetched,
     isPolicyFetched,
     isTotalMarksFetched,
+    isStudentPolicyMapFetched,
   ]);
 
   useEffect(() => {

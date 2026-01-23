@@ -100,7 +100,7 @@ export default function GPView() {
             console.error('Error fetching Assessments data:', error);
           }
         }
-      }
+      };
       fetchAssessments();
     }
   }, [role, isLoading, hasAccess, isPolicyFetched, courseId]);
