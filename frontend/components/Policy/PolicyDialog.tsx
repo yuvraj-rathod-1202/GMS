@@ -391,16 +391,53 @@ export default function PolicyDialog({
                 </div>
               </div>
 
+              {/* Multiple Policies */}
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-2">
+                  Multiple Policies & Default Policy
+                </h4>
+                <div className="space-y-3 text-gray-700">
+                  <div>
+                    <p className="font-medium text-gray-800 mb-1">Multiple Policies:</p>
+                    <p className="leading-relaxed">
+                      You can create multiple grading policies for the same course. This is useful
+                      when different students need different grading schemes (e.g., regular students
+                      vs. audit students, or different program requirements). Each policy can have
+                      its own components and calculation rules.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 mb-1">Default Policy:</p>
+                    <p className="leading-relaxed">
+                      One policy must be marked as the <strong>default policy</strong>. This policy
+                      is automatically applied to all students unless a specific policy is assigned
+                      to them individually. The default policy ensures that every student has a
+                      grading scheme even if not explicitly assigned.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 mb-1">Assigning Policies:</p>
+                    <p className="leading-relaxed">
+                      After creating multiple policies, you can assign specific policies to
+                      individual students from the gradebook. Students without a specific assignment
+                      will use the default policy for their grade calculations.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Tips */}
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <h4 className="font-semibold text-gray-900 mb-2">Tips</h4>
                 <ul className="list-disc list-inside space-y-1 text-gray-700">
                   <li>Total weightage typically equals 100%</li>
                   <li>Component weightages can be adjusted based on course requirements</li>
+                  <li>Sum of component weightages should not exceed total policy weightage</li>
                   <li>Create assessments first before setting up CUSTOM rule type</li>
                   <li>BEST_N is useful for courses with a "drop lowest quiz" policy</li>
                   <li>EQUAL_WEIGHTAGE treats all assessments equally regardless of max marks</li>
                   <li>CUMULATIVE reflects the actual point-based contribution</li>
+                  <li>Always have one default policy for students without specific assignments</li>
                 </ul>
               </div>
             </div>

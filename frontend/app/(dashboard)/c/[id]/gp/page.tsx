@@ -275,7 +275,7 @@ export default function GPView() {
   return (
     <>
       <InstructorNavbar />
-      <div className="p-6 max-h-[calc(100vh-96px)] overflow-y-auto">
+      <div className="p-2 md:p-6 max-h-[calc(100vh-96px)] overflow-y-auto">
         {isLoadingPolicy ? (
           <div className="flex justify-center items-center h-full p-10">
             <div className="text-gray-900 text-lg animate-pulse">Loading grading policy...</div>

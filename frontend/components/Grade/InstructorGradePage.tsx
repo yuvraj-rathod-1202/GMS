@@ -129,7 +129,7 @@ export default function InstructorGradePage() {
             </div>
             <div>
               <Link href={`/c/${courseId}/gb`}>
-                <button className="flex cursor-pointer flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400">
+                <button className="flex text-xs md:text-base cursor-pointer flex-row items-center gap-2 rounded-lg bg-gray-300 md:p-2 hover:bg-gray-400">
                   Open Grade Sheet
                 </button>
               </Link>
