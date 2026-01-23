@@ -201,6 +201,18 @@ export default function PolicyDialog({
     if (formData.total_weightage <= 0) {
       newErrors.total_weightage = 'Total weightage must be between 1 and 100';
     }
+
+    // Calculate total of all component weightages
+    const totalComponentWeightage = formData.components.reduce(
+      (sum, component) => sum + (component.weightage || 0),
+      0
+    );
+
+    // Check if total component weightages exceed policy total weightage
+    if (totalComponentWeightage > formData.total_weightage) {
+      newErrors.total_weightage = `Components total (${totalComponentWeightage}%) exceeds policy weightage (${formData.total_weightage}%)`;
+    }
+
     formData.components.forEach((component, index) => {
       if (component.weightage <= 0) {
         newErrors[`components_weightage_${index}`] = 'Component weightage must be greater than 0';
@@ -401,7 +413,7 @@ export default function PolicyDialog({
         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           {/* Dialog Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div className="flex flex-row gap-2">
+            <div className="flex flex-row items-center gap-2">
               <h2 className="text-xl font-semibold text-gray-900">
                 {policy ? 'Edit Policy' : 'Create Policy'}
               </h2>
@@ -410,7 +422,7 @@ export default function PolicyDialog({
                   type="button"
                   onClick={() => setShowInfoDialog(true)}
                   title="Policy Information"
-                  className="w-7 h-7 cursor-pointer rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold"
+                  className="w-4 h-4 cursor-pointer rounded-full bg-gray-300 flex items-center justify-center text-xs"
                 >
                   i
                 </button>
@@ -435,7 +447,15 @@ export default function PolicyDialog({
           </div>
 
           {/* Dialog Content */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <form
+            onSubmit={handleSubmit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+              }
+            }}
+            className="p-6 space-y-5"
+          >
             {/* Assessment Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
