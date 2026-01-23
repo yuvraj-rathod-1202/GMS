@@ -81,20 +81,26 @@ export default function PolicyDialog({
   const [showInfoDialog, setShowInfoDialog] = useState(false);
 
   const addComponent = () => {
-    setFormData((prev) => ({
-      ...prev,
-      components: [
-        ...prev.components,
-        {
-          assessment_category_id: 1,
-          weightage: 0,
-          rules: {
-            rule_type: 'CUMULATIVE',
-            rule_params: {},
+    setFormData((prev) => {
+      // Find the first available category that hasn't been used yet
+      const usedCategoryIds = prev.components.map((comp) => comp.assessment_category_id);
+      const availableCategoryId = CATEGORY_IDS.find((id) => !usedCategoryIds.includes(id)) || 1;
+
+      return {
+        ...prev,
+        components: [
+          ...prev.components,
+          {
+            assessment_category_id: availableCategoryId,
+            weightage: 0,
+            rules: {
+              rule_type: 'CUMULATIVE',
+              rule_params: {},
+            },
           },
-        },
-      ],
-    }));
+        ],
+      };
+    });
   };
 
   const removeComponent = (index: number) => {
@@ -537,7 +543,13 @@ export default function PolicyDialog({
                           disabled={isLoading}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors bg-white disabled:opacity-50"
                         >
-                          {CATEGORY_IDS.map((id: number) => (
+                          {CATEGORY_IDS.filter((id: number) => {
+                            if (id === component.assessment_category_id) return true;
+                            return !formData.components.some(
+                              (comp, compIdx) =>
+                                compIdx !== idx && comp.assessment_category_id === id
+                            );
+                          }).map((id: number) => (
                             <option key={id} value={id}>
                               {ASSESSMENT_CATEGORIES[id as keyof typeof ASSESSMENT_CATEGORIES]}
                             </option>
