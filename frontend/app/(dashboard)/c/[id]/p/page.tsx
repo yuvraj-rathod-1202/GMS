@@ -76,14 +76,14 @@ export default function PeoplePage() {
 
     try {
       await enrollStudent(courseId, { student_id: Number(studentId), email: email.trim() });
-      alert('Student enrolled successfully!');
+      // alert('Student enrolled successfully!');
       setShowEnrollDialog(false);
       await fetchCourseRoles(courseId, true, role === 'instructor');
     } catch (error: any) {
       if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
         console.error('Error enrolling student:', error);
       }
-      alert(error?.message || 'Failed to enroll student');
+      alert('Failed to enroll student');
     }
   };
 
@@ -97,7 +97,7 @@ export default function PeoplePage() {
       await fetchCourseRoles(courseId, true, role === 'instructor');
       alert('Student removed successfully!');
     } catch (error: any) {
-      alert(error?.message || 'Failed to remove student');
+      alert('Failed to remove student');
     }
   };
 
@@ -119,7 +119,7 @@ export default function PeoplePage() {
       if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
         console.error('Error adding TA:', error);
       }
-      alert(error?.message || 'Failed to add TA');
+      alert('Failed to add TA');
     }
   };
 
@@ -133,7 +133,7 @@ export default function PeoplePage() {
       await fetchCourseRoles(courseId, true, true);
       alert('TA removed successfully!');
     } catch (error: any) {
-      alert(error?.message || 'Failed to remove TA');
+      alert('Failed to remove TA');
     }
   };
 
@@ -239,9 +239,7 @@ export default function PeoplePage() {
       setShowBulkEnrollDialog(false);
     } catch (error: any) {
       console.error('Bulk enrollment error:', error);
-      alert(
-        error?.message || 'Failed to enroll students. Please check the file format and try again.'
-      );
+      alert('Failed to enroll students. Please check the file format and try again.');
     }
   };
 

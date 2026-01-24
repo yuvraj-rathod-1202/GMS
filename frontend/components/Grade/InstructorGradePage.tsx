@@ -106,7 +106,7 @@ export default function InstructorGradePage() {
       setShowAssessmentDialog(false);
     } catch (error: any) {
       console.error('Error submitting assessment:', error);
-      alert(error?.message || 'Failed to save assessment');
+      alert('Failed to save assessment');
     } finally {
       setIsSubmitting(false);
     }

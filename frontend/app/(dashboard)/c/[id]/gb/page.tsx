@@ -454,10 +454,10 @@ export default function GradeSheetView() {
     try {
       if (assessment.is_marks_published) {
         await UnpublishMarks(assessment.course_id, assessment.id);
-        alert(`Marks for "${assessment.name}" unpublished successfully!`);
+        // alert(`Marks for "${assessment.name}" unpublished successfully!`);
       } else {
         await PublishMarks(assessment.course_id, assessment.id);
-        alert(`Marks for "${assessment.name}" published successfully!`);
+        // alert(`Marks for "${assessment.name}" published successfully!`);
       }
       // Refresh assessment data
       await fetchAllAssessments(courseId, true);
