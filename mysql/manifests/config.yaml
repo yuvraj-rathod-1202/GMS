@@ -31,9 +31,6 @@ data:
     CREATE INDEX idx_email ON users (email);
     CREATE INDEX idx_id ON users (id);
 
-    INSERT INTO users (id, password_hash, email) VALUES
-        (24110000, '$2b$12$mJVYcYweZv4M.0maWYgAneEk1z84m86XGgUq84Fog/kdmQjIo04sS', 'sameergk@iitgn.ac.in');
-
     CREATE DATABASE IF NOT EXISTS courses;
     GRANT ALL PRIVILEGES ON courses.* TO 'mms_user'@'%';
 
