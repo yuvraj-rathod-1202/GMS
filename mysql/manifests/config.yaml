@@ -79,6 +79,8 @@ data:
     INSERT INTO id_email_map (user_id, email) VALUES
         (24110000, "sameergk@iitgn.ac.in");
 
+    INSERT INTO admin (user_id) VALUES (24110000);
+
     CREATE INDEX idx_course_id ON courses_role (course_id);
     CREATE INDEX idx_user_id ON courses_role (user_id);
     CREATE INDEX idx_course_id ON courses (id);
