@@ -36,24 +36,24 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
   return (
     <form onSubmit={handleSubmit} className="max-w-sm mx-auto text-left">
       <div className="mb-4">
-        <label className="block mb-1.5">User ID</label>
+        <label className="block mb-1.5 text-black">User ID</label>
         <input
           value={id}
           onChange={(e) => setId(e.target.value)}
           placeholder="Enter user id"
           inputMode="numeric"
-          className="w-full px-3 py-2 rounded-md border border-zinc-300 bg-mms-grayLight outline-none focus:ring-2 focus:ring-mms-blue"
+          className="w-full px-3 py-2 rounded-md border text-black border-zinc-300 bg-mms-grayLight outline-none focus:ring-2 focus:ring-mms-blue"
         />
       </div>
 
       <div className="mb-4">
-        <label className="block mb-1.5">Password</label>
+        <label className="block mb-1.5 text-black">Password</label>
         <input
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           type="password"
           placeholder="Enter password"
-          className="w-full px-3 py-2 rounded-md border border-zinc-300 bg-mms-grayLight outline-none focus:ring-2 focus:ring-mms-blue"
+          className="w-full px-3 py-2 rounded-md border text-black border-zinc-300 bg-mms-grayLight outline-none focus:ring-2 focus:ring-mms-blue"
         />
       </div>
 
