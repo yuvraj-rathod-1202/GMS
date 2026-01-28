@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { AssessmentDBObject } from '@/lib/types/assessments';
-import Link from 'next/link';
 import { useTACourse } from '@/hooks/useTACourse';
+import { BiEdit, BiHide, BiShow, BiSpreadsheet } from 'react-icons/bi';
 
 interface AssessmentCardProps {
   assessment: AssessmentDBObject;
   onClick?: () => void;
   onPublishToggle?: () => void;
   onEdit?: () => void;
+  onEnterMarks: () => void;
 }
 
 const getAssessmentTypeLabel = (typeId: number): string => {
@@ -28,6 +29,7 @@ export default function InstructorAssessmentCard({
   onClick,
   onPublishToggle,
   onEdit,
+  onEnterMarks,
 }: AssessmentCardProps) {
   const [isPublishing, setIsPublishing] = useState(false);
   const { PublishMarks, UnpublishMarks } = useTACourse();
@@ -73,83 +75,84 @@ export default function InstructorAssessmentCard({
   return (
     <div
       onClick={onClick}
-      className={`border border-gray-300 rounded-2xl bg-white overflow-hidden transition-all duration-200 ${
-        onClick ? 'hover:border-gray-400' : ''
-      }`}
+      className="flex flex-col border border-gray-200 rounded-2xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
     >
-      {/* Header Section */}
-      <div className="px-4 sm:px-6 py-3 sm:py-4 flex flex-row justify-between items-center bg-gray-50 border-b border-gray-300">
-        <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
-          {assessment.name}
-        </h3>
-        <div className="flex flex-row gap-2 items-center">
-          <div>
-            <button
-              onClick={handlePublishToggle}
-              disabled={isPublishing}
-              className={`rounded-lg cursor-pointer bg-gray-300 px-3 py-1 text-xs sm:text-sm font-medium text-black hover:bg-mms-blueDark transition-colors ${
-                assessment.is_marks_published
-                  ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  : 'bg-gray-900 text-white hover:bg-gray-800'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {isPublishing
-                ? 'Processing...'
-                : assessment.is_marks_published
-                  ? 'Unpublish Marks'
-                  : 'Publish Marks'}
-            </button>
-          </div>
-          {onEdit && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              className="flex items-center gap-1 rounded-lg cursor-pointer bg-white border border-gray-300 px-3 py-1 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-              Edit
-            </button>
+      <div className="px-6 py-5 grow">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-lg font-bold text-gray-900 line-clamp-1" title={assessment.name}>
+            {assessment.name}
+          </h3>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            Max: {assessment.max_marks}
+          </span>
+        </div>
+
+        <div className="text-sm text-gray-500 mb-4">
+          <span>{getAssessmentTypeLabel(assessment.assessment_type_id)}</span> • Created on{' '}
+          {formattedDate}
+        </div>
+
+        <div
+          className={`text-xs px-3 py-2 rounded-lg flex items-center w-fit gap-2 ${
+            assessment.is_marks_published
+              ? 'bg-green-50 text-green-700'
+              : 'bg-yellow-50 text-yellow-700'
+          }`}
+        >
+          {assessment.is_marks_published ? (
+            <>
+              <BiShow className="text-lg" /> Marks are visible to students
+            </>
+          ) : (
+            <>
+              <BiHide className="text-lg" /> Marks are hidden from students
+            </>
           )}
         </div>
       </div>
 
-      {/* Content Section */}
-      <div className="px-4 sm:px-6 py-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs sm:text-sm text-gray-500">Type</span>
-          <span className="text-xs sm:text-sm font-medium text-gray-900">
-            {getAssessmentTypeLabel(assessment.assessment_type_id)}
-          </span>
-        </div>
+      <div className="bg-gray-50 border-t border-gray-200 p-4 flex items-center justify-between gap-3">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit?.();
+          }}
+          className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-200 rounded-lg transition-colors"
+          title="Edit Details"
+        >
+          <BiEdit className="text-xl" />
+        </button>
 
-        <div className="flex items-center justify-between">
-          <span className="text-xs sm:text-sm text-gray-500">Date</span>
-          <span className="text-xs sm:text-sm font-medium text-gray-900">{formattedDate}</span>
-        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePublishToggle(e);
+            }}
+            disabled={isPublishing}
+            className={`text-xs font-medium px-3 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+              assessment.is_marks_published
+                ? 'border-gray-300 text-gray-700 bg-white hover:bg-gray-100'
+                : 'border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100'
+            }`}
+            title={
+              assessment.is_marks_published ? 'Hide marks from students' : 'Show marks to students'
+            }
+          >
+            {isPublishing ? '...' : assessment.is_marks_published ? 'Hide Marks' : 'Publish Marks'}
+          </button>
 
-        <div className="flex items-center justify-between">
-          <span className="text-xs sm:text-sm text-gray-500">Max Marks</span>
-          <span className="text-base sm:text-lg font-bold text-gray-900">
-            {assessment.max_marks}
-          </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEnterMarks();
+            }}
+            className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm"
+          >
+            <BiSpreadsheet className="text-lg" />
+            Enter Marks
+          </button>
         </div>
-
-        {assessment.is_marks_published && (
-          <div className="flex pt-2 border-t border-gray-300">
-            <span className="text-xs text-black flex flex-row gap-1 font-medium">
-              <p className="text-mms-greenLight font-bold">✓</p> Marks Published
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

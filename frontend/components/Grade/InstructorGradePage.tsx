@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useCourseManagement } from '@/hooks/useCourseManagement';
@@ -11,6 +11,7 @@ import AssessmentDialog, { AssessmentFormData } from './AssessmentDialog';
 import { MarksApi } from '@/lib/api/marks';
 import { AssessmentDBObject } from '@/lib/types/assessments';
 import Link from 'next/link';
+import { BiSpreadsheet } from 'react-icons/bi';
 
 export default function InstructorGradePage() {
   const params = useParams();
@@ -19,6 +20,7 @@ export default function InstructorGradePage() {
   const [showAssessmentDialog, setShowAssessmentDialog] = useState(false);
   const [editingAssessment, setEditingAssessment] = useState<AssessmentDBObject | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const { role, course, isLoading, hasAccess } = useRoleAccess({
     allowedRoles: ['instructor'],
@@ -75,6 +77,10 @@ export default function InstructorGradePage() {
     }
   };
 
+  const handleOnEnterMarks = () => {
+    router.push(`/c/${courseId}/gb`);
+  };
+
   const handleCreateAssessment = () => {
     setEditingAssessment(null);
     setShowAssessmentDialog(true);
@@ -118,21 +124,27 @@ export default function InstructorGradePage() {
       <div className="max-h-[calc(100vh-96px)] overflow-y-auto w-full md:max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="space-y-6 md:space-y-8">
           {/* Page Header */}
-          <div className="flex flex-row justify-between items-center mb-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Grades
-              </h1>
-              <p className="text-xs sm:text-sm md:text-base text-gray-600">
-                View and manage student grades for assessments in this course.
-              </p>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grades & Assessments</h1>
+              <p className="text-gray-500 mt-1">Create assessments and manage student results.</p>
             </div>
-            <div>
+            <div className="flex gap-3">
               <Link href={`/c/${courseId}/gb`}>
-                <button className="flex text-xs md:text-base cursor-pointer flex-row items-center gap-2 rounded-lg bg-gray-300 md:p-2 hover:bg-gray-400">
-                  Open Grade Sheet
+                <button
+                  title="View Master Gradebook"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                >
+                  <BiSpreadsheet /> View Master Gradebook
                 </button>
               </Link>
+              <button
+                onClick={handleCreateAssessment}
+                title="Create Assessment"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 font-medium transition-colors shadow-sm"
+              >
+                + Create Assessment
+              </button>
             </div>
           </div>
 
@@ -178,42 +190,34 @@ export default function InstructorGradePage() {
 
           {/* Assessments Section */}
           <div>
-            <div className="flex items-center justify-between mb-3 md:mb-4">
-              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
-                Assessments
-              </h2>
-              <button
-                onClick={handleCreateAssessment}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Create Assessment
-              </button>
-            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Active Assessments</h2>
+
             {isLoadingData ? (
-              <div className="border border-gray-300 rounded-2xl bg-white px-4 sm:px-6 py-6 sm:py-8 text-xs sm:text-sm md:text-base text-center text-gray-500">
-                <div className="animate-pulse">Loading assessments...</div>
+              <div className="p-12 text-center text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                Loading...
               </div>
-            ) : !instructorData?.assessments || instructorData.assessments.length === 0 ? (
-              <div className="border border-gray-300 rounded-2xl bg-white px-4 sm:px-6 py-6 sm:py-8 text-xs sm:text-sm md:text-base text-center text-gray-500">
-                No assessments available yet
+            ) : !instructorData?.assessments?.length ? (
+              <div className="p-12 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                <h3 className="font-medium text-gray-900">No assessments yet</h3>
+                <p className="text-gray-500 text-sm mt-1 mb-4">
+                  Create your first quiz or exam to start grading.
+                </p>
+                <button
+                  onClick={handleCreateAssessment}
+                  className="text-gray-300 font-medium hover:underline"
+                >
+                  Create Assessment
+                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {instructorData.assessments.map((assessment) => (
                   <InstructorAssessmentCard
                     key={assessment.id}
                     assessment={assessment}
-                    onClick={() => {}}
                     onPublishToggle={handlePublishToggle}
                     onEdit={() => handleEditAssessment(assessment)}
+                    onEnterMarks={() => handleOnEnterMarks()}
                   />
                 ))}
               </div>
