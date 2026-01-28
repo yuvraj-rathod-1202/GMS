@@ -119,6 +119,35 @@ export default function GradeSheetView() {
     }
   }, [isLoading, courseId, role]);
 
+      // Warn user before leaving if there are unsaved changes
+    useEffect(() => {
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        if (hasUnsavedChanges) {
+          e.preventDefault();
+          e.returnValue = '';
+          return '';
+        }
+      };
+      window.addEventListener('beforeunload', handleBeforeUnload);
+
+      // For Next.js route changes
+      const handleRouteChange = (url: string) => {
+        if (hasUnsavedChanges) {
+          if (!window.confirm('You have unsaved marks. Save them before leaving or your changes will be lost. Are you sure you want to leave?')) {
+            throw 'Route change aborted by user due to unsaved marks.';
+          }
+        }
+      };
+      // @ts-ignore
+      if (router.events) router.events.on('routeChangeStart', handleRouteChange);
+
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        // @ts-ignore
+        if (router.events) router.events.off('routeChangeStart', handleRouteChange);
+      };
+    }, [hasUnsavedChanges]);
+
   // // fetch courses roles
   useEffect(() => {
     if (!isLoading && hasAccess && !isFetchingRoles && isAssessmentsFetched) {
