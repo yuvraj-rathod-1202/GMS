@@ -15,7 +15,9 @@ export async function handleRequest<T>(call: ApiCall<T>): Promise<T> {
 
     // toast.error(message);
 
-    alert(message);
+    if (message == 'Network error. Please try again.') {
+      alert(message);
+    }
     throw new Error(message);
   }
 }

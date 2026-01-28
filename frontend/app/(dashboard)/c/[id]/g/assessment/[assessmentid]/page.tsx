@@ -215,13 +215,13 @@ export default function AssessmentPage() {
       );
 
       await saveMarks(courseId, assessmentId, { marks: marksPayload });
-      await getmarksofassessment(courseId, assessmentId, true);
+      await new Promise((res) => setTimeout(res, 300));
       // Clear local state after successful save
       setChangedMarks(new Map());
       setHasUnsavedChanges(false);
 
       // Refresh data
-      await getmarksofassessment(courseId, assessmentId);
+      await getmarksofassessment(courseId, assessmentId, true);
     } catch (error) {
       console.error('Failed to save marks:', error);
       // alert("Failed to save marks. Please try again.");

@@ -576,25 +576,11 @@ export default function GradeSheetView() {
     });
   };
 
-  const handleBulkUpload = async (assessmentId: number, file: File) => {
+  const handleBulkUpload = async (
+    parsedData: Array<{ student_id: number; email: string; marks_obtained: number }>,
+    assessmentId: number
+  ) => {
     try {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size exceeds 5MB limit');
-        return;
-      }
-
-      const text = await file.text();
-      let parsedData: Array<{ student_id: number; email: string; marks_obtained: number }> = [];
-
-      if (file.name.endsWith('.csv')) {
-        parsedData = parseCSV(text);
-      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-        parsedData = await parseExcel(file);
-      } else {
-        alert('Only CSV and Excel files are supported.');
-        return;
-      }
-
       if (parsedData.length === 0) {
         alert('No valid data found in file. Please check the format.');
         return;
@@ -859,7 +845,9 @@ export default function GradeSheetView() {
         <BulkUploadDialog
           assessmentName={selectedAssessmentForUpload.name}
           onClose={() => setShowBulkUploadDialog(false)}
-          onFileSelect={(file) => handleBulkUpload(selectedAssessmentForUpload.id, file)}
+          onFileSelect={(parsedData) =>
+            handleBulkUpload(parsedData, selectedAssessmentForUpload.id)
+          }
         />
       )}
 

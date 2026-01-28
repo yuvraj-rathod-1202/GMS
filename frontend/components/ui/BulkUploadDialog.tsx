@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
+import * as XLSX from 'xlsx';
 
 interface BulkUploadDialogProps {
   assessmentName: string;
   onClose: () => void;
-  onFileSelect: (file: File) => void;
+  onFileSelect: (
+    parsedData: Array<{ student_id: number; email: string; marks_obtained: number }>
+  ) => void;
 }
 
 export default function BulkUploadDialog({
@@ -13,16 +16,76 @@ export default function BulkUploadDialog({
   onClose,
   onFileSelect,
 }: BulkUploadDialogProps) {
+  const [columnNames, setColumnNames] = useState({ student_id: '', email: '', marks_obtained: '' });
+  const [columnError, setColumnError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsUploading(true);
+    setColumnError('');
     const file = e.target.files?.[0];
-    if (file) {
-      onFileSelect(file);
-      onClose();
+    if (!file) {
+      setIsUploading(false);
+      return;
     }
-    setIsUploading(false);
+    const { student_id, email, marks_obtained } = columnNames;
+    if (!student_id || !email || !marks_obtained) {
+      setColumnError('Please enter all column names.');
+      setIsUploading(false);
+      return;
+    }
+    try {
+      let parsedData: Array<{ student_id: number; email: string; marks_obtained: number }> = [];
+      if (file.name.endsWith('.csv')) {
+        const text = await file.text();
+        const lines = text.trim().split(/\r?\n/);
+        if (lines.length < 2) throw new Error('No data found');
+        const header = lines[0].split(',').map((h) => h.trim());
+        const idxStudent = header.findIndex((h) => h.toLowerCase() === student_id.toLowerCase());
+        const idxEmail = header.findIndex((h) => h.toLowerCase() === email.toLowerCase());
+        const idxMarks = header.findIndex((h) => h.toLowerCase() === marks_obtained.toLowerCase());
+        if (idxStudent === -1 || idxEmail === -1 || idxMarks === -1)
+          throw new Error('Column not found');
+        for (let i = 1; i < lines.length; i++) {
+          const row = lines[i].split(',').map((v) => v.trim());
+          const sid = parseInt(row[idxStudent]);
+          const em = row[idxEmail];
+          const marks = parseFloat(row[idxMarks]);
+          if (!isNaN(sid) && em && !isNaN(marks)) {
+            parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
+          }
+        }
+      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
+        if (!jsonData || jsonData.length < 2) throw new Error('No data found');
+        const header = jsonData[0].map((h: any) => String(h).trim());
+        const idxStudent = header.findIndex((h) => h.toLowerCase() === student_id.toLowerCase());
+        const idxEmail = header.findIndex((h) => h.toLowerCase() === email.toLowerCase());
+        const idxMarks = header.findIndex((h) => h.toLowerCase() === marks_obtained.toLowerCase());
+        if (idxStudent === -1 || idxEmail === -1 || idxMarks === -1)
+          throw new Error('Column not found');
+        for (let i = 1; i < jsonData.length; i++) {
+          const row = jsonData[i];
+          const sid = parseInt(row[idxStudent]);
+          const em = row[idxEmail];
+          const marks = parseFloat(row[idxMarks]);
+          if (!isNaN(sid) && em && !isNaN(marks)) {
+            parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
+          }
+        }
+      } else {
+        throw new Error('Only CSV and Excel files are supported.');
+      }
+      onFileSelect(parsedData);
+      onClose();
+    } catch (error: any) {
+      setColumnError(error.message || 'Upload error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const [isUploading, setIsUploading] = React.useState(false);
@@ -33,6 +96,7 @@ export default function BulkUploadDialog({
         {/* Dialog Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Bulk Upload Marks</h2>
+          <h5>Upload the marks for {assessmentName}</h5>
           <button
             onClick={() => onClose()}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -100,22 +164,54 @@ export default function BulkUploadDialog({
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                Sample Format
+                Column Mapping
               </h3>
-              <div className="bg-white border border-gray-300 rounded p-3 font-mono text-xs">
-                <div className="grid grid-cols-3 gap-2 font-semibold text-gray-700 pb-2 border-b border-gray-200">
-                  <div>student_id</div>
-                  <div>email</div>
-                  <div>marks_obtained</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Student ID Column
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-2 py-1 border border-gray-300 rounded"
+                    placeholder="e.g. RollNo or student_id"
+                    value={columnNames.student_id}
+                    onChange={(e) => setColumnNames({ ...columnNames, student_id: e.target.value })}
+                    disabled={isUploading}
+                  />
                 </div>
-                <div className="grid grid-cols-3 gap-2 text-gray-600 pt-2">
-                  <div>24110293</div>
-                  <div>email@example.com</div>
-                  <div>25</div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Email Column
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-2 py-1 border border-gray-300 rounded"
+                    placeholder="e.g. Email id or email"
+                    value={columnNames.email}
+                    onChange={(e) => setColumnNames({ ...columnNames, email: e.target.value })}
+                    disabled={isUploading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Marks Column
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-2 py-1 border border-gray-300 rounded"
+                    placeholder="e.g. marks_obtained or Marks"
+                    value={columnNames.marks_obtained}
+                    onChange={(e) =>
+                      setColumnNames({ ...columnNames, marks_obtained: e.target.value })
+                    }
+                    disabled={isUploading}
+                  />
                 </div>
               </div>
+              {columnError && <div className="text-xs text-red-600 mt-2">{columnError}</div>}
               <p className="text-xs text-gray-500 mt-2">
-                * First row should contain column headers
+                * Enter the exact column names as in your file's header row.
               </p>
             </div>
 
