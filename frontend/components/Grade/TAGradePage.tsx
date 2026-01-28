@@ -1,16 +1,19 @@
 'use client';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
 import TANavbar from '@/components/Course/TANavbar';
 import AssessmentCard from '@/components/Grade/AssessmentCard';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useCourseManagement } from '@/hooks/useCourseManagement';
+import Link from 'next/link';
+import { BiSpreadsheet } from 'react-icons/bi';
 
 export default function TAGradePage() {
   const params = useParams();
   const courseId = Number(params.id);
   const [isFetchingData, setIsFetchingData] = useState(false);
+  const router = useRouter();
 
   const { role, course, isLoading, hasAccess } = useRoleAccess({
     allowedRoles: ['ta'],
@@ -54,6 +57,10 @@ export default function TAGradePage() {
 
   const isLoadingData = managementLoading || isFetchingData;
 
+  const handleOnEnterMarks = (assessmentId: number) => {
+    router.push(`/c/${courseId}/a/${assessmentId}`);
+  };
+
   const handlePublishToggle = async () => {
     // Refresh assessments after publish/unpublish
     try {
@@ -71,11 +78,19 @@ export default function TAGradePage() {
       <div className="max-h-[calc(100vh-96px)] overflow-y-auto w-full md:max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="space-y-6 md:space-y-8">
           {/* Page Header */}
-          <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Grades</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600">
-              View and manage student grades for assessments in this course.
-            </p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grades</h1>
+              <p className="text-gray-500 mt-1">View assessments and manage student marks.</p>
+            </div>
+            {/* Master Gradebook Link */}
+            <div>
+              <Link href={`/c/${currentCourse?.id}/gb`}>
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">
+                  <BiSpreadsheet /> View Master Gradebook
+                </button>
+              </Link>
+            </div>
           </div>
 
           <div>
@@ -120,27 +135,29 @@ export default function TAGradePage() {
 
           {/* Assessments Section */}
           <div>
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">
-              Assessments
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Assigned Assessments</h2>
+
             {isLoadingData ? (
-              <div className="border border-gray-300 rounded-2xl bg-white px-4 sm:px-6 py-6 sm:py-8 text-xs sm:text-sm md:text-base text-center text-gray-500">
-                <div className="animate-pulse">Loading assessments...</div>
+              <div className="p-12 text-center text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                Loading assessments...
               </div>
             ) : !taData?.assessments || taData.assessments.length === 0 ? (
-              <div className="border border-gray-300 rounded-2xl bg-white px-4 sm:px-6 py-6 sm:py-8 text-xs sm:text-sm md:text-base text-center text-gray-500">
-                No assessments available yet
+              <div className="p-12 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                <h3 className="font-medium text-gray-900">No assessments found</h3>
+                <p className="text-gray-500 text-sm mt-1">
+                  The instructor hasn't created any assessments for this course yet.
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 md:gap-6">
-                {taData.assessments.map((assessment) => (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {taData.assessments.map((assessment: any) => (
                   <AssessmentCard
                     key={assessment.id}
                     assessment={assessment}
-                    onClick={() => {
-                      // Handle assessment click - navigate to assessment details or marks entry
+                    onPublishToggle={() => handlePublishToggle()}
+                    onEnterMarks={() => {
+                      handleOnEnterMarks(assessment.id);
                     }}
-                    onPublishToggle={handlePublishToggle}
                   />
                 ))}
               </div>
