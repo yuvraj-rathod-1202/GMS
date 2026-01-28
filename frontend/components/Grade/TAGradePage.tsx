@@ -6,8 +6,6 @@ import TANavbar from '@/components/Course/TANavbar';
 import AssessmentCard from '@/components/Grade/AssessmentCard';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useCourseManagement } from '@/hooks/useCourseManagement';
-import Link from 'next/link';
-import { BiSpreadsheet } from 'react-icons/bi';
 
 export default function TAGradePage() {
   const params = useParams();
@@ -58,7 +56,7 @@ export default function TAGradePage() {
   const isLoadingData = managementLoading || isFetchingData;
 
   const handleOnEnterMarks = (assessmentId: number) => {
-    router.push(`/c/${courseId}/a/${assessmentId}`);
+    router.push(`/c/${courseId}/g/assessment/${assessmentId}`);
   };
 
   const handlePublishToggle = async () => {
@@ -82,14 +80,6 @@ export default function TAGradePage() {
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grades</h1>
               <p className="text-gray-500 mt-1">View assessments and manage student marks.</p>
-            </div>
-            {/* Master Gradebook Link */}
-            <div>
-              <Link href={`/c/${currentCourse?.id}/gb`}>
-                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">
-                  <BiSpreadsheet /> View Master Gradebook
-                </button>
-              </Link>
             </div>
           </div>
 
