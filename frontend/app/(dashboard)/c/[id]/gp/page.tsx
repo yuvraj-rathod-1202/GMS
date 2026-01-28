@@ -231,7 +231,7 @@ export default function GPView() {
               weightage: component.weightage,
               rules: {
                 id: component.rules?.id || undefined,
-                rule_type: component.rules?.rule_type || 'ALL',
+                rule_type: component.rules?.rule_type || 'CUMULATIVE',
                 rule_params: component.rules?.rule_params || {},
               },
             });
@@ -240,7 +240,7 @@ export default function GPView() {
               assessment_category_id: component.assessment_category_id,
               weightage: component.weightage,
               rules: {
-                rule_type: component.rules?.rule_type || 'ALL',
+                rule_type: component.rules?.rule_type || 'CUMULATIVE',
                 rule_params: component.rules?.rule_params || {},
               },
             });
@@ -254,7 +254,7 @@ export default function GPView() {
             assessment_category_id: component.assessment_category_id,
             weightage: component.weightage,
             rules: {
-              rule_type: component.rules?.rule_type || 'ALL',
+              rule_type: component.rules?.rule_type || 'CUMULATIVE',
               rule_params: component.rules?.rule_params || {},
             },
           })),

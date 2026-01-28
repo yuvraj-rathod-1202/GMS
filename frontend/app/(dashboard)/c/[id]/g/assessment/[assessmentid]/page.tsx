@@ -132,7 +132,11 @@ export default function AssessmentPage() {
     // For Next.js route changes
     const handleRouteChange = (url: string) => {
       if (hasUnsavedChanges) {
-        if (!window.confirm('You have unsaved marks. Save them before leaving or your changes will be lost. Are you sure you want to leave?')) {
+        if (
+          !window.confirm(
+            'You have unsaved marks. Save them before leaving or your changes will be lost. Are you sure you want to leave?'
+          )
+        ) {
           throw 'Route change aborted by user due to unsaved marks.';
         }
       }
