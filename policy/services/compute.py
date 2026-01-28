@@ -103,7 +103,7 @@ def execute_policy_calculation(student_marks: list[AllMarksDBObj], policy: Polic
             total_score += (component_score * component_total_weightage) / (100*len(best_n_marks)) if best_n_marks else 0
                 
         elif component_rule_type == 'CUSTOM':
-            logic = component_rule_params.get("logic", "")
+            logic = component_rule_params
             for mark in marks_in_category:
                 component_score += (mark.marks_obtained*100/mark.max_marks) * logic.get(str(mark.assessment_id), 0)/100
                 
@@ -177,7 +177,7 @@ async def update_total_in_db(data: ComputeQueueMessage):
         student_id = student.student_id
         course_id = data.course_id
         current_total = get_current_total_from_db(student_id, course_id)
-        student_policy = next((policy for policy in policies if policy.id == student_policy_mapping.get(student_id)), default_policy) # type: ignore
+        student_policy = next((policy for policy in policies if policy.id == student_policy_mapping.get(student_id)), default_policy)
         if not student_policy:
             continue
         total_score = await calculate_total_score(student_id, course_id, student_policy, initiated_by=data.initiated_by)
