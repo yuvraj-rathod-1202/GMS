@@ -119,7 +119,7 @@ export default function IGradeSheet<T extends Record<string, any>>({
 
   // Handle keyboard events in edit mode
   const handleKeyDown = (e: React.KeyboardEvent, rowIndex: number, column: GradeSheetColumn<T>) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
       handleEditSave(rowIndex, column);
     } else if (e.key === 'Escape') {
@@ -217,7 +217,11 @@ export default function IGradeSheet<T extends Record<string, any>>({
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, rowIndex, column)}
-                            onBlur={() => !isProcessing && handleEditCancel()}
+                            onBlur={() => {
+                              if (!isProcessing) {
+                                handleEditSave(rowIndex, column);
+                              }
+                            }}
                             autoFocus
                             disabled={isProcessing}
                             className="flex-1 px-2 py-1 rounded outline-none"
