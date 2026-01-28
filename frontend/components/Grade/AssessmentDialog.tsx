@@ -72,7 +72,7 @@ export default function AssessmentDialog({
       newErrors.name = 'Assessment name is required';
     }
 
-    if (formData.max_marks <= 0) {
+    if (formData.max_marks < 0) {
       newErrors.max_marks = 'Max marks must be greater than 0';
     }
 
@@ -180,7 +180,7 @@ export default function AssessmentDialog({
               type="number"
               value={formData.max_marks}
               onChange={(e) => handleChange('max_marks', Number(e.target.value))}
-              min="1"
+              min="0"
               className={`w-full px-4 py-2 border rounded-lg outline-none transition-colors ${
                 errors.max_marks ? 'border-red-500' : 'border-gray-300 focus:border-gray-500'
               }`}

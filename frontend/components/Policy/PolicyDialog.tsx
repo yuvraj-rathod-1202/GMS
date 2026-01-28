@@ -198,7 +198,7 @@ export default function PolicyDialog({
     if (!formData.policy_name.trim()) {
       newErrors.policy_name = 'Policy name is required';
     }
-    if (formData.total_weightage <= 0) {
+    if (formData.total_weightage < 0) {
       newErrors.total_weightage = 'Total weightage must be between 1 and 100';
     }
 
@@ -214,7 +214,7 @@ export default function PolicyDialog({
     }
 
     formData.components.forEach((component, index) => {
-      if (component.weightage <= 0) {
+      if (component.weightage < 0) {
         newErrors[`components_weightage_${index}`] = 'Component weightage must be greater than 0';
       }
 
@@ -521,7 +521,7 @@ export default function PolicyDialog({
                 type="number"
                 value={formData.total_weightage}
                 onChange={(e) => handleChange('total_weightage', Number(e.target.value))}
-                min="1"
+                min="0"
                 className={`w-full px-4 py-2 border rounded-lg outline-none transition-colors ${
                   errors.total_weightage
                     ? 'border-red-500'
@@ -666,7 +666,7 @@ export default function PolicyDialog({
                           type="number"
                           value={component.rules.rule_params.n || 0}
                           onChange={(e) => updateComponent(idx, 'rules_n_value', e.target.value)}
-                          min="1"
+                          min="0"
                           placeholder="e.g., 3"
                           disabled={isLoading}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors disabled:opacity-50"
