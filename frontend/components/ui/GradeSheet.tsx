@@ -213,7 +213,7 @@ export default function GradeSheet<T extends Record<string, any>>({
                             onChange={(e) => setEditValue(e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, rowIndex, column)}
                             onBlur={() => {
-                              if(!isProcessing){
+                              if (!isProcessing) {
                                 handleEditSave(rowIndex, column);
                               }
                             }}

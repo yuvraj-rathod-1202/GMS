@@ -21,7 +21,6 @@
   --color-mms-white: #ffffff;
 }
 
-
 /* Force light theme regardless of device theme */
 @media (prefers-color-scheme: dark) {
   :root {
@@ -30,7 +29,10 @@
   }
 }
 
-body, html, #__next, #root {
+body,
+html,
+#__next,
+#root {
   background: #ffffff !important;
   color: #171717 !important;
 }

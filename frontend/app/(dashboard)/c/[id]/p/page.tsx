@@ -141,7 +141,9 @@ export default function PeoplePage() {
     const lines = text.trim().split('\n');
     if (lines.length < 2) return [];
     const header = lines[0].split(',').map((h) => h.trim().toLowerCase());
-    const rollNoIdx = header.findIndex((h) => h === 'rollno' || h === 'roll no' || h === 'roll_number' || h === 'roll number');
+    const rollNoIdx = header.findIndex(
+      (h) => h === 'rollno' || h === 'roll no' || h === 'roll_number' || h === 'roll number'
+    );
     const emailIdx = header.findIndex((h) => h === 'email id' || h === 'email' || h === 'email_id');
     if (rollNoIdx === -1 || emailIdx === -1) return [];
     const data: Array<{ student_id: number; email: string }> = [];
@@ -175,8 +177,13 @@ export default function PeoplePage() {
 
           if (!jsonData || jsonData.length < 2) return resolve([]);
           const header = jsonData[0].map((h: any) => String(h).trim().toLowerCase());
-          const rollNoIdx = header.findIndex((h: string) => h === 'rollno' || h === 'roll no' || h === 'roll_number' || h === 'roll number');
-          const emailIdx = header.findIndex((h: string) => h === 'email id' || h === 'email' || h === 'email_id');
+          const rollNoIdx = header.findIndex(
+            (h: string) =>
+              h === 'rollno' || h === 'roll no' || h === 'roll_number' || h === 'roll number'
+          );
+          const emailIdx = header.findIndex(
+            (h: string) => h === 'email id' || h === 'email' || h === 'email_id'
+          );
           if (rollNoIdx === -1 || emailIdx === -1) return resolve([]);
 
           const parsedData: Array<{ student_id: number; email: string }> = [];

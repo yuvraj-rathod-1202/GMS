@@ -77,14 +77,13 @@ export default function BulkEnrollDialog({ isOpen, onClose, onUpload }: BulkEnro
                 <li className="flex items-start gap-2">
                   <span className="text-gray-400 mt-0.5">•</span>
                   <span>
-                    Upload a <strong>Student list</strong> File exported from the <strong>IMS</strong>.
+                    Upload a <strong>Student list</strong> File exported from the{' '}
+                    <strong>IMS</strong>.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-gray-400 mt-0.5">•</span>
-                  <span>
-                    File type should be .xlsx or .xls
-                  </span>
+                  <span>File type should be .xlsx or .xls</span>
                 </li>
               </ul>
             </div>

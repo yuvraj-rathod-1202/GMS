@@ -419,10 +419,13 @@ export default function GradeSheetView() {
       );
 
       await Promise.all(
-        Object.entries(GroupedPayload).map(async ([assessment_id, marks]) => {
-          await saveMarks(courseId, Number(assessment_id), { marks: marks });
-        })
+        Object.entries(GroupedPayload).map(([assessment_id, marks]) =>
+          saveMarks(courseId, Number(assessment_id), { marks })
+        )
       );
+
+      // Small delay to allow backend commit/cache update
+      await new Promise((res) => setTimeout(res, 300));
 
       setChangedMarks(new Map());
       setHasUnsavedChanges(false);
