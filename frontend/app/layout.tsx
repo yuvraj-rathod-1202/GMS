@@ -18,7 +18,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: 'MMS',
+  title: 'GMS',
   description: 'Management System',
 };
 
