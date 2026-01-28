@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PolicyDBObject } from '@/lib/types/policy';
 import { AssessmentDBObject } from '@/lib/types/assessments';
-
+import { BiInfoCircle, BiTrash } from 'react-icons/bi';
 export const ASSESSMENT_CATEGORIES = {
   1: 'Quiz',
   2: 'Assignment',
@@ -44,14 +44,43 @@ export interface PolicyFormData {
   components: PolicyComponentFormData[];
 }
 
-const ASSESSMENT_TYPES = [
-  { id: 1, name: 'Quiz' },
-  { id: 2, name: 'Assignment' },
-  { id: 3, name: 'Midsem' },
-  { id: 4, name: 'EndSem' },
-  { id: 5, name: 'Project' },
-  { id: 6, name: 'Attendance' },
-  { id: 7, name: 'Lab' },
+const getAssessmentTypeLabel = (typeId: number): string => {
+  const types: { [key: number]: string } = {
+    1: 'Quiz',
+    2: 'Assignment',
+    3: 'Midsem',
+    4: 'EndSem',
+    5: 'Project',
+    6: 'Attendance',
+    7: 'Lab',
+  };
+  return types[typeId] || 'Unknown';
+};
+const RULE_TYPES = [
+  {
+    id: 'CUMULATIVE',
+    label: 'Cumulative',
+    desc: 'Sum of all marks / Sum of max marks.',
+    example: 'Good for standard exams.',
+  },
+  {
+    id: 'EQUAL_WEIGHTAGE',
+    label: 'Equal Weight',
+    desc: 'Average of percentages.',
+    example: 'Good if Quiz 1 is 10 marks and Quiz 2 is 50, but both are worth equal.',
+  },
+  {
+    id: 'BEST_N',
+    label: 'Best N',
+    desc: 'Top X scores only.',
+    example: 'Drops the lowest scores.',
+  },
+  {
+    id: 'CUSTOM',
+    label: 'Custom',
+    desc: 'Manual weights per item.',
+    example: 'Assign specific % to specific quizzes.',
+  },
 ];
 
 export default function PolicyDialog({
@@ -78,7 +107,6 @@ export default function PolicyDialog({
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [showInfoDialog, setShowInfoDialog] = useState(false);
 
   const addComponent = () => {
     setFormData((prev) => {
@@ -106,7 +134,7 @@ export default function PolicyDialog({
   const removeComponent = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      components: prev.components.filter((_, i) => i !== index),
+      components: prev.components.filter((comp, i) => comp.assessment_category_id !== index),
     }));
   };
 
@@ -114,7 +142,7 @@ export default function PolicyDialog({
     setFormData((prev) => ({
       ...prev,
       components: prev.components.map((comp, i) => {
-        if (i === index) {
+        if (comp.assessment_category_id === index) {
           if (field === 'rules_type') {
             return {
               ...comp,
@@ -260,342 +288,157 @@ export default function PolicyDialog({
 
   if (!isOpen) return null;
 
+  const currentTotal = formData.components.reduce(
+    (acc: number, curr: any) => acc + (Number(curr.weightage) || 0),
+    0
+  );
+  const isOverweight = currentTotal > formData.total_weightage;
+  const isUnderweight = currentTotal < formData.total_weightage;
+
   return (
     <>
-      {/* Info Dialog */}
-      {showInfoDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Grading Policy Guide</h3>
-              <button
-                onClick={() => setShowInfoDialog(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div className="overflow-y-auto p-5 space-y-4 text-sm">
-              {/* Overview */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">What is a Grading Policy?</h4>
-                <p className="text-gray-700 leading-relaxed">
-                  A grading policy defines how student grades are calculated in a course. You can
-                  create different
-                  <strong> components</strong> (like Quiz, Assignment, Lab, Midsem, EndSem, Project,
-                  Attendance) and assign a percentage weightage to each component. Within each
-                  component, you can have multiple assessments and apply different calculation
-                  rules.
-                </p>
-              </div>
-
-              {/* Rule Types */}
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Rule Types Explained</h4>
-
-                {/* CUMULATIVE */}
-                <div className="border border-gray-200 rounded-lg p-4 mb-3">
-                  <h5 className="font-semibold text-gray-800 mb-2">1. CUMULATIVE</h5>
-                  <p className="text-gray-600 mb-2">
-                    Sums all marks obtained across all assessments in the component, divides by
-                    total possible marks, and converts to percentage based on component weightage.
-                  </p>
-                  <div className="bg-gray-50 p-3 rounded border border-gray-200 font-mono text-xs">
-                    <div className="mb-1">
-                      Component Score = (Σ Marks Obtained / Σ Max Marks) × Component Weightage
-                    </div>
-                    <div className="text-gray-500 mt-2">
-                      Example: Quiz component (20% weightage)
-                    </div>
-                    <div className="text-gray-500">Quiz 1: 8/10, Quiz 2: 15/20, Quiz 3: 18/20</div>
-                    <div className="text-gray-500">
-                      Score = (8+15+18)/(10+20+20) × 20 = (41/50) × 20 = 16.4%
-                    </div>
-                  </div>
-                </div>
-
-                {/* EQUAL_WEIGHTAGE */}
-                <div className="border border-gray-200 rounded-lg p-4 mb-3">
-                  <h5 className="font-semibold text-gray-800 mb-2">2. EQUAL_WEIGHTAGE</h5>
-                  <p className="text-gray-600 mb-2">
-                    Each assessment gets equal importance. Converts each assessment to percentage,
-                    averages them, then applies component weightage.
-                  </p>
-                  <div className="bg-gray-50 p-3 rounded border border-gray-200 font-mono text-xs">
-                    <div className="mb-1">
-                      Component Score = (Σ(Marks/Max × 100) / N) × Component Weightage / 100
-                    </div>
-                    <div className="text-gray-500 mt-2">
-                      Example: Assignment component (30% weightage)
-                    </div>
-                    <div className="text-gray-500">
-                      A1: 8/10 (80%), A2: 15/20 (75%), A3: 18/20 (90%)
-                    </div>
-                    <div className="text-gray-500">
-                      Score = ((80+75+90)/3) × 30/100 = 81.67 × 0.3 = 24.5%
-                    </div>
-                  </div>
-                </div>
-
-                {/* BEST_N */}
-                <div className="border border-gray-200 rounded-lg p-4 mb-3">
-                  <h5 className="font-semibold text-gray-800 mb-2">3. BEST_N</h5>
-                  <p className="text-gray-600 mb-2">
-                    Considers only the top N assessments (by percentage). Useful when you want to
-                    drop lowest scores. Requires specifying the value of N.
-                  </p>
-                  <div className="bg-gray-50 p-3 rounded border border-gray-200 font-mono text-xs">
-                    <div className="mb-1">
-                      Component Score = (Σ(Top N percentages) / N) × Component Weightage / 100
-                    </div>
-                    <div className="text-gray-500 mt-2">
-                      Example: Quiz component (20% weightage), Best 2 of 3
-                    </div>
-                    <div className="text-gray-500">
-                      Quiz 1: 8/10 (80%), Quiz 2: 12/20 (60%), Quiz 3: 18/20 (90%)
-                    </div>
-                    <div className="text-gray-500">
-                      Score = ((90+80)/2) × 20/100 = 85 × 0.2 = 17%
-                    </div>
-                  </div>
-                </div>
-
-                {/* CUSTOM */}
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h5 className="font-semibold text-gray-800 mb-2">4. CUSTOM</h5>
-                  <p className="text-gray-600 mb-2">
-                    Assign different weightage to each individual assessment within the component.
-                    Total custom weightages should not exceed component weightage.
-                  </p>
-                  <div className="bg-gray-50 p-3 rounded border border-gray-200 font-mono text-xs">
-                    <div className="mb-1">
-                      Component Score = Σ((Marks/Max × 100) × Assessment Weightage / 100)
-                    </div>
-                    <div className="text-gray-500 mt-2">
-                      Example: Project component (25% weightage)
-                    </div>
-                    <div className="text-gray-500">Proposal: 9/10 (90%) with 5% weightage</div>
-                    <div className="text-gray-500">Final: 85/100 (85%) with 20% weightage</div>
-                    <div className="text-gray-500">
-                      Score = (90 × 5/100) + (85 × 20/100) = 4.5 + 17 = 21.5%
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Multiple Policies */}
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">
-                  Multiple Policies & Default Policy
-                </h4>
-                <div className="space-y-3 text-gray-700">
-                  <div>
-                    <p className="font-medium text-gray-800 mb-1">Multiple Policies:</p>
-                    <p className="leading-relaxed">
-                      You can create multiple grading policies for the same course. This is useful
-                      when different students need different grading schemes (e.g., regular students
-                      vs. audit students, or different program requirements). Each policy can have
-                      its own components and calculation rules.
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800 mb-1">Default Policy:</p>
-                    <p className="leading-relaxed">
-                      One policy must be marked as the <strong>default policy</strong>. This policy
-                      is automatically applied to all students unless a specific policy is assigned
-                      to them individually. The default policy ensures that every student has a
-                      grading scheme even if not explicitly assigned.
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800 mb-1">Assigning Policies:</p>
-                    <p className="leading-relaxed">
-                      After creating multiple policies, you can assign specific policies to
-                      individual students from the gradebook. Students without a specific assignment
-                      will use the default policy for their grade calculations.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tips */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Tips</h4>
-                <ul className="list-disc list-inside space-y-1 text-gray-700">
-                  <li>Total weightage typically equals 100%</li>
-                  <li>Component weightages can be adjusted based on course requirements</li>
-                  <li>Sum of component weightages should not exceed total policy weightage</li>
-                  <li>Create assessments first before setting up CUSTOM rule type</li>
-                  <li>BEST_N is useful for courses with a "drop lowest quiz" policy</li>
-                  <li>EQUAL_WEIGHTAGE treats all assessments equally regardless of max marks</li>
-                  <li>CUMULATIVE reflects the actual point-based contribution</li>
-                  <li>Always have one default policy for students without specific assignments</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main Policy Dialog */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
           {/* Dialog Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div className="flex flex-row items-center gap-2">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {policy ? 'Edit Policy' : 'Create Policy'}
-              </h2>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowInfoDialog(true)}
-                  title="Policy Information"
-                  className="w-4 h-4 cursor-pointer rounded-full bg-gray-300 flex items-center justify-center text-xs"
-                >
-                  i
-                </button>
-              </div>
-            </div>
+          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
             <div>
-              <button
-                onClick={onClose}
-                disabled={isLoading}
-                className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              <h2 className="text-xl font-bold text-gray-900">
+                {policy ? 'Edit Policy' : 'Create Grading Policy'}
+              </h2>
+              <p className="text-sm text-gray-500">
+                Configure how marks combine to form the final grade.
+              </p>
             </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">
+              &times;
+            </button>
           </div>
 
-          {/* Dialog Content */}
-          <form
-            onSubmit={handleSubmit}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-              }
-            }}
-            className="p-6 space-y-5"
-          >
-            {/* Assessment Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Policy Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.policy_name}
-                onChange={(e) => handleChange('policy_name', e.target.value)}
-                placeholder="e.g., Mid-Term Exam, Assignment 1"
-                className={`w-full px-4 py-2 border rounded-lg outline-none transition-colors ${
-                  errors.policy_name ? 'border-red-500' : 'border-gray-300 focus:border-gray-500'
-                }`}
-                disabled={isLoading}
-              />
-              {errors.policy_name && (
-                <p className="text-red-500 text-xs mt-1">{errors.policy_name}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Total Weightage (%) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={formData.total_weightage}
-                onChange={(e) => handleChange('total_weightage', Number(e.target.value))}
-                min="0"
-                className={`w-full px-4 py-2 border rounded-lg outline-none transition-colors ${
-                  errors.total_weightage
-                    ? 'border-red-500'
-                    : 'border-gray-300 focus:border-gray-500'
-                }`}
-                disabled={isLoading}
-              />
-              {errors.total_weightage && (
-                <p className="text-red-500 text-xs mt-1">{errors.total_weightage}</p>
-              )}
-            </div>
-
-            {/* Components Section */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-medium text-gray-700">Components</label>
-                <button
-                  type="button"
-                  onClick={addComponent}
+          <div className="overflow-y-auto p-6 space-y-8 flex-1">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Policy Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.policy_name}
+                  onChange={(e) => handleChange('policy_name', e.target.value)}
+                  placeholder="e.g., Mid-Term Exam, Assignment 1"
+                  className={`w-full px-4 py-2 border rounded-lg outline-none transition-colors ${
+                    errors.policy_name ? 'border-red-500' : 'border-gray-300 focus:border-gray-500'
+                  }`}
                   disabled={isLoading}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                />
+                {errors.policy_name && (
+                  <p className="text-red-500 text-xs mt-1">{errors.policy_name}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Total Weightage (%) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={formData.total_weightage}
+                  onChange={(e) => handleChange('total_weightage', Number(e.target.value))}
+                  min="0"
+                  className={`w-full px-4 py-2 border rounded-lg outline-none transition-colors ${
+                    errors.total_weightage
+                      ? 'border-red-500'
+                      : 'border-gray-300 focus:border-gray-500'
+                  }`}
+                  disabled={isLoading}
+                />
+                {errors.total_weightage && (
+                  <p className="text-red-500 text-xs mt-1">{errors.total_weightage}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+              <div className="flex justify-between text-sm font-medium mb-2">
+                <span>Weightage Allocation</span>
+                <span
+                  className={
+                    isOverweight
+                      ? 'text-red-600'
+                      : isUnderweight
+                        ? 'text-orange-600'
+                        : 'text-green-600'
+                  }
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  Add Component
+                  {currentTotal}% / {formData.total_weightage}%
+                </span>
+              </div>
+              {/* Progress Bar */}
+              <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden flex">
+                {formData.components.map((comp: any, i: number) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: `${Math.min((comp.weightage / formData.total_weightage) * 100, 100)}%`,
+                    }}
+                    className={`${['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500'][i % 4]}`}
+                  />
+                ))}
+                {/* Warning strip if overweight */}
+                {isOverweight && <div className="bg-red-500 flex-1 animate-pulse" />}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {isUnderweight && 'You still have percentage points to assign.'}
+                {isOverweight && 'Total exceeds 100%. Please reduce component weightages.'}
+                {!isUnderweight && !isOverweight && 'Perfectly balanced.'}
+              </p>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Grading Components</h3>
+                <button
+                  onClick={addComponent}
+                  className="text-sm text-blue-600 font-bold hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  + Add Component
                 </button>
               </div>
 
               <div className="space-y-4">
                 {formData.components.map((component, idx) => (
                   <div
-                    key={idx}
+                    key={component.assessment_category_id}
                     className="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">Component {idx + 1}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        {getAssessmentTypeLabel(component.assessment_category_id)}
+                      </span>
                       {formData.components.length > 1 && (
                         <button
                           type="button"
-                          onClick={() => removeComponent(idx)}
+                          onClick={() => removeComponent(component.assessment_category_id)}
                           disabled={isLoading}
                           className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
                         >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
+                          <BiTrash className="text-xl" />
                         </button>
                       )}
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       {/* Category */}
                       <div>
                         <label className="block text-xs text-gray-600 mb-1.5">Category</label>
                         <select
                           value={component.assessment_category_id}
                           onChange={(e) =>
-                            updateComponent(idx, 'assessment_category_id', Number(e.target.value))
+                            updateComponent(
+                              component.assessment_category_id,
+                              'assessment_category_id',
+                              Number(e.target.value)
+                            )
                           }
                           disabled={isLoading}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors bg-white disabled:opacity-50"
@@ -604,7 +447,8 @@ export default function PolicyDialog({
                             if (id === component.assessment_category_id) return true;
                             return !formData.components.some(
                               (comp, compIdx) =>
-                                compIdx !== idx && comp.assessment_category_id === id
+                                compIdx !== component.assessment_category_id &&
+                                comp.assessment_category_id === id
                             );
                           }).map((id: number) => (
                             <option key={id} value={id}>
@@ -621,199 +465,204 @@ export default function PolicyDialog({
                           type="number"
                           value={component.weightage}
                           onChange={(e) =>
-                            updateComponent(idx, 'weightage', Number(e.target.value))
+                            updateComponent(
+                              component.assessment_category_id,
+                              'weightage',
+                              Number(e.target.value)
+                            )
                           }
                           min="0"
                           placeholder="0"
                           disabled={isLoading}
                           className={`w-full px-3 py-2 border rounded-lg text-sm outline-none transition-colors ${
-                            errors[`components_weightage_${idx}`]
+                            errors[`components_weightage_${component.assessment_category_id}`]
                               ? 'border-red-500'
                               : 'border-gray-300 focus:border-blue-500'
                           } disabled:opacity-50`}
                         />
-                        {errors[`components_weightage_${idx}`] && (
+                        {errors[`components_weightage_${component.assessment_category_id}`] && (
                           <p className="text-red-500 text-xs mt-1">
-                            {errors[`components_weightage_${idx}`]}
+                            {errors[`components_weightage_${component.assessment_category_id}`]}
                           </p>
                         )}
                       </div>
+                    </div>
 
-                      {/* Rule Type */}
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1.5">Rule Type</label>
-                        <select
-                          value={component.rules.rule_type}
-                          onChange={(e) => updateComponent(idx, 'rules_type', e.target.value)}
-                          disabled={isLoading}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors bg-white disabled:opacity-50"
-                        >
-                          <option value="CUMULATIVE">CUMULATIVE</option>
-                          <option value="EQUAL_WEIGHTAGE">EQUAL_WEIGHTAGE</option>
-                          <option value="BEST_N">BEST_N</option>
-                          <option value="CUSTOM">CUSTOM</option>
-                        </select>
+                    <div className="mb-4">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                        Calculation Rule
+                      </label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {RULE_TYPES.map((rule) => (
+                          <div
+                            key={rule.id}
+                            onClick={() =>
+                              updateComponent(
+                                component.assessment_category_id,
+                                'rules_type',
+                                rule.id
+                              )
+                            }
+                            className={`cursor-pointer rounded-lg p-2 border text-left transition-all ${
+                              component.rules.rule_type === rule.id
+                                ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
+                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="font-bold text-xs text-gray-900">{rule.label}</div>
+                            <div className="text-[10px] text-gray-500 leading-tight mt-1">
+                              {rule.desc}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
-                    {/* Rule Params - Only show for BEST_N */}
-                    {component.rules.rule_type === 'BEST_N' && (
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1.5">
-                          N (Best N to consider)
-                        </label>
-                        <input
-                          type="number"
-                          value={component.rules.rule_params.n || 0}
-                          onChange={(e) => updateComponent(idx, 'rules_n_value', e.target.value)}
-                          min="0"
-                          placeholder="e.g., 3"
-                          disabled={isLoading}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors disabled:opacity-50"
-                        />
-                      </div>
-                    )}
+                    <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                      {component.rules.rule_type === 'CUMULATIVE' && (
+                        <p className="text-gray-600 flex items-center gap-2">
+                          <BiInfoCircle /> All assessments in this category will be summed up.
+                        </p>
+                      )}
+                      {component.rules.rule_type === 'BEST_N' && (
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1.5">
+                            N (Best N to consider)
+                          </label>
+                          <input
+                            type="number"
+                            value={component.rules.rule_params.n || 0}
+                            onChange={(e) =>
+                              updateComponent(
+                                component.assessment_category_id,
+                                'rules_n_value',
+                                e.target.value
+                              )
+                            }
+                            min="0"
+                            placeholder="e.g., 3"
+                            disabled={isLoading}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors disabled:opacity-50"
+                          />
+                        </div>
+                      )}
 
-                    {component.rules.rule_type === 'CUSTOM' && (
-                      <div className="space-y-2">
-                        <label className="block text-xs text-gray-600 mb-1.5">
-                          Custom Weightage per Assessment
-                        </label>
-                        {(() => {
-                          const categoryAssessments = assessments.filter(
-                            (a) => a.assessment_type_id === component.assessment_category_id
-                          );
-                          const customWeightages = component.rules.rule_params || {};
-                          const totalCustomWeightage = Object.values(customWeightages).reduce(
-                            (sum: number, val: any) => sum + (Number(val) || 0),
-                            0
-                          );
-                          const exceedsLimit = totalCustomWeightage > component.weightage;
-
-                          if (categoryAssessments.length === 0) {
-                            return (
-                              <p className="text-xs text-gray-500 italic py-2">
-                                No assessments found for this category. First Create assessments to
-                                set Custom policy.
-                              </p>
+                      {component.rules.rule_type === 'CUSTOM' && (
+                        <div className="space-y-2">
+                          <label className="block text-xs text-gray-600 mb-1.5">
+                            Custom Weightage per Assessment
+                          </label>
+                          {(() => {
+                            const categoryAssessments = assessments.filter(
+                              (a) => a.assessment_type_id === component.assessment_category_id
                             );
-                          }
+                            const customWeightages = component.rules.rule_params || {};
+                            const totalCustomWeightage = Object.values(customWeightages).reduce(
+                              (sum: number, val: any) => sum + (Number(val) || 0),
+                              0
+                            );
+                            const exceedsLimit = totalCustomWeightage > component.weightage;
 
-                          return (
-                            <div className="space-y-2">
-                              {categoryAssessments.map((assessment) => (
-                                <div key={assessment.id} className="flex items-center gap-2">
-                                  <label className="text-xs text-gray-700 flex-1 truncate">
-                                    {assessment.name}
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={customWeightages[assessment.id] || 0}
-                                    onChange={(e) => {
-                                      const newWeightages = {
-                                        ...customWeightages,
-                                        [assessment.id]: Number(e.target.value) || 0,
-                                      };
-                                      updateComponent(idx, 'rules_params', newWeightages);
-                                    }}
-                                    min="0"
-                                    max={component.weightage}
-                                    placeholder="0"
-                                    disabled={isLoading}
-                                    className="w-20 px-2 py-1 border border-gray-300 rounded text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none disabled:opacity-50"
-                                  />
-                                  <span className="text-xs text-gray-500">%</span>
-                                </div>
-                              ))}
-                              <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                                <span className="text-xs font-medium text-gray-700">Total:</span>
-                                <span
-                                  className={`text-xs font-medium ${
-                                    exceedsLimit
-                                      ? 'text-red-600'
-                                      : totalCustomWeightage === component.weightage
-                                        ? 'text-green-600'
-                                        : 'text-gray-700'
-                                  }`}
-                                >
-                                  {totalCustomWeightage}% / {component.weightage}%
-                                </span>
-                              </div>
-                              {exceedsLimit && (
-                                <p className="text-xs text-red-600 mt-1">
-                                  Total weightage exceeds component limit
+                            if (categoryAssessments.length === 0) {
+                              return (
+                                <p className="text-xs text-gray-500 italic py-2">
+                                  No assessments found for this category. First Create assessments
+                                  to set Custom policy.
                                 </p>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    )}
+                              );
+                            }
 
-                    {errors[`components_custom_${idx}`] && (
+                            return (
+                              <div className="space-y-2">
+                                {categoryAssessments.map((assessment) => (
+                                  <div key={assessment.id} className="flex items-center gap-2">
+                                    <label className="text-xs text-gray-700 flex-1 truncate">
+                                      {assessment.name}
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={customWeightages[assessment.id] || 0}
+                                      onChange={(e) => {
+                                        const newWeightages = {
+                                          ...customWeightages,
+                                          [assessment.id]: Number(e.target.value) || 0,
+                                        };
+                                        updateComponent(
+                                          component.assessment_category_id,
+                                          'rules_params',
+                                          newWeightages
+                                        );
+                                      }}
+                                      min="0"
+                                      max={component.weightage}
+                                      placeholder="0"
+                                      disabled={isLoading}
+                                      className="w-20 px-2 py-1 border border-gray-300 rounded text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none disabled:opacity-50"
+                                    />
+                                    <span className="text-xs text-gray-500">%</span>
+                                  </div>
+                                ))}
+                                <div className="flex items-center justify-between gap-4 pt-2 border-t border-gray-200">
+                                  <div className="text-xs wrap-break-word text-blue-700 flex-1">
+                                    Sum of weightage of individual assessments should not exceed the
+                                    component weightage.
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium text-gray-700">
+                                      Total:
+                                    </span>
+                                    <span
+                                      className={`text-xs font-medium ${
+                                        exceedsLimit
+                                          ? 'text-red-600'
+                                          : totalCustomWeightage === component.weightage
+                                            ? 'text-green-600'
+                                            : 'text-gray-700'
+                                      }`}
+                                    >
+                                      {totalCustomWeightage}% / {component.weightage}%
+                                    </span>
+                                  </div>
+                                </div>
+                                {exceedsLimit && (
+                                  <p className="text-xs text-red-600 mt-1">
+                                    Total weightage exceeds component limit
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+
+                    {errors[`components_custom_${component.assessment_category_id}`] && (
                       <p className="text-red-500 text-xs mt-1">
-                        {errors[`components_custom_${idx}`]}
+                        {errors[`components_custom_${component.assessment_category_id}`]}
                       </p>
                     )}
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Dialog Footer */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isLoading}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-4 py-2 text-sm font-medium text-white bg-gray-700 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isLoading ? (
-                  <>
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    {policy ? 'Updating...' : 'Creating...'}
-                  </>
-                ) : policy ? (
-                  'Update Policy'
-                ) : (
-                  'Create Policy'
-                )}
-              </button>
-            </div>
-          </form>
+          </div>
+          <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+            <button
+              onClick={onClose}
+              className="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-200 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isOverweight || isLoading}
+              className="px-5 py-2.5 bg-black text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Saving...' : 'Save Policy'}
+            </button>
+          </div>
         </div>
       </div>
     </>
   );
-}
-
-export function getAssessmentTypeName(typeId: number): string {
-  const type = ASSESSMENT_TYPES.find((t) => t.id === typeId);
-  return type ? type.name : `Type ${typeId}`;
 }

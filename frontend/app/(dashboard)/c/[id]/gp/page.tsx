@@ -14,9 +14,23 @@ import {
   UpdatePolicyComponentsRequest,
   UpdatePolicyRequest,
 } from '@/lib/types/policy';
-import { FaPlus } from 'react-icons/fa';
+import { FaPencilAlt, FaPlus, FaTrash } from 'react-icons/fa';
 import Link from 'next/link';
 import PolicyDialog, { PolicyFormData } from '@/components/Policy/PolicyDialog';
+import { BiCalculator, BiSpreadsheet } from 'react-icons/bi';
+
+const getAssessmentTypeLabel = (typeId: number): string => {
+  const types: { [key: number]: string } = {
+    1: 'Quiz',
+    2: 'Assignment',
+    3: 'Midsem',
+    4: 'EndSem',
+    5: 'Project',
+    6: 'Attendance',
+    7: 'Lab',
+  };
+  return types[typeId] || `Type ${typeId}`;
+};
 
 export default function GPView() {
   const params = useParams();
@@ -276,42 +290,52 @@ export default function GPView() {
     <>
       <InstructorNavbar />
       <div className="p-2 md:p-6 max-h-[calc(100vh-96px)] overflow-y-auto">
-        {isLoadingPolicy ? (
-          <div className="flex justify-center items-center h-full p-10">
-            <div className="text-gray-900 text-lg animate-pulse">Loading grading policy...</div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Grading Policies</h1>
+            <p className="text-gray-500 mt-1">
+              Define how student grades are calculated (e.g., Exams 40%, Quizzes 20%).
+            </p>
           </div>
-        ) : (
-          !instructorData?.policies && (
-            <div className="text-gray-900 text-lg">No grading policy found for this course.</div>
-          )
-        )}
-        <div className="w-full">
-          <div className="flex gap-4 justify-end mb-4">
+          <div className="flex gap-3">
             <Link href={`/c/${courseId}/gb`}>
-              <button className="flex flex-row cursor-pointer items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400">
-                Open Grade Sheet
+              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">
+                <BiSpreadsheet className="text-lg" /> Master Gradebook
               </button>
             </Link>
             <button
               onClick={handleCreatePolicy}
-              className="flex flex-row items-center gap-2 rounded-lg bg-gray-300 p-2 hover:bg-gray-400"
+              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 font-medium transition-colors shadow-sm"
             >
-              <FaPlus />
-              Create Policy
+              <FaPlus className="text-sm" /> Create Policy
             </button>
           </div>
         </div>
-        {instructorData?.policies &&
-          instructorData.policies.map((policy) => (
-            <div key={policy.id} className="mb-6 p-4 rounded-lg">
-              <GradingPolicyCard
+        {isLoadingPolicy ? (
+          <div className="flex justify-center items-center h-40">
+            <div className="text-gray-900 text-lg animate-pulse">Loading policies...</div>
+          </div>
+        ) : !instructorData?.policies.length ? (
+          <EmptyPolicyState onCreate={handleCreatePolicy} />
+        ) : (
+          <div className="grid gap-6">
+            {instructorData.policies.map((policy) => (
+              // <GradingPolicyCard
+              //   policy={policy}
+              //   onEdit={() => handleEditPolicy(policy)}
+              //   onDelete={() => handleDeletePolicy(policy.id)}
+              //   SetDefault={() => handleSetDefaultPolicy(policy.id)}
+              // />
+              <PolicyCard
+                key={policy.id}
                 policy={policy}
                 onEdit={() => handleEditPolicy(policy)}
                 onDelete={() => handleDeletePolicy(policy.id)}
-                SetDefault={() => handleSetDefaultPolicy(policy.id)}
+                onSetDefault={() => handleSetDefaultPolicy(policy.id)}
               />
-            </div>
-          ))}
+            ))}
+          </div>
+        )}
       </div>
       <PolicyDialog
         isOpen={showPolicyDialog}
@@ -322,5 +346,94 @@ export default function GPView() {
         isLoading={creatingPolicy || updatingPolicyId || updatingPolicyComponentId}
       />
     </>
+  );
+}
+
+function EmptyPolicyState({ onCreate }: { onCreate: () => void }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl p-8 md:p-12 text-center max-w-2xl mx-auto">
+      <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <BiCalculator className="text-3xl" />
+      </div>
+      <h3 className="text-lg font-bold text-gray-900 mb-2">Set up your grading logic</h3>
+      <p className="text-gray-500 mb-8 max-w-md mx-auto">
+        Create a policy to tell the system how to calculate final grades. You can set weightages for
+        different components (e.g., Quizzes, Mid-Term) and choose how scores are aggregated.
+      </p>
+      <button
+        onClick={onCreate}
+        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm"
+      >
+        Start Policy Builder
+      </button>
+    </div>
+  );
+}
+
+function PolicyCard({ policy, onEdit, onDelete, onSetDefault }: any) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-300 transition-colors shadow-sm">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-bold text-gray-900">{policy.policy_name}</h3>
+            {policy.is_default && (
+              <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                Default
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            Total Weightage:{' '}
+            <span className="font-semibold text-gray-900">{policy.total_weightage}%</span>
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {!policy.is_default && (
+            <button
+              onClick={onSetDefault}
+              className="text-xs font-medium text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-md transition-colors"
+            >
+              Make Default
+            </button>
+          )}
+          <button
+            onClick={onEdit}
+            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-gray-100 rounded-lg"
+          >
+            <FaPencilAlt />
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-2 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg"
+          >
+            <FaTrash />
+          </button>
+        </div>
+      </div>
+
+      {/* Visual Component Breakdown */}
+      <div className="flex gap-2 overflow-hidden rounded-full h-2 bg-gray-100 mb-3">
+        {policy.components.map((comp: any, i: number) => (
+          <div
+            key={i}
+            style={{ width: `${(comp.weightage / policy.total_weightage) * 100}%` }}
+            className={`h-full ${['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500'][i % 4]}`}
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+        {policy.components.map((comp: any, i: number) => (
+          <div key={i} className="flex items-center gap-1.5">
+            <div
+              className={`w-2 h-2 rounded-full ${['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500'][i % 4]}`}
+            />
+            <span>
+              {getAssessmentTypeLabel(comp.assessment_category_id)} ({comp.weightage}%)
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
