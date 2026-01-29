@@ -35,12 +35,6 @@ async def get_all_assessments(course_id: int, user_id: int = Query(...)):
     
     assessments = get_all_assessments_from_db(course_id)
     
-    if not assessments:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No assessments found for this course"
-        )
-    
     return {"assessments": assessments}
 
 @router.get("/assessments/{course_id}/{assessment_id}")

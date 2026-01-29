@@ -35,12 +35,6 @@ async def get_all_policy(course_id: int, user_id: int):
         )
         
     policy = get_policy_from_db(course_id)
-    
-    if not policy:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No policy found for the specified course"
-        )
         
     return {"policy": policy}
 
@@ -232,12 +226,6 @@ async def get_total_scores_of_all_students(course_id: int, user_id: int):
         )
         
     totals = fetch_total_scores_from_db(course_id)
-    
-    if not totals:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No total scores found for the specified course"
-        )
         
     return {"totals": totals}
 

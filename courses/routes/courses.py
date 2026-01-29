@@ -15,12 +15,6 @@ def get_courses(user_id: int = Query(...)):
         )
         
     course_list = fetch_all_courses_from_db()
-    
-    if not course_list:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No courses found"
-        )
         
     return {"courses": course_list}
 

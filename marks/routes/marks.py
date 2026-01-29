@@ -40,12 +40,6 @@ async def get_marks(course_id: int, assessment_id: int, user_id: int = Query(...
         )
         
     marks = get_marks_from_db(assessment_id)
-    
-    if not marks:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No marks found"
-        )
         
     return {"marks": marks}
 
