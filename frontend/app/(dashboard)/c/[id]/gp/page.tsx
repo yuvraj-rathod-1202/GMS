@@ -217,6 +217,10 @@ export default function GPView() {
   };
 
   const handleDeletePolicy = async (policyId: number) => {
+    if (!confirm('Are you sure you want to delete this policy? This action cannot be undone.')) {
+      return;
+    }
+
     setUpdatingPolicyId(true);
     try {
       await DeletePolicy(courseId, policyId);
@@ -352,19 +356,17 @@ export default function GPView() {
 function EmptyPolicyState({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-8 md:p-12 text-center max-w-2xl mx-auto">
-      <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-        <BiCalculator className="text-3xl" />
-      </div>
       <h3 className="text-lg font-bold text-gray-900 mb-2">Set up your grading logic</h3>
       <p className="text-gray-500 mb-8 max-w-md mx-auto">
         Create a policy to tell the system how to calculate final grades. You can set weightages for
-        different components (e.g., Quizzes, Mid-Term) and choose how scores are aggregated.
+        different components (e.g., Quizzes, Midsem, Assignments) and choose how scores are
+        aggregated.
       </p>
       <button
         onClick={onCreate}
         className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm"
       >
-        Start Policy Builder
+        Create Grading Policy
       </button>
     </div>
   );
