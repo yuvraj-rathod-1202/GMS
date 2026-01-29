@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 
 export interface GradeSheetColumn<T = any> {
-  header: string;
+  header: string | React.ReactNode;
   key: keyof T | string;
   width?: string;
   editable?: boolean;
@@ -16,6 +16,8 @@ export interface GradeSheetColumn<T = any> {
 
 export interface GradeSheetProps<T = any> {
   columns: GradeSheetColumn<T>[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
   data: T[];
   searchable?: boolean;
   searchKeys?: (keyof T | string)[];
@@ -26,6 +28,8 @@ export interface GradeSheetProps<T = any> {
 
 export default function IGradeSheet<T extends Record<string, any>>({
   columns,
+  searchTerm,
+  setSearchTerm,
   data = [],
   searchable = true,
   searchKeys,
@@ -33,7 +37,6 @@ export default function IGradeSheet<T extends Record<string, any>>({
   className = '',
   onRowClick,
 }: GradeSheetProps<T>) {
-  const [searchTerm, setSearchTerm] = useState('');
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnKey: string } | null>(
     null
   );
@@ -52,7 +55,7 @@ export default function IGradeSheet<T extends Record<string, any>>({
     }
 
     const lowerSearchTerm = searchTerm.toLowerCase();
-    const keysToSearch = searchKeys || columns.map((col) => col.key as string);
+    const keysToSearch = searchKeys || ['student_id', 'email'];
 
     return data.filter((row) => {
       return keysToSearch.some((key) => {
@@ -143,32 +146,6 @@ export default function IGradeSheet<T extends Record<string, any>>({
     <div
       className={`flex flex-col overflow-x-auto max-w-[100vw] md:max-w-[calc((5/6)*100vw)] gap-4 ${className}`}
     >
-      {/* Search Bar */}
-      {searchable && (
-        <div className="relative">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search..."
-            className="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 bg-white outline-none transition-all"
-          />
-          <svg
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-        </div>
-      )}
-
       {/* Table */}
       <div className="border border-gray-300 rounded-2xl overflow-x-auto bg-white shadow-sm">
         {/* Table Header */}

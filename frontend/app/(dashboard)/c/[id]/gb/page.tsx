@@ -9,8 +9,9 @@ import { useTACourse } from '@/hooks/useTACourse';
 import UnenrolledStudentsDialog from '@/components/ui/UnenrolledStudentsDialog';
 import BulkUploadDialog from '@/components/ui/BulkUploadDialog';
 import IGradeSheet from '@/components/ui/IGradeSheet';
-import IGradeSheetButtons from '@/components/Grade/IGradeSheetButtons';
+import { IGradeSheetButtons } from '@/components/Grade/IGradeSheetButtons';
 import * as XLSX from 'xlsx';
+import { BiArrowBack, BiDotsVerticalRounded, BiHide, BiShow, BiSliderAlt } from 'react-icons/bi';
 
 const getAssessmentTypeLabel = (typeId: number): string => {
   const types: { [key: number]: string } = {
@@ -75,6 +76,9 @@ export default function GradeSheetView() {
     Array<{ student_id: number; email: string; marks_obtained: number }>
   >([]);
   const [isProcessingEnrollment, setIsProcessingEnrollment] = useState(false);
+
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { role, course, isLoading, hasAccess } = useRoleAccess({
     allowedRoles: ['instructor'],
@@ -633,60 +637,75 @@ export default function GradeSheetView() {
 
   const assessmentColumns =
     instructorData?.assessments.map((a) => ({
-      header: `${a.name}`,
+      header: (
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-bold text-gray-900 truncate" title={a.name}>
+              {a.name}
+            </span>
+            <div className="relative group">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenMenuId(openMenuId === a.id ? null : a.id);
+                }}
+                className="p-1 text-gray-400 hover:text-gray-700 rounded hover:bg-gray-100"
+              >
+                <BiDotsVerticalRounded />
+              </button>
+              {openMenuId === a.id && (
+                <div className="absolute right-0 top-6 w-40 bg-white border border-gray-200 shadow-xl rounded-lg z-50 overflow-hidden">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePublishToggle(a, e);
+                      setOpenMenuId(null);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    {a.is_marks_published ? <BiHide /> : <BiShow />}
+                    {a.is_marks_published ? 'Unpublish' : 'Publish'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs mt-1">
+            <span className="text-gray-500">Max: {a.max_marks}</span>
+            <span
+              className={`px-1.5 py-0.5 rounded ${
+                a.is_marks_published
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-yellow-100 text-yellow-700'
+              }`}
+            >
+              {a.is_marks_published ? 'Visible' : 'Hidden'}
+            </span>
+          </div>
+        </div>
+      ),
       key: String(a.id),
       width: '150px',
       editable: true,
       onEditComplete: handleMarkChange(a.id, a.max_marks),
       max_marks: a.max_marks,
-      headerActions: (
-        <div className="relative">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpenMenuId(openMenuId === a.id ? null : a.id);
-            }}
-            className="p-1 hover:bg-gray-200 rounded transition-colors"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-              <circle cx="8" cy="2" r="1.5" />
-              <circle cx="8" cy="8" r="1.5" />
-              <circle cx="8" cy="14" r="1.5" />
-            </svg>
-          </button>
-          {openMenuId === a.id && (
-            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedAssessmentForUpload(a);
-                  setShowBulkUploadDialog(true);
-                  setOpenMenuId(null);
-                }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
-              >
-                Bulk Upload
-              </button>
-              <button
-                onClick={(e) => {
-                  handlePublishToggle(a, e);
-                  setOpenMenuId(null);
-                }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors border-t border-gray-200"
-              >
-                {a.is_marks_published ? 'Unpublish Marks' : 'Publish Marks'}
-              </button>
-            </div>
-          )}
-        </div>
-      ),
     })) || [];
 
   const columns = [
-    { header: 'Student ID', key: 'student_id', width: '120px' },
-    { header: 'Email', key: 'email', width: '250px' },
     {
-      header: 'Assigned Policy',
+      header: 'Student',
+      key: 'student_info',
+      width: '250px',
+      render: (_: any, row: any) => (
+        <div>
+          <div className="font-medium text-gray-900">{row.student_id}</div>
+          <div className="text-xs text-gray-500">{row.email}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Policy',
       key: 'policy_name',
       width: '200px',
       render: (value: any, row: any) => {
@@ -706,9 +725,7 @@ export default function GradeSheetView() {
               }}
               onClick={(e) => e.stopPropagation()}
               disabled={isLoading}
-              className={`w-2/3 px-2 py-1 border border-gray-300 rounded bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className="w-full bg-transparent border-b border-transparent group-hover:border-gray-300 focus:border-blue-500 text-sm py-1 outline-none cursor-pointer"
             >
               {policies.map((policy) => (
                 <option key={policy.id} value={policy.id}>
@@ -746,60 +763,104 @@ export default function GradeSheetView() {
       },
     },
     ...assessmentColumns,
-    { header: 'Total Marks', key: 'total_marks', width: '120px' },
+    {
+      header: 'Total',
+      key: 'total_marks',
+      width: '100px',
+      render: (val: any) => <span className="font-bold text-gray-900">{val}</span>,
+    },
   ];
 
   return (
     <div
-      className="p-6 h-[calc(100vh-48px)] overflow-y-auto w-screen md:w-[calc((5/6)*100vw)]"
+      className="h-screen flex flex-col bg-gray-50 max-h-[calc(100vh-48px)]"
       onClick={() => setOpenMenuId(null)}
     >
-      {/* Header with Title and Navigation Buttons */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Grade Book</h1>
-        <div className="flex gap-3">
+      <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center shrink-0 h-16">
+        <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="px-4 py-2 bg-gray-600 cursor-pointer text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+            className="text-gray-500 hover:text-gray-900 transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            Back
+            <BiArrowBack className="text-xl" />
           </button>
-          <button
-            onClick={() => router.push(`/c/${courseId}/gp`)}
-            className="px-4 py-2 bg-gray-300 rounded-xl cursor-pointer flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            Policy Page
-          </button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Grade Book</h1>
+            <p className="text-xs text-gray-500">Course ID: {courseId}</p>
+          </div>
+        </div>
+        <button
+          onClick={() => router.push(`/c/${courseId}/gp`)}
+          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+        >
+          <BiSliderAlt /> Grading Policy
+        </button>
+      </div>
+
+      {/* 2. Main Workspace */}
+      <div className="flex-1 overflow-hidden p-4 md:p-6 flex flex-col">
+        {/* The New Toolbar */}
+        <IGradeSheetButtons
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          hasUnsavedChanges={hasUnsavedChanges}
+          isSaving={isSaving}
+          isRecalculating={isRecalculating}
+          onSave={handleSave}
+          onDiscard={handleDiscard}
+          onRecalculate={handleRecalculateTotal}
+          onImportClick={() => setIsImportModalOpen(true)} // Opens the selector modal
+        />
+
+        {/* The Table Container */}
+        <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+          <IGradeSheet
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            columns={columns}
+            data={displayData}
+          />
         </div>
       </div>
 
-      <IGradeSheetButtons
-        handleSave={handleSave}
-        handleDiscard={handleDiscard}
-        hasUnsavedChanges={hasUnsavedChanges}
-        isSaving={isSaving}
-        handleRecalculateTotal={handleRecalculateTotal}
-        isRecalculating={isRecalculating}
-      />
-      <IGradeSheet columns={columns} data={displayData} />
+      {/* 3. Global Import Selection Modal (New Feature) */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Import Marks</h3>
+            <p className="text-gray-500 text-sm mb-4">
+              Select the assessment you want to upload marks for:
+            </p>
 
-      {/* Bulk Upload Dialog */}
+            <div className="space-y-2 max-h-60 overflow-y-auto mb-6">
+              {instructorData?.assessments.map((a) => (
+                <button
+                  key={a.id}
+                  onClick={() => {
+                    setSelectedAssessmentForUpload(a);
+                    setShowBulkUploadDialog(true);
+                    setIsImportModalOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                >
+                  <span className="font-medium text-gray-700 group-hover:text-blue-700">
+                    {a.name}
+                  </span>
+                  <span className="text-xs text-gray-400">Max: {a.max_marks}</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setIsImportModalOpen(false)}
+              className="w-full py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {showBulkUploadDialog && selectedAssessmentForUpload && (
         <BulkUploadDialog
           assessmentName={selectedAssessmentForUpload.name}
@@ -810,7 +871,6 @@ export default function GradeSheetView() {
         />
       )}
 
-      {/* Unenrolled Students Dialog */}
       {showUnenrolledDialog && (
         <UnenrolledStudentsDialog
           students={unenrolledStudents}

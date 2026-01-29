@@ -1,85 +1,80 @@
 import React from 'react';
+import { BiSave, BiReset, BiCalculator, BiCloudUpload, BiSearch, BiCog } from 'react-icons/bi';
 
-export default function IGradeSheetButtons({
-  handleSave,
-  handleDiscard,
+export const IGradeSheetButtons = ({
+  searchTerm,
+  setSearchTerm,
+  onImportClick,
+  onRecalculate,
+  onSave,
+  onDiscard,
   hasUnsavedChanges,
   isSaving,
-  handleRecalculateTotal,
   isRecalculating,
-}: {
-  handleSave: () => void;
-  handleDiscard: () => void;
-  hasUnsavedChanges: boolean;
-  isSaving: boolean;
-  handleRecalculateTotal?: () => void;
-  isRecalculating?: boolean;
-}) {
+}: any) => {
   return (
-    <>
-      <div className="flex gap-3 mb-6 flex-wrap">
-        <button
-          onClick={handleSave}
-          disabled={!hasUnsavedChanges || isSaving}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm border ${
-            hasUnsavedChanges && !isSaving
-              ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:shadow-md active:scale-95'
-              : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-          }`}
-          title={hasUnsavedChanges ? 'Save all changes' : 'No changes to save'}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          {isSaving ? 'Saving...' : 'Save Marks'}
-        </button>
-
-        {/* Discard Changes Button */}
-        <button
-          onClick={handleDiscard}
-          disabled={!hasUnsavedChanges}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm border ${
-            hasUnsavedChanges
-              ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:shadow-md active:scale-95'
-              : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-          }`}
-          title={hasUnsavedChanges ? 'Discard all unsaved changes' : 'No changes to discard'}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-          Discard Changes
-        </button>
-
-        {/* Recalculate Total Button */}
-        {handleRecalculateTotal && (
-          <button
-            onClick={handleRecalculateTotal}
-            disabled={isRecalculating}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm border ${
-              !isRecalculating
-                ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:shadow-md active:scale-95'
-                : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-            }`}
-            title="Recalculate total marks for all students"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            {isRecalculating ? 'Recalculating...' : 'Recalculate Total'}
-          </button>
-        )}
+    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-4 flex flex-col md:flex-row gap-4 justify-between items-center">
+      {/* Left: Search & Filters */}
+      <div className="relative w-full md:w-96">
+        <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search student name, ID or email..."
+          className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+        />
       </div>
-    </>
+
+      {/* Right: Actions */}
+      <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+        {/* The Missing Link: GLOBAL IMPORT */}
+        <button
+          onClick={onImportClick}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors shadow-sm"
+        >
+          <BiCloudUpload className="text-xl" />
+          <span>Import CSV</span>
+        </button>
+
+        {/* Recalculate */}
+        <button
+          onClick={onRecalculate}
+          disabled={isRecalculating}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors shadow-sm disabled:opacity-50"
+        >
+          <BiCalculator className="text-xl" />
+          <span>{isRecalculating ? 'Calculating...' : 'Recalculate'}</span>
+        </button>
+
+        {/* Separator */}
+        <div className="w-px h-10 bg-gray-300 mx-2 hidden md:block"></div>
+
+        {/* State Actions */}
+        <button
+          onClick={onDiscard}
+          disabled={!hasUnsavedChanges}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            hasUnsavedChanges ? 'text-red-600 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'
+          }`}
+        >
+          <BiReset className="text-xl" />
+          Discard
+        </button>
+
+        <button
+          onClick={onSave}
+          disabled={!hasUnsavedChanges || isSaving}
+          className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium shadow-sm transition-all ${
+            hasUnsavedChanges
+              ? 'bg-black text-white hover:bg-gray-800 hover:shadow-md'
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+          }`}
+        >
+          <BiSave className="text-xl" />
+          {isSaving ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+    </div>
   );
-}
+};
