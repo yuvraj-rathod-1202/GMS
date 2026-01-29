@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Component } from 'react';
 import { PolicyDBObject } from '@/lib/types/policy';
 import { AssessmentDBObject } from '@/lib/types/assessments';
 import { BiInfoCircle, BiTrash } from 'react-icons/bi';
@@ -62,24 +62,32 @@ const RULE_TYPES = [
     label: 'Cumulative',
     desc: 'Sum of all marks / Sum of max marks.',
     example: 'Good for standard exams.',
+    title:
+      'Sum of Marks: Calculates based on total marks obtained divided by total maximum marks across all assessments.',
   },
   {
     id: 'EQUAL_WEIGHTAGE',
     label: 'Equal Weight',
     desc: 'Average of percentages.',
     example: 'Good if Quiz 1 is 10 marks and Quiz 2 is 50, but both are worth equal.',
+    title:
+      'Average of Percentages: Treats every assessment equally, regardless of its max marks (e.g. a 10-mark quiz counts the same as a 50-mark quiz).',
   },
   {
     id: 'BEST_N',
     label: 'Best N',
     desc: 'Top X scores only.',
     example: 'Drops the lowest scores.',
+    title:
+      "Top Scores: Mark of Each Assessment will be converted into out of 100. Then only includes the highest scoring 'N' assessments in the calculation (drops the lowest scores).",
   },
   {
     id: 'CUSTOM',
     label: 'Custom',
     desc: 'Manual weights per item.',
     example: 'Assign specific % to specific quizzes.',
+    title:
+      'Manual Assignment: Allows you to manually set a specific percentage weight for each individual assessment.',
   },
 ];
 
@@ -97,7 +105,39 @@ export default function PolicyDialog({
     components: [
       {
         assessment_category_id: 1,
-        weightage: 100,
+        weightage: 20,
+        rules: {
+          rule_type: 'CUMULATIVE',
+          rule_params: {},
+        },
+      },
+      {
+        assessment_category_id: 2,
+        weightage: 20,
+        rules: {
+          rule_type: 'CUMULATIVE',
+          rule_params: {},
+        },
+      },
+      {
+        assessment_category_id: 3,
+        weightage: 20,
+        rules: {
+          rule_type: 'CUMULATIVE',
+          rule_params: {},
+        },
+      },
+      {
+        assessment_category_id: 4,
+        weightage: 20,
+        rules: {
+          rule_type: 'CUMULATIVE',
+          rule_params: {},
+        },
+      },
+      {
+        assessment_category_id: 5,
+        weightage: 20,
         rules: {
           rule_type: 'CUMULATIVE',
           rule_params: {},
@@ -208,7 +248,39 @@ export default function PolicyDialog({
         components: [
           {
             assessment_category_id: 1,
-            weightage: 100,
+            weightage: 20,
+            rules: {
+              rule_type: 'CUMULATIVE',
+              rule_params: {},
+            },
+          },
+          {
+            assessment_category_id: 2,
+            weightage: 20,
+            rules: {
+              rule_type: 'CUMULATIVE',
+              rule_params: {},
+            },
+          },
+          {
+            assessment_category_id: 3,
+            weightage: 20,
+            rules: {
+              rule_type: 'CUMULATIVE',
+              rule_params: {},
+            },
+          },
+          {
+            assessment_category_id: 4,
+            weightage: 20,
+            rules: {
+              rule_type: 'CUMULATIVE',
+              rule_params: {},
+            },
+          },
+          {
+            assessment_category_id: 5,
+            weightage: 20,
             rules: {
               rule_type: 'CUMULATIVE',
               rule_params: {},
@@ -306,9 +378,7 @@ export default function PolicyDialog({
               <h2 className="text-xl font-bold text-gray-900">
                 {policy ? 'Edit Policy' : 'Create Grading Policy'}
               </h2>
-              <p className="text-sm text-gray-500">
-                Configure how marks combine to form the final grade.
-              </p>
+              <p className="text-xs text-blue-500">Hover over any field for more information.</p>
             </div>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">
               &times;
@@ -317,15 +387,15 @@ export default function PolicyDialog({
 
           <div className="overflow-y-auto p-6 space-y-8 flex-1">
             <div className="grid md:grid-cols-2 gap-6">
-              <div>
+              <div title="Give this policy a unique name to distinguish it from others (e.g., 'Regular Grading' vs 'Audit Grading').">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Policy Name <span className="text-red-500">*</span>
+                  Grading Policy Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.policy_name}
                   onChange={(e) => handleChange('policy_name', e.target.value)}
-                  placeholder="e.g., Mid-Term Exam, Assignment 1"
+                  placeholder="e.g., Regular Grading, Audit Grading"
                   className={`w-full px-4 py-2 border rounded-lg outline-none transition-colors ${
                     errors.policy_name ? 'border-red-500' : 'border-gray-300 focus:border-gray-500'
                   }`}
@@ -336,7 +406,7 @@ export default function PolicyDialog({
                 )}
               </div>
 
-              <div>
+              <div title="The target sum for all components combined. Standard courses typically use 100%.">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Total Weightage (%) <span className="text-red-500">*</span>
                 </label>
@@ -358,7 +428,10 @@ export default function PolicyDialog({
               </div>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+            <div
+              className="bg-gray-50 p-4 rounded-xl border border-gray-200"
+              title="Visualizes the distribution of marks. Ensure the bar is full (100%) but not overflowing (Red)."
+            >
               <div className="flex justify-between text-sm font-medium mb-2">
                 <span>Weightage Allocation</span>
                 <span
@@ -387,18 +460,44 @@ export default function PolicyDialog({
                 {/* Warning strip if overweight */}
                 {isOverweight && <div className="bg-red-500 flex-1 animate-pulse" />}
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                {isUnderweight && 'You still have percentage points to assign.'}
-                {isOverweight && 'Total exceeds 100%. Please reduce component weightages.'}
-                {!isUnderweight && !isOverweight && 'Perfectly balanced.'}
+              <p className="text-xs font-semibold text-gray-500 mt-2">
+                <div className="space-y-2">
+                  <div className="text-blue-500">
+                    {isUnderweight && 'You still have percentage points to assign.'}
+                  </div>
+                  <div className="text-red-500">
+                    {isOverweight && 'Total exceeds 100%. Please reduce component weightages.'}
+                  </div>
+                  <div className="text-green-500">
+                    {!isUnderweight && !isOverweight && 'Total weightage allocated correctly.'}
+                  </div>
+                  {
+                    <div className="grid grid-cols-2 gap-x-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                      {formData.components.map((c, i) => (
+                        <div>
+                          <p key={i} className="flex justify-start gap-2">
+                            <span>{getAssessmentTypeLabel(c.assessment_category_id)}</span>
+                            <span>{c.weightage}%</span>
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  }
+                </div>
               </p>
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-gray-900">Grading Components</h3>
+                <h3
+                  className="text-lg font-bold text-gray-900"
+                  title="Define the distinct categories (buckets) that make up the final grade, such as Quizzes, Labs, or Exams."
+                >
+                  Grading Components
+                </h3>
                 <button
                   onClick={addComponent}
+                  title="Add a new grading component to this policy."
                   className="text-sm text-blue-600 font-bold hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
                 >
                   + Add Component
@@ -429,7 +528,7 @@ export default function PolicyDialog({
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       {/* Category */}
-                      <div>
+                      <div title="Select the assessment category (e.g., Quizzes, Assignments) to group under this component.">
                         <label className="block text-xs text-gray-600 mb-1.5">Category</label>
                         <select
                           value={component.assessment_category_id}
@@ -459,7 +558,7 @@ export default function PolicyDialog({
                       </div>
 
                       {/* Weightage */}
-                      <div>
+                      <div title="The percentage of the final grade allocated to this specific component.">
                         <label className="block text-xs text-gray-600 mb-1.5">Weightage (%)</label>
                         <input
                           type="number"
@@ -496,6 +595,7 @@ export default function PolicyDialog({
                         {RULE_TYPES.map((rule) => (
                           <div
                             key={rule.id}
+                            title={rule.title}
                             onClick={() =>
                               updateComponent(
                                 component.assessment_category_id,
@@ -522,6 +622,21 @@ export default function PolicyDialog({
                       {component.rules.rule_type === 'CUMULATIVE' && (
                         <p className="text-gray-600 flex items-center gap-2">
                           <BiInfoCircle /> All assessments in this category will be summed up.
+                        </p>
+                      )}
+                      {component.rules.rule_type === 'EQUAL_WEIGHTAGE' && (
+                        <p className="text-gray-600 flex items-center gap-2">
+                          <BiInfoCircle /> All assessments in this category will be assigned{' '}
+                          <p className="text-blue-500">
+                            {(
+                              component.weightage /
+                              assessments.filter(
+                                (a) => a.assessment_type_id === component.assessment_category_id
+                              ).length
+                            ).toFixed(2)}
+                            %
+                          </p>{' '}
+                          weightage each.
                         </p>
                       )}
                       {component.rules.rule_type === 'BEST_N' && (

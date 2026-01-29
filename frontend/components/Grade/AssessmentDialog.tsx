@@ -143,7 +143,7 @@ export default function AssessmentDialog({
               type="text"
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="e.g., Mid-Term Exam, Assignment 1"
+              placeholder="e.g., Midsem, Assignment 1, Quiz 3"
               className={`w-full px-4 py-2 border rounded-lg outline-none transition-colors ${
                 errors.name ? 'border-red-500' : 'border-gray-300 focus:border-gray-500'
               }`}
