@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useCourseDetailStore } from '@/lib/store/courseDetail';
+import { InstructorCourseData, useCourseDetailStore } from '@/lib/store/courseDetail';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useCourseManagement } from '@/hooks/useCourseManagement';
 import { useTACourse } from '@/hooks/useTACourse';
@@ -12,6 +12,7 @@ import IGradeSheet from '@/components/ui/IGradeSheet';
 import { IGradeSheetButtons } from '@/components/Grade/IGradeSheetButtons';
 import * as XLSX from 'xlsx';
 import { BiArrowBack, BiDotsVerticalRounded, BiHide, BiShow, BiSliderAlt } from 'react-icons/bi';
+import { exportGradeBookToExcel } from '@/components/Grade/ExportGradeBook';
 
 const getAssessmentTypeLabel = (typeId: number): string => {
   const types: { [key: number]: string } = {
@@ -79,6 +80,7 @@ export default function GradeSheetView() {
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isExportingSheet, setIsExportingSheet] = useState(false);
 
   const { role, course, isLoading, hasAccess } = useRoleAccess({
     allowedRoles: ['instructor'],
@@ -627,6 +629,19 @@ export default function GradeSheetView() {
     }
   };
 
+  const handleExportGradeBook = async (
+    instructorData: InstructorCourseData | null,
+    courseCode: string
+  ) => {
+    if (!instructorData) {
+      alert('Instructor data not available. Cannot export grade book.');
+      return;
+    }
+    setIsExportingSheet(true);
+    await exportGradeBookToExcel(instructorData, courseCode);
+    setIsExportingSheet(false);
+  };
+
   const handleSkipUnenrolled = async (assessmentId: number) => {
     const enrolledIds = new Set(mergedData.map((s) => s.student_id));
     const toImport = pendingMarksData.filter((d) => enrolledIds.has(d.student_id));
@@ -789,12 +804,21 @@ export default function GradeSheetView() {
             <p className="text-xs text-gray-500">Course ID: {courseId}</p>
           </div>
         </div>
-        <button
-          onClick={() => router.push(`/c/${courseId}/gp`)}
-          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
-        >
-          <BiSliderAlt /> Grading Policy
-        </button>
+        <div className="flex flex-row gap-2">
+          <button
+            onClick={() => handleExportGradeBook(instructorData, course?.course_code || 'Course')}
+            title="You will get a sheet with all the function of Calculation written in excel"
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            Export Grade Book
+          </button>
+          <button
+            onClick={() => router.push(`/c/${courseId}/gp`)}
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            <BiSliderAlt /> Grading Policy
+          </button>
+        </div>
       </div>
 
       {/* 2. Main Workspace */}

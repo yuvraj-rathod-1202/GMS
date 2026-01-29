@@ -14,7 +14,6 @@ export const IGradeSheetButtons = ({
 }: any) => {
   return (
     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-4 flex flex-col md:flex-row gap-4 justify-between items-center">
-      {/* Left: Search & Filters */}
       <div className="relative w-full md:w-96">
         <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
         <input
@@ -26,9 +25,7 @@ export const IGradeSheetButtons = ({
         />
       </div>
 
-      {/* Right: Actions */}
       <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-        {/* The Missing Link: GLOBAL IMPORT */}
         <button
           onClick={onImportClick}
           className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors shadow-sm"
@@ -37,7 +34,6 @@ export const IGradeSheetButtons = ({
           <span>Import CSV</span>
         </button>
 
-        {/* Recalculate */}
         <button
           onClick={onRecalculate}
           disabled={isRecalculating}
@@ -47,10 +43,8 @@ export const IGradeSheetButtons = ({
           <span>{isRecalculating ? 'Calculating...' : 'Recalculate'}</span>
         </button>
 
-        {/* Separator */}
         <div className="w-px h-10 bg-gray-300 mx-2 hidden md:block"></div>
 
-        {/* State Actions */}
         <button
           onClick={onDiscard}
           disabled={!hasUnsavedChanges}
