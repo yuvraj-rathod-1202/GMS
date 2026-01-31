@@ -24,6 +24,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import InstructorNavbar from '@/components/Course/InstructorNavbar';
+import { BiArrowBack, BiBarChartAlt2, BiHash, BiStats, BiTrendingUp, BiUser } from 'react-icons/bi';
 
 // Register Chart.js components
 ChartJS.register(
@@ -143,12 +144,16 @@ export default function AnalyticsPage() {
     labels: assessmentFrequencies.map((f) => f.mark.toString()),
     datasets: [
       {
-        label: 'Frequency',
+        label: 'Student Count',
         data: assessmentFrequencies.map((f) => f.frequency),
-        backgroundColor: 'rgba(34, 197, 94, 0.6)',
-        borderColor: 'rgba(34, 197, 94, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        borderColor: 'rgba(59, 130, 246, 1)',
         borderWidth: 2,
         tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: 'rgba(59, 130, 246, 1)',
+        pointRadius: 4,
       },
     ],
   };
@@ -157,16 +162,27 @@ export default function AnalyticsPage() {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false,
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1f2937',
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: false,
+        callbacks: {
+          title: (items: any) => `Mark: ${items[0].label}`,
+          label: (item: any) => `${item.raw} Students`,
+        },
       },
     },
     scales: {
       y: {
         beginAtZero: true,
-        ticks: {
-          precision: 0,
-        },
+        grid: { display: true, borderDash: [2, 4], color: '#f3f4f6' },
+        title: { display: true, text: 'Number of Students' },
+      },
+      x: {
+        grid: { display: true, borderDash: [2, 4], color: '#f3f4f6' },
+        title: { display: true, text: 'Marks Obtained' },
       },
     },
   };
@@ -174,129 +190,205 @@ export default function AnalyticsPage() {
   return (
     <>
       <InstructorNavbar />
-      <div className="p-6 overflow-y-auto h-[calc(100vh-96px)] bg-gray-50">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Course Analytics</h1>
-          <button
-            onClick={() => router.back()}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            Back
-          </button>
-        </div>
-
-        {/* Course Overview Stats */}
-        {courseOverview && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            <StatCard label="Total Students" value={courseOverview.total_students ?? 0} />
-            <StatCard label="Mean" value={courseOverview.mean?.toFixed(2) ?? 'N/A'} />
-            <StatCard label="Median" value={courseOverview.median?.toFixed(2) ?? 'N/A'} />
-            <StatCard label="Max" value={courseOverview.max?.toFixed(2) ?? 'N/A'} />
-            <StatCard label="Min" value={courseOverview.min?.toFixed(2) ?? 'N/A'} />
-            <StatCard label="Std Dev" value={courseOverview.std?.toFixed(2) ?? 'N/A'} />
-          </div>
-        )}
-
-        {/* Assessment Selection */}
-        {assessments.length > 0 && (
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Assessment
-            </label>
-            <select
-              value={selectedAssessmentId || ''}
-              onChange={(e) => setSelectedAssessmentId(Number(e.target.value))}
-              className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {assessments.map((assessment) => (
-                <option key={assessment.id} value={assessment.id}>
-                  {assessment.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* Assessment Analytics */}
-        {assessmentAnalytics && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Assessment Statistics</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <StatCard
-                label="Mean"
-                value={assessmentAnalytics.mean?.toFixed(2) ?? 'N/A'}
-                color="bg-blue-50"
-              />
-              <StatCard
-                label="Median"
-                value={assessmentAnalytics.median?.toFixed(2) ?? 'N/A'}
-                color="bg-blue-50"
-              />
-              <StatCard
-                label="Max"
-                value={assessmentAnalytics.max?.toFixed(2) ?? 'N/A'}
-                color="bg-blue-50"
-              />
-              <StatCard
-                label="Min"
-                value={assessmentAnalytics.min?.toFixed(2) ?? 'N/A'}
-                color="bg-blue-50"
-              />
-              <StatCard
-                label="Std Dev"
-                value={assessmentAnalytics.std?.toFixed(2) ?? 'N/A'}
-                color="bg-blue-50"
-              />
+      <div className="flex flex-col overflow-y-auto h-[calc(100vh-96px)] bg-gray-50">
+        <div className="bg-white border-b border-gray-200 px-6 py-4 shrink-0">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.back()}
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all"
+              >
+                <BiArrowBack className="text-xl" />
+              </button>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  Course Analytics
+                </h1>
+                <p className="text-xs text-gray-500">Performance insights and grade distribution</p>
+              </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Frequency Distribution Chart */}
-          {assessmentFrequencies.length > 0 && (
-            <ChartCard title="Mark Frequency Distribution">
-              <Line data={frequencyChartData} options={chartOptions} />
-            </ChartCard>
-          )}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+          <div className="max-w-7xl mx-auto space-y-8">
+            {courseOverview && (
+              <section>
+                <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
+                  Course Overview
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <OverviewCard
+                    label="Total Students"
+                    value={courseOverview.total_students}
+                    trend="Enrolled"
+                  />
+                  <OverviewCard
+                    label="Class Average"
+                    value={courseOverview.mean?.toFixed(1)}
+                    trend="Mean Score"
+                    accentColor="text-green-600"
+                  />
+                  <OverviewCard
+                    label="Median Score"
+                    value={courseOverview.median?.toFixed(1)}
+                    trend="Middle Point"
+                    accentColor="text-purple-600"
+                  />
+                  <OverviewCard
+                    label="Standard Dev"
+                    value={courseOverview.std?.toFixed(2)}
+                    trend="Variability"
+                    accentColor="text-orange-600"
+                  />
+                </div>
+              </section>
+            )}
+
+            <hr className="border-gray-200" />
+
+            <section className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 className="text-lg font-bold text-gray-900">Assessment Analysis</h2>
+
+                {assessments.length > 0 && (
+                  <div className="relative">
+                    <select
+                      value={selectedAssessmentId || ''}
+                      onChange={(e) => setSelectedAssessmentId(Number(e.target.value))}
+                      className="appearance-none bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium min-w-[240px]"
+                    >
+                      {assessments.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                      <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {assessmentAnalytics ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 className="text-base font-semibold text-gray-900 mb-6">
+                      Performance Metrics
+                    </h3>
+
+                    <div className="space-y-6">
+                      <MetricRow
+                        label="Average Score"
+                        value={assessmentAnalytics.mean}
+                        max={
+                          selectedAssessmentId
+                            ? assessments.filter((a) => a.id === selectedAssessmentId)[0]?.max_marks
+                            : 100
+                        }
+                        color="bg-blue-500"
+                      />
+                      <MetricRow
+                        label="Median Score"
+                        value={assessmentAnalytics.median}
+                        max={
+                          selectedAssessmentId
+                            ? assessments.filter((a) => a.id === selectedAssessmentId)[0]?.max_marks
+                            : 100
+                        }
+                        color="bg-purple-500"
+                      />
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Highest</div>
+                          <div className="text-xl font-bold text-green-600">
+                            {assessmentAnalytics.max}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Lowest</div>
+                          <div className="text-xl font-bold text-red-600">
+                            {assessmentAnalytics.min}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-base font-semibold text-gray-900">Grade Distribution</h3>
+                      <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded text-gray-600">
+                        Frequency Curve
+                      </span>
+                    </div>
+                    <div className="h-64 md:h-80">
+                      <Line data={frequencyChartData} options={chartOptions} />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                  <p className="text-gray-500">Select an assessment to view detailed analytics.</p>
+                </div>
+              )}
+            </section>
+          </div>
         </div>
       </div>
     </>
   );
 }
 
-// Reusable Components
-function StatCard({
+function OverviewCard({
   label,
   value,
-  color = 'bg-white',
+  trend,
+  accentColor = 'text-gray-900',
 }: {
   label: string;
-  value: string | number;
-  color?: string;
+  value: string | number | null;
+  trend: string;
+  accentColor?: string;
 }) {
   return (
-    <div className={`${color} p-4 rounded-lg shadow-sm border border-gray-200`}>
-      <p className="text-sm text-gray-600 mb-1">{label}</p>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
+    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between">
+      <div>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
+        <h3 className={`text-2xl font-bold mt-1 ${accentColor}`}>{value || '-'}</h3>
+        <p className="text-xs text-gray-400 mt-1">{trend}</p>
+      </div>
     </div>
   );
 }
 
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+function MetricRow({
+  label,
+  value,
+  max,
+  color,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+}) {
+  const percentage = Math.min((value / max) * 100, 100);
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
-      <div className="h-80">{children}</div>
+    <div>
+      <div className="flex justify-between items-end mb-1">
+        <span className="text-sm text-gray-600">{label}</span>
+        <span className="text-lg flex flex-row gap-1 font-bold items-center text-gray-900">
+          {typeof value === 'number' ? value.toFixed(2) : 'N/A'}
+          <p className="text-xs opacity-50">/{max}</p>
+        </span>
+      </div>
+      <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div className={`h-full ${color}`} style={{ width: `${percentage}%` }} />
+      </div>
     </div>
   );
 }
