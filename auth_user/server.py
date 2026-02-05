@@ -109,17 +109,30 @@ def bulk_signup(data: BulkEnrollStudentRequest):
         )
     try:    
         cursor = db.cursor()
+
+        user_ids = [user.id for user in data.users]
+        if user_ids:
+            placeholders = ','.join(['%s'] * len(user_ids))
+            cursor.execute(f"SELECT id FROM users WHERE id IN ({placeholders})", user_ids)
+            existing_ids = {row[0] for row in cursor.fetchall()}
+        else:
+            existing_ids = set()
+        
         user_data = []
         for user in data.users:
-            password_hash = bcrypt.hashpw(str(user.id).encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            user_data.append((user.id, user.email, password_hash, None, datetime.datetime.now(tz=datetime.timezone.utc)))
-            
-        cursor.executemany(
-            "INSERT IGNORE INTO users (id, email, password_hash, last_login, created_at) VALUES (%s, %s, %s, %s, %s)",
-            user_data
-        )
-        db.commit()
-        return {"text": "Users created successfully"}
+            if user.id not in existing_ids:
+                password_hash = bcrypt.hashpw(str(user.id).encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                user_data.append((user.id, user.email, password_hash, None, datetime.datetime.now(tz=datetime.timezone.utc)))
+        
+        if user_data:
+            cursor.executemany(
+                "INSERT IGNORE INTO users (id, email, password_hash, last_login, created_at) VALUES (%s, %s, %s, %s, %s)",
+                user_data
+            )
+            db.commit()
+            return {"message": f"Created {len(user_data)} new users, {len(existing_ids)} already existed"}
+        else:
+            return {"message": "All users already exist"}
     except Exception as e:
         logger.error(f"Bulk signup error: {str(e)}")
         raise HTTPException(
