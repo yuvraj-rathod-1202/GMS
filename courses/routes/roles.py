@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, status
 from utils.auth import verifyAdmin, verifyInstructor, verifyInstructorOrTa
 from models.schemas.roles import EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest, BulkEnrollStudentRequest
-from services.roles import enroll_student_in_course_in_db
+from services.roles import enroll_student_in_bulk, enroll_student_in_course_in_db
 
 router = APIRouter()
 
@@ -35,13 +35,23 @@ async def enroll_students_bulk(course_id: int, data: BulkEnrollStudentRequest):
             detail="Instructor or TA privileges required"
         )
         
-    enrolled_ids = []
-    for student in data.students:
-        enrolled_id = await enroll_student_in_course_in_db(course_id, student.student_id, student.email)
-        if enrolled_id is not None:
-            enrolled_ids.append(enrolled_id)
+    await enroll_student_in_bulk(course_id, True, [(student.student_id, student.email) for student in data.students])
     
-    return {"enrolled_ids": enrolled_ids, "message": "Students enrolled successfully"}
+    return {"message": "Students enrolled successfully"}
+
+@router.post("/{course_id}/unenroll/bulk")
+async def unenroll_students_bulk(course_id: int, data: BulkEnrollStudentRequest):
+    verified = verifyInstructorOrTa(data.user_id, course_id)
+    
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Instructor or TA privileges required"
+        )
+        
+    await enroll_student_in_bulk(course_id, False, [(student.student_id, student.email) for student in data.students])
+    
+    return {"message": "Students unenrolled successfully"}
 
 @router.delete("/{course_id}/enroll")
 async def unenroll_student(course_id: int, user_id: int = Query(...), student_id: int = Query(...)):

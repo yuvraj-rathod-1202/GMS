@@ -98,6 +98,34 @@ def signup(user: SignUpUser, credentials: HTTPBasicCredentials = Depends(basic_a
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create user" if IS_PRODUCTION else f"Signup error: {str(e)}"
         )
+        
+@app.post("/signup/bulk")
+def bulk_signup(users: list[SignUpUser]):
+    db = get_db()
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+    try:    
+        cursor = db.cursor()
+        user_data = []
+        for user in users:
+            password_hash = bcrypt.hashpw(str(user.id).encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            user_data.append((user.id, user.email, password_hash, None, datetime.datetime.now(tz=datetime.timezone.utc)))
+            
+        cursor.executemany(
+            "INSERT IGNORE INTO users (id, email, password_hash, last_login, created_at) VALUES (%s, %s, %s, %s, %s)",
+            user_data
+        )
+        db.commit()
+        return {"text": "Users created successfully"}
+    except Exception as e:
+        logger.error(f"Bulk signup error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create users" if IS_PRODUCTION else f"Bulk signup error: {str(e)}"
+        )
 
 @app.post("/logout")
 def logout(credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
