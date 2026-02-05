@@ -9,6 +9,9 @@ class SignUpUser(BaseModel):
     email: EmailStr
     password: str
     
+class BulkEnrollStudentRequest(BaseModel):
+    users: list[SignUpUser]
+    
 class ChangePasswordRequest(BaseModel):
     id: int
     old_password: str

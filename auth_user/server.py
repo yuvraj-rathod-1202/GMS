@@ -2,7 +2,7 @@ import datetime, os, bcrypt, logging
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
-from models.schema import User, SignUpUser, ChangePasswordRequest, ForgotPasswordRequest
+from models.schema import User, SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, BulkEnrollStudentRequest
 from utils.security import create_jwt_token, verify_jwt_token, verify_password
 from utils.email import request_password_reset
 from utils.db import get_db
@@ -100,7 +100,7 @@ def signup(user: SignUpUser, credentials: HTTPBasicCredentials = Depends(basic_a
         )
         
 @app.post("/signup/bulk")
-def bulk_signup(users: list[SignUpUser]):
+def bulk_signup(data: BulkEnrollStudentRequest):
     db = get_db()
     if not db:
         raise HTTPException(
@@ -110,7 +110,7 @@ def bulk_signup(users: list[SignUpUser]):
     try:    
         cursor = db.cursor()
         user_data = []
-        for user in users:
+        for user in data.users:
             password_hash = bcrypt.hashpw(str(user.id).encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             user_data.append((user.id, user.email, password_hash, None, datetime.datetime.now(tz=datetime.timezone.utc)))
             
