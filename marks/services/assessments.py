@@ -61,7 +61,6 @@ def get_all_assessments_from_db(course_id: int, assessment_id: int | None = None
                 created_at, updated_at
             FROM assessments
             WHERE course_id = %s
-            ORDER BY created_at DESC
         """
         params = [course_id]
 

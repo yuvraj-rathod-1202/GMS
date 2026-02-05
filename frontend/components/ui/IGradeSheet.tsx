@@ -24,6 +24,7 @@ export interface GradeSheetProps<T = any> {
   emptyMessage?: string;
   className?: string;
   onRowClick?: (row: T, rowIndex: number) => void;
+  changedCells?: Set<string>; // Format: "studentId-columnKey"
 }
 
 export default function IGradeSheet<T extends Record<string, any>>({
@@ -36,6 +37,7 @@ export default function IGradeSheet<T extends Record<string, any>>({
   emptyMessage = 'No data available',
   className = '',
   onRowClick,
+  changedCells,
 }: GradeSheetProps<T>) {
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnKey: string } | null>(
     null
@@ -221,9 +223,18 @@ export default function IGradeSheet<T extends Record<string, any>>({
                           handleEditStart(rowIndex, column, cellValue);
                         }}
                       >
-                        {column.render
-                          ? column.render(cellValue, row, rowIndex)
-                          : (cellValue ?? '-')}
+                        {(() => {
+                          const isChanged = changedCells?.has(`${row.student_id}-${String(column.key)}`);
+                          const content = column.render
+                            ? column.render(cellValue, row, rowIndex)
+                            : (cellValue ?? '-');
+                          
+                          return (
+                            <span className={isChanged ? 'text-red-600 font-semibold' : ''}>
+                              {content}
+                            </span>
+                          );
+                        })()}
 
                         {column.editable && column.max_marks !== undefined && (
                           <span className="ml-1 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -408,6 +408,15 @@ export default function GradeSheetView() {
     });
   }, [mergedData, changedMarks]);
 
+  const changedCellsSet = useMemo(() => {
+    const set = new Set<string>();
+    changedMarks.forEach((_, key) => {
+      const [studentId, assessmentId] = key;
+      set.add(`${studentId}-${assessmentId}`);
+    });
+    return set;
+  }, [changedMarks]);
+
   if (isLoading || !role) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -794,7 +803,7 @@ export default function GradeSheetView() {
 
   return (
     <div
-      className="h-screen flex flex-col bg-gray-50 max-h-[calc(100vh-48px)]"
+      className="flex flex-col bg-gray-50 h-[calc(100vh-48px)] max-h-[calc(100vh-48px)]"
       onClick={() => setOpenMenuId(null)}
     >
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center shrink-0 h-16">
@@ -849,6 +858,7 @@ export default function GradeSheetView() {
             setSearchTerm={setSearchTerm}
             columns={columns}
             data={displayData}
+            changedCells={changedCellsSet}
           />
         </div>
       </div>
