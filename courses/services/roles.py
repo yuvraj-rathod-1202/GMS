@@ -14,7 +14,7 @@ async def ensure_bulk_user_exists(user_email_data: list[tuple[int, str]]):
     if not user_email_data:
         return True
         
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             payload = {"users": [{"id": user_id, "email": email, "password": str(user_id)} for user_id, email in user_email_data]}
             logger.info(f"Sending bulk signup request to {AUTH_SERVICE_URL}/signup/bulk with {len(user_email_data)} users")

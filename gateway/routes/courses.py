@@ -172,7 +172,7 @@ async def enroll_in_course(course_id: str, data: EnrollStudentRequest, user_info
             
 @router.post("/{course_id}/enroll/bulk")
 async def enroll_multiple_in_course(course_id: str, data: list[EnrollStudentRequest], user_info: dict = Depends(verify_token)):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=90.0) as client:
         try:
             response = await client.post(
                 f"{COURSES_SERVICE_URL}/{course_id}/enroll/bulk",

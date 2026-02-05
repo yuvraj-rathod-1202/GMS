@@ -622,10 +622,7 @@ export default function GradeSheetView() {
       await BulkEnrollStudent(courseId, enrollData);
       await fetchCourseRoles(courseId, true);
 
-      const enrolledIds = new Set(mergedData.map((s) => s.student_id));
-      const toImport = pendingMarksData.filter(
-        (d) => enrolledIds.has(d.student_id) || selected.some((s) => s.student_id === d.student_id)
-      );
+      const toImport = pendingMarksData;
 
       setShowUnenrolledDialog(false);
       await importMarks(assessmentId, toImport);
@@ -661,14 +658,14 @@ export default function GradeSheetView() {
   };
 
   const handleGoBack = () => {
-    if (!confirm('Any unsaved changes will be lost. Are you sure you want to go back?')) {
+    if (changedCellsSet.size > 0 && !confirm('Any unsaved changes will be lost. Are you sure you want to go back?')) {
       return;
     }
     router.back();
   };
 
   const handleGoPolicy = () => {
-    if (!confirm('Any unsaved changes will be lost. Are you sure you want to go to grading policy page?')) {
+    if (changedCellsSet.size > 0 && !confirm('Any unsaved changes will be lost. Are you sure you want to go to grading policy page?')) {
       return;
     }
     router.push(`/c/${courseId}/gp`);
