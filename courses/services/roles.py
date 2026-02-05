@@ -11,14 +11,42 @@ IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:5000")
         
 async def ensure_bulk_user_exists(user_email_data: list[tuple[int, str]]):
-    async with httpx.AsyncClient() as client:
+    if not user_email_data:
+        return True
+        
+    async with httpx.AsyncClient(timeout=60.0) as client:
         try:
+            payload = {"users": [{"id": user_id, "email": email, "password": str(user_id)} for user_id, email in user_email_data]}
+            logger.info(f"Sending bulk signup request to {AUTH_SERVICE_URL}/signup/bulk with {len(user_email_data)} users")
+            
             response = await client.post(
                 f"{AUTH_SERVICE_URL}/signup/bulk",
-                json={"users": [{"id": user_id, "email": email, "password": str(user_id)} for user_id, email in user_email_data]}
+                json=payload
             )
+            
+            logger.info(f"Auth service response: status={response.status_code}, body={response.text}")
+            response.raise_for_status()
+            return True
+        except httpx.TimeoutException as e:
+            logger.warning(f"Auth service timeout (users may already exist): {str(e)}")
+            return True
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error from auth service: {e.response.status_code} - {e.response.text}")
+            if e.response.status_code == 400:
+                logger.info("Users may already exist in auth service, continuing enrollment")
+                return True
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create users in auth service" if IS_PRODUCTION else f"Auth service HTTP error: {e.response.status_code}"
+            )
+        except httpx.RequestError as e:
+            logger.error(f"Request error to auth service: {type(e).__name__} - {str(e)}")
+            logger.warning("Auth service unreachable, continuing with enrollment (users may need to be created manually)")
+            return True
         except Exception as e:
-            return False
+            logger.error(f"Unexpected error ensuring bulk user exists: {type(e).__name__} - {str(e)}")
+            logger.warning("Unexpected error with auth service, continuing with enrollment")
+            return True
 
 async def enroll_student_in_course_in_db(course_id: int, student_id: int, email: str | None = None, enroll: bool = True, assign_ta: bool = False, assign_instructor: bool = False) -> int | None:
     db = get_db()
