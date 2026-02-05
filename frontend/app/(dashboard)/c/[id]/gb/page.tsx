@@ -658,18 +658,26 @@ export default function GradeSheetView() {
   };
 
   const handleGoBack = () => {
-    if (changedCellsSet.size > 0 && !confirm('Any unsaved changes will be lost. Are you sure you want to go back?')) {
+    if (
+      changedCellsSet.size > 0 &&
+      !confirm('Any unsaved changes will be lost. Are you sure you want to go back?')
+    ) {
       return;
     }
     router.back();
   };
 
   const handleGoPolicy = () => {
-    if (changedCellsSet.size > 0 && !confirm('Any unsaved changes will be lost. Are you sure you want to go to grading policy page?')) {
+    if (
+      changedCellsSet.size > 0 &&
+      !confirm(
+        'Any unsaved changes will be lost. Are you sure you want to go to grading policy page?'
+      )
+    ) {
       return;
     }
     router.push(`/c/${courseId}/gp`);
-  }
+  };
 
   const assessmentColumns =
     instructorData?.assessments.map((a) => ({

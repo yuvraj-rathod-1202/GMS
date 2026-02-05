@@ -224,11 +224,13 @@ export default function IGradeSheet<T extends Record<string, any>>({
                         }}
                       >
                         {(() => {
-                          const isChanged = changedCells?.has(`${row.student_id}-${String(column.key)}`);
+                          const isChanged = changedCells?.has(
+                            `${row.student_id}-${String(column.key)}`
+                          );
                           const content = column.render
                             ? column.render(cellValue, row, rowIndex)
                             : (cellValue ?? '-');
-                          
+
                           return (
                             <span className={isChanged ? 'text-red-600 font-semibold' : ''}>
                               {content}

@@ -145,30 +145,30 @@ export default function PolicyDialog({
       },
     ],
   });
-
+  const [addComponentLabel, setAddComponentLabel] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const addComponent = () => {
-    setFormData((prev) => {
-      // Find the first available category that hasn't been used yet
-      const usedCategoryIds = prev.components.map((comp) => comp.assessment_category_id);
-      const availableCategoryId = CATEGORY_IDS.find((id) => !usedCategoryIds.includes(id)) || 1;
-
-      return {
-        ...prev,
-        components: [
-          ...prev.components,
-          {
-            assessment_category_id: availableCategoryId,
-            weightage: 0,
-            rules: {
-              rule_type: 'CUMULATIVE',
-              rule_params: {},
-            },
+  const addComponent = (categoryId: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      components: [
+        ...prev.components,
+        {
+          assessment_category_id: categoryId,
+          weightage: 0,
+          rules: {
+            rule_type: 'CUMULATIVE',
+            rule_params: {},
           },
-        ],
-      };
-    });
+        },
+      ],
+    }));
+    setAddComponentLabel(false);
+  };
+
+  const getAvailableCategories = () => {
+    const usedCategoryIds = formData.components.map((comp) => comp.assessment_category_id);
+    return CATEGORY_IDS.filter((id) => !usedCategoryIds.includes(id));
   };
 
   const removeComponent = (index: number) => {
@@ -496,7 +496,8 @@ export default function PolicyDialog({
                   Grading Components
                 </h3>
                 <button
-                  onClick={addComponent}
+                  // onClick={addComponent}
+                  onClick={() => setAddComponentLabel(true)}
                   title="Add a new grading component to this policy."
                   className="text-sm text-blue-600 font-bold hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
                 >
@@ -528,7 +529,7 @@ export default function PolicyDialog({
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       {/* Category */}
-                      <div title="Select the assessment category (e.g., Quizzes, Assignments) to group under this component.">
+                      {/* <div title="Select the assessment category (e.g., Quizzes, Assignments) to group under this component.">
                         <label className="block text-xs text-gray-600 mb-1.5">Category</label>
                         <select
                           value={component.assessment_category_id}
@@ -555,7 +556,7 @@ export default function PolicyDialog({
                             </option>
                           ))}
                         </select>
-                      </div>
+                      </div> */}
 
                       {/* Weightage */}
                       <div title="The percentage of the final grade allocated to this specific component.">
@@ -626,16 +627,7 @@ export default function PolicyDialog({
                       )}
                       {component.rules.rule_type === 'EQUAL_WEIGHTAGE' && (
                         <p className="text-gray-600 flex items-center gap-2">
-                          <BiInfoCircle /> All assessments in this category will be assigned{' '}
-                          <p className="text-blue-500">
-                            {(
-                              component.weightage /
-                              assessments.filter(
-                                (a) => a.assessment_type_id === component.assessment_category_id
-                              ).length
-                            ).toFixed(2)}
-                            %
-                          </p>{' '}
+                          <BiInfoCircle /> All assessments in this category will be assigned equal
                           weightage each.
                         </p>
                       )}
@@ -778,6 +770,56 @@ export default function PolicyDialog({
           </div>
         </div>
       </div>
+
+      {addComponentLabel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Select Category to Add</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Choose an assessment category for the new component
+              </p>
+            </div>
+
+            <div className="p-6">
+              {getAvailableCategories().length > 0 ? (
+                <div className="space-y-2">
+                  {getAvailableCategories().map((categoryId) => (
+                    <button
+                      key={categoryId}
+                      onClick={() => addComponent(categoryId)}
+                      className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg transition-all group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-900 group-hover:text-blue-600">
+                          {ASSESSMENT_CATEGORIES[categoryId as CategoryId]}
+                        </span>
+                        <span className="text-sm text-gray-500 group-hover:text-blue-600">
+                          Add →
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <BiInfoCircle className="mx-auto text-4xl text-gray-400 mb-3" />
+                  <p className="text-gray-600">All categories have been added</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-xl flex justify-end">
+              <button
+                onClick={() => setAddComponentLabel(false)}
+                className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
