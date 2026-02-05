@@ -79,6 +79,7 @@ def get_marks_of_students_from_db(assessment_id: int, studentids: list[int]):
             SELECT student_id, marks_obtained, recorded_by_id, updated_at
             FROM marks
             WHERE assessment_id = %s AND student_id IN ({placeholders})
+            ORDER BY student_id ASC
         """
         cursor.execute(query, [assessment_id, *studentids])
         results = cursor.fetchall()
@@ -179,6 +180,7 @@ def get_marks_from_db(assessment_id: int, student_id: int | None = None):
             SELECT student_id, marks_obtained, recorded_by_id, updated_at
             FROM marks
             WHERE assessment_id = %s AND student_id = COALESCE(%s, student_id)
+            ORDER BY student_id ASC
         """
         
         cursor.execute(query, (assessment_id, student_id))

@@ -361,6 +361,7 @@ export default function GradeSheetView() {
   const handleMarkChange = useCallback((assessmentId: number, maxMarks: number) => {
     return (newValue: any, oldValue: any, row: any) => {
       const newMark = Number(newValue);
+      if (newMark === oldValue) return;
       if (isNaN(newMark) || newMark > maxMarks) return;
 
       setChangedMarks((prev) => {
@@ -650,6 +651,20 @@ export default function GradeSheetView() {
     await importMarks(assessmentId, toImport);
   };
 
+  const handleGoBack = () => {
+    if (!confirm('Any unsaved changes will be lost. Are you sure you want to go back?')) {
+      return;
+    }
+    router.back();
+  };
+
+  const handleGoPolicy = () => {
+    if (!confirm('Any unsaved changes will be lost. Are you sure you want to go to grading policy page?')) {
+      return;
+    }
+    router.push(`/c/${courseId}/gp`);
+  }
+
   const assessmentColumns =
     instructorData?.assessments.map((a) => ({
       header: (
@@ -688,15 +703,6 @@ export default function GradeSheetView() {
 
           <div className="flex items-center justify-between text-xs mt-1">
             <span className="text-gray-500">Max: {a.max_marks}</span>
-            <span
-              className={`px-1.5 py-0.5 rounded ${
-                a.is_marks_published
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-yellow-100 text-yellow-700'
-              }`}
-            >
-              {a.is_marks_published ? 'Visible' : 'Hidden'}
-            </span>
           </div>
         </div>
       ),
@@ -794,8 +800,8 @@ export default function GradeSheetView() {
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center shrink-0 h-16">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.back()}
-            className="text-gray-500 hover:text-gray-900 transition-colors"
+            onClick={() => handleGoBack()}
+            className="text-gray-500 cursor-pointer hover:text-gray-900 transition-colors"
           >
             <BiArrowBack className="text-xl" />
           </button>
@@ -808,13 +814,13 @@ export default function GradeSheetView() {
           <button
             onClick={() => handleExportGradeBook(instructorData, course?.course_code || 'Course')}
             title="You will get a sheet with all the function of Calculation written in excel"
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+            className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
           >
             Export Grade Book
           </button>
           <button
-            onClick={() => router.push(`/c/${courseId}/gp`)}
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+            onClick={() => handleGoPolicy()}
+            className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
           >
             <BiSliderAlt /> Grading Policy
           </button>

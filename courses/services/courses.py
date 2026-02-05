@@ -20,7 +20,7 @@ def fetch_all_courses_from_db():
     try:
         cursor = db.cursor()
         cursor.execute(
-            "SELECT id, course_code, name, semester, credits, status, total_students, created_at, updated_at FROM courses"
+            "SELECT id, course_code, name, semester, credits, status, total_students, created_at, updated_at FROM courses ORDER BY created_at DESC"
         )
         courses = cursor.fetchall()
         course_list = []
@@ -188,7 +188,7 @@ def fetch_course_roles_from_db(course_id: int, role: str):
             "SELECT cr.user_id, COALESCE(cr.email, ie.email) as email "
             "FROM courses_role cr "
             "LEFT JOIN id_email_map ie ON cr.user_id = ie.user_id "
-            "WHERE cr.course_id = %s AND cr.role = %s",
+            "WHERE cr.course_id = %s AND cr.role = %s ORDER BY cr.user_id ASC",
             (course_id, role)
         )
         roles = cursor.fetchall()
