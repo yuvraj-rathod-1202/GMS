@@ -153,3 +153,29 @@ async def enroll_student_in_bulk(course_id: int, enroll: bool, students: list[tu
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while enrolling student" if IS_PRODUCTION else f"Failed to enroll student: {str(e)}"
         )
+        
+def unenroll_all_students_in_course_in_db(course_id: int):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+    try:
+        cursor = db.cursor()
+        cursor.execute(
+            "DELETE FROM courses_role WHERE course_id = %s AND role = 'student'",
+            (course_id,)
+        )
+        cursor.execute(
+            "UPDATE courses SET total_students = 0 WHERE id = %s",
+            (course_id,)
+        )
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error unenrolling all students: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while unenrolling all students" if IS_PRODUCTION else f"Failed to unenroll all students: {str(e)}"
+        )

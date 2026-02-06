@@ -172,7 +172,7 @@ async def enroll_in_course(course_id: str, data: EnrollStudentRequest, user_info
             
 @router.post("/{course_id}/enroll/bulk")
 async def enroll_multiple_in_course(course_id: str, data: list[EnrollStudentRequest], user_info: dict = Depends(verify_token)):
-    async with httpx.AsyncClient(timeout=90.0) as client:
+    async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             response = await client.post(
                 f"{COURSES_SERVICE_URL}/{course_id}/enroll/bulk",
@@ -182,6 +182,26 @@ async def enroll_multiple_in_course(course_id: str, data: list[EnrollStudentRequ
                 raise HTTPException(
                     status_code=response.status_code,
                     detail=_error_detail(response, "Error enrolling multiple students in course"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Courses service unavailable: {str(e)}"
+            )
+            
+@router.post("/{course_id}/unenroll/all")
+async def unenroll_multiple_from_course(course_id: str, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            response = await client.post(
+                f"{COURSES_SERVICE_URL}/{course_id}/unenroll/all",
+                json={"user_id": user_info.get("user_id", 0)},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Error unenrolling multiple students from course"),
                 )
             return response.json()
         except httpx.RequestError as e:

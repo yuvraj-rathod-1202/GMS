@@ -23,3 +23,6 @@ class StudentEnrollment(BaseModel):
 class BulkEnrollStudentRequest(BaseModel):
     user_id: int
     students: list[StudentEnrollment]
+    
+class UnEnrollAllStudentRequest(BaseModel):
+    user_id: int

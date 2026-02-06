@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, status
 from utils.auth import verifyAdmin, verifyInstructor, verifyInstructorOrTa
-from models.schemas.roles import EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest, BulkEnrollStudentRequest
-from services.roles import enroll_student_in_bulk, enroll_student_in_course_in_db
+from models.schemas.roles import EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest, BulkEnrollStudentRequest, UnEnrollAllStudentRequest
+from services.roles import enroll_student_in_bulk, enroll_student_in_course_in_db, unenroll_all_students_in_course_in_db
 
 router = APIRouter()
 
@@ -39,8 +39,8 @@ async def enroll_students_bulk(course_id: int, data: BulkEnrollStudentRequest):
     
     return {"message": "Students enrolled successfully"}
 
-@router.post("/{course_id}/unenroll/bulk")
-async def unenroll_students_bulk(course_id: int, data: BulkEnrollStudentRequest):
+@router.post("/{course_id}/unenroll/all")
+async def unenroll_all_students(course_id: int, data: UnEnrollAllStudentRequest):
     verified = verifyInstructorOrTa(data.user_id, course_id)
     
     if not verified:
@@ -49,7 +49,7 @@ async def unenroll_students_bulk(course_id: int, data: BulkEnrollStudentRequest)
             detail="Instructor or TA privileges required"
         )
         
-    await enroll_student_in_bulk(course_id, False, [(student.student_id, student.email) for student in data.students])
+    unenroll_all_students_in_course_in_db(course_id)
     
     return {"message": "Students unenrolled successfully"}
 
