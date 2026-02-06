@@ -315,7 +315,7 @@ export function useCourseManagement(role: UserRole) {
 
   const saveMarks = useCallback(
     async (courseId: number, assessmentId: number, marksData: AddMarksRequest) => {
-      executeRequest(
+      return executeRequest(
         () => MarksApi.AddMarks(courseId, assessmentId, marksData),
         'Failed to save marks'
       );

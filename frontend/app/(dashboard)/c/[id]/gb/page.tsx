@@ -473,13 +473,9 @@ export default function GradeSheetView() {
         )
       );
 
-      // Small delay to allow backend commit/cache update
-      await new Promise((res) => setTimeout(res, 300));
-
+      await getallassessmentmarks(courseId, true);
       setChangedMarks(new Map());
       setHasUnsavedChanges(false);
-
-      await getallassessmentmarks(courseId, true);
     } catch (error) {
       alert('Failed to save marks. Please try again.');
     } finally {

@@ -20,6 +20,11 @@ export default function BulkUploadDialog({
   const [columnError, setColumnError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsUploading(true);
     setColumnError('');
@@ -36,6 +41,8 @@ export default function BulkUploadDialog({
     }
     try {
       let parsedData: Array<{ student_id: number; email: string; marks_obtained: number }> = [];
+      const validationErrors: string[] = [];
+      
       if (file.name.endsWith('.csv')) {
         const text = await file.text();
         const lines = text.trim().split(/\r?\n/);
@@ -48,12 +55,28 @@ export default function BulkUploadDialog({
           throw new Error('Column not found');
         for (let i = 1; i < lines.length; i++) {
           const row = lines[i].split(',').map((v) => v.trim());
-          const sid = parseInt(row[idxStudent]);
+          const sidStr = row[idxStudent];
           const em = row[idxEmail];
-          const marks = parseFloat(row[idxMarks]);
-          if (!isNaN(sid) && em && !isNaN(marks)) {
-            parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
+          const marksStr = row[idxMarks];
+          
+          const sid = parseInt(sidStr);
+          if (isNaN(sid) || sidStr === '' || !/^\d+$/.test(sidStr.trim())) {
+            validationErrors.push(`Row ${i + 1}: Student ID must be a valid number (found: "${sidStr}")`);
+            continue;
           }
+          
+          if (!em || !isValidEmail(em)) {
+            validationErrors.push(`Row ${i + 1}: Invalid email format (found: "${em}")`);
+            continue;
+          }
+          
+          const marks = parseFloat(marksStr);
+          if (isNaN(marks) || marksStr === '') {
+            validationErrors.push(`Row ${i + 1}: Marks must be a valid number (found: "${marksStr}")`);
+            continue;
+          }
+          
+          parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
         }
       } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
         const data = await file.arrayBuffer();
@@ -69,20 +92,50 @@ export default function BulkUploadDialog({
           throw new Error('Column not found');
         for (let i = 1; i < jsonData.length; i++) {
           const row = jsonData[i];
-          const sid = parseInt(row[idxStudent]);
-          const em = row[idxEmail];
-          const marks = parseFloat(row[idxMarks]);
-          if (!isNaN(sid) && em && !isNaN(marks)) {
-            parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
+          const sidStr = String(row[idxStudent] || '').trim();
+          const em = String(row[idxEmail] || '').trim();
+          const marksStr = String(row[idxMarks] || '').trim();
+          
+          const sid = parseInt(sidStr);
+          if (isNaN(sid) || sidStr === '' || !/^\d+$/.test(sidStr)) {
+            validationErrors.push(`Row ${i + 1}: Student ID must be a valid number (found: "${sidStr}")`);
+            continue;
           }
+          
+          if (!em || !isValidEmail(em)) {
+            validationErrors.push(`Row ${i + 1}: Invalid email format (found: "${em}")`);
+            continue;
+          }
+                    
+          const marks = parseFloat(marksStr);
+          if (isNaN(marks) || marksStr === '') {
+            validationErrors.push(`Row ${i + 1}: Marks must be a valid number (found: "${marksStr}")`);
+            continue;
+          }
+          
+          parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
         }
       } else {
         throw new Error('Only CSV and Excel files are supported.');
       }
+      
+      if (validationErrors.length > 0) {
+        const errorMessage = validationErrors.slice(0, 5).join('\n');
+        const remainingErrors = validationErrors.length > 5 ? `\n... and ${validationErrors.length - 5} more errors` : '';
+        throw new Error(`Data validation failed:\n${errorMessage}${remainingErrors}`);
+      }
+      
+      if (parsedData.length === 0) {
+        throw new Error('No valid data found in the file');
+      }
+      
       onFileSelect(parsedData);
       onClose();
     } catch (error: any) {
       setColumnError(error.message || 'Upload error');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } finally {
       setIsUploading(false);
     }
@@ -176,7 +229,10 @@ export default function BulkUploadDialog({
                     className="w-full px-2 py-1 border border-gray-300 rounded"
                     placeholder="e.g. RollNo or student_id"
                     value={columnNames.student_id}
-                    onChange={(e) => setColumnNames({ ...columnNames, student_id: e.target.value })}
+                    onChange={(e) => {
+                      setColumnError('');
+                      setColumnNames({ ...columnNames, student_id: e.target.value })
+                    }}
                     disabled={isUploading}
                   />
                 </div>
@@ -189,7 +245,10 @@ export default function BulkUploadDialog({
                     className="w-full px-2 py-1 border border-gray-300 rounded"
                     placeholder="e.g. Email id or email"
                     value={columnNames.email}
-                    onChange={(e) => setColumnNames({ ...columnNames, email: e.target.value })}
+                    onChange={(e) => {
+                      setColumnError('');
+                      setColumnNames({ ...columnNames, email: e.target.value })
+                    }}
                     disabled={isUploading}
                   />
                 </div>
@@ -202,34 +261,22 @@ export default function BulkUploadDialog({
                     className="w-full px-2 py-1 border border-gray-300 rounded"
                     placeholder="e.g. marks_obtained or Marks"
                     value={columnNames.marks_obtained}
-                    onChange={(e) =>
-                      setColumnNames({ ...columnNames, marks_obtained: e.target.value })
+                    onChange={(e) => {
+                        setColumnError('');
+                        setColumnNames({ ...columnNames, marks_obtained: e.target.value })
+                      }
                     }
                     disabled={isUploading}
                   />
                 </div>
               </div>
-              {columnError && <div className="text-xs text-red-600 mt-2">{columnError}</div>}
+              {columnError && (
+                <div className="text-xs text-red-600 mt-2 whitespace-pre-wrap max-h-32 overflow-y-auto bg-red-50 p-2 rounded border border-red-200">
+                  {columnError}
+                </div>
+              )}
               <p className="text-xs text-gray-500 mt-2">
                 * Enter the exact column names as in your file's header row.
-              </p>
-            </div>
-
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h3 className="font-medium text-yellow-900 mb-2 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-                Unenrolled Students
-              </h3>
-              <p className="text-sm text-yellow-800">
-                If a student ID is in the file but not enrolled in the course, you'll be prompted to
-                enroll them or skip their entry.
               </p>
             </div>
           </div>
