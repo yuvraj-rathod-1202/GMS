@@ -42,7 +42,7 @@ export default function BulkUploadDialog({
     try {
       let parsedData: Array<{ student_id: number; email: string; marks_obtained: number }> = [];
       const validationErrors: string[] = [];
-      
+
       if (file.name.endsWith('.csv')) {
         const text = await file.text();
         const lines = text.trim().split(/\r?\n/);
@@ -58,24 +58,28 @@ export default function BulkUploadDialog({
           const sidStr = row[idxStudent];
           const em = row[idxEmail];
           const marksStr = row[idxMarks];
-          
+
           const sid = parseInt(sidStr);
           if (isNaN(sid) || sidStr === '' || !/^\d+$/.test(sidStr.trim())) {
-            validationErrors.push(`Row ${i + 1}: Student ID must be a valid number (found: "${sidStr}")`);
+            validationErrors.push(
+              `Row ${i + 1}: Student ID must be a valid number (found: "${sidStr}")`
+            );
             continue;
           }
-          
+
           if (!em || !isValidEmail(em)) {
             validationErrors.push(`Row ${i + 1}: Invalid email format (found: "${em}")`);
             continue;
           }
-          
+
           const marks = parseFloat(marksStr);
           if (isNaN(marks) || marksStr === '') {
-            validationErrors.push(`Row ${i + 1}: Marks must be a valid number (found: "${marksStr}")`);
+            validationErrors.push(
+              `Row ${i + 1}: Marks must be a valid number (found: "${marksStr}")`
+            );
             continue;
           }
-          
+
           parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
         }
       } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
@@ -95,40 +99,45 @@ export default function BulkUploadDialog({
           const sidStr = String(row[idxStudent] || '').trim();
           const em = String(row[idxEmail] || '').trim();
           const marksStr = String(row[idxMarks] || '').trim();
-          
+
           const sid = parseInt(sidStr);
           if (isNaN(sid) || sidStr === '' || !/^\d+$/.test(sidStr)) {
-            validationErrors.push(`Row ${i + 1}: Student ID must be a valid number (found: "${sidStr}")`);
+            validationErrors.push(
+              `Row ${i + 1}: Student ID must be a valid number (found: "${sidStr}")`
+            );
             continue;
           }
-          
+
           if (!em || !isValidEmail(em)) {
             validationErrors.push(`Row ${i + 1}: Invalid email format (found: "${em}")`);
             continue;
           }
-                    
+
           const marks = parseFloat(marksStr);
           if (isNaN(marks) || marksStr === '') {
-            validationErrors.push(`Row ${i + 1}: Marks must be a valid number (found: "${marksStr}")`);
+            validationErrors.push(
+              `Row ${i + 1}: Marks must be a valid number (found: "${marksStr}")`
+            );
             continue;
           }
-          
+
           parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
         }
       } else {
         throw new Error('Only CSV and Excel files are supported.');
       }
-      
+
       if (validationErrors.length > 0) {
         const errorMessage = validationErrors.slice(0, 5).join('\n');
-        const remainingErrors = validationErrors.length > 5 ? `\n... and ${validationErrors.length - 5} more errors` : '';
+        const remainingErrors =
+          validationErrors.length > 5 ? `\n... and ${validationErrors.length - 5} more errors` : '';
         throw new Error(`Data validation failed:\n${errorMessage}${remainingErrors}`);
       }
-      
+
       if (parsedData.length === 0) {
         throw new Error('No valid data found in the file');
       }
-      
+
       onFileSelect(parsedData);
       onClose();
     } catch (error: any) {
@@ -231,7 +240,7 @@ export default function BulkUploadDialog({
                     value={columnNames.student_id}
                     onChange={(e) => {
                       setColumnError('');
-                      setColumnNames({ ...columnNames, student_id: e.target.value })
+                      setColumnNames({ ...columnNames, student_id: e.target.value });
                     }}
                     disabled={isUploading}
                   />
@@ -247,7 +256,7 @@ export default function BulkUploadDialog({
                     value={columnNames.email}
                     onChange={(e) => {
                       setColumnError('');
-                      setColumnNames({ ...columnNames, email: e.target.value })
+                      setColumnNames({ ...columnNames, email: e.target.value });
                     }}
                     disabled={isUploading}
                   />
@@ -262,10 +271,9 @@ export default function BulkUploadDialog({
                     placeholder="e.g. marks_obtained or Marks"
                     value={columnNames.marks_obtained}
                     onChange={(e) => {
-                        setColumnError('');
-                        setColumnNames({ ...columnNames, marks_obtained: e.target.value })
-                      }
-                    }
+                      setColumnError('');
+                      setColumnNames({ ...columnNames, marks_obtained: e.target.value });
+                    }}
                     disabled={isUploading}
                   />
                 </div>

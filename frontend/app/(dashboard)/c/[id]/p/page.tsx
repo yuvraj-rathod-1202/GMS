@@ -28,6 +28,7 @@ export default function PeoplePage() {
     fetchCourseRoles,
     enrollStudent,
     unenrollStudent,
+    UnEnrollAllStudents,
     AddTA,
     RemoveTA,
     BulkEnrollStudent,
@@ -212,6 +213,24 @@ export default function PeoplePage() {
     });
   };
 
+  const handleUnenrollAllStudents = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to unenroll ALL students from this course? This action cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    try {
+      await UnEnrollAllStudents(courseId);
+      await fetchCourseRoles(courseId, true, role === 'instructor');
+      alert('All students have been unenrolled successfully!');
+    } catch (error: any) {
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error unenrolling all students:', error);
+      }
+      alert('Failed to unenroll all students');
+    }
+  };
+
   const handleBulkEnroll = async (file: File) => {
     try {
       if (file.size > 5 * 1024 * 1024) {
@@ -276,6 +295,7 @@ export default function PeoplePage() {
           setShowBulkEnrollDialog={setShowBulkEnrollDialog}
           handleEnrollStudent={handleEnrollStudent}
           handleRemoveStudent={handleRemoveStudent}
+          handleUnenrollAllStudents={handleUnenrollAllStudents}
           handleAddTA={handleAddTA}
           handleRemoveTA={handleRemoveTA}
           handleBulkEnroll={handleBulkEnroll}

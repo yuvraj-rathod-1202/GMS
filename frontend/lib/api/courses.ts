@@ -42,6 +42,10 @@ export const CoursesApi = {
     return handleRequest(apiClient.post(`/courses/${courseId}/enroll/bulk`, EnrollStudentData));
   },
 
+  UnEnrollAllStudents: async (courseId: number) => {
+    return handleRequest(apiClient.post(`/courses/${courseId}/unenroll/all`));
+  },
+
   UnEnrollStudent: async (courseId: number, studentId: number) => {
     return handleRequest(apiClient.delete(`/courses/${courseId}/enroll?student_id=${studentId}`));
   },

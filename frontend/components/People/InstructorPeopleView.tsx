@@ -23,6 +23,7 @@ export function InstructorPeopleView({
   setShowBulkEnrollDialog,
   handleEnrollStudent,
   handleRemoveStudent,
+  handleUnenrollAllStudents,
   handleAddTA,
   handleRemoveTA,
   handleBulkEnroll,
@@ -36,6 +37,7 @@ export function InstructorPeopleView({
   setShowBulkEnrollDialog: React.Dispatch<React.SetStateAction<boolean>>;
   handleEnrollStudent: (studentId: string, email: string) => Promise<void>;
   handleRemoveStudent: (studentId: number) => Promise<void>;
+  handleUnenrollAllStudents: () => Promise<void>;
   handleAddTA: (taId: string, email: string) => Promise<void>;
   handleRemoveTA: (taId: number) => Promise<void>;
   handleBulkEnroll: (file: File) => Promise<void>;
@@ -115,6 +117,7 @@ export function InstructorPeopleView({
               onEnroll={() => setShowEnrollDialog(true)}
               onBulk={() => setShowBulkEnrollDialog(true)}
               onRemoveStudent={handleRemoveStudent}
+              onUnenrollAll={handleUnenrollAllStudents}
               isLoading={managementLoading}
             />
           ) : (

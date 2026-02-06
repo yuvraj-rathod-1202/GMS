@@ -292,6 +292,15 @@ export function useCourseManagement(role: UserRole) {
     [executeRequest]
   );
 
+  const UnEnrollAllStudents = useCallback(
+    (courseId: number) =>
+      executeRequest(
+        () => CoursesApi.UnEnrollAllStudents(courseId),
+        'Failed to unenroll all students'
+      ),
+    [executeRequest]
+  );
+
   const unenrollStudent = useCallback(
     (courseId: number, studentId: number) =>
       executeRequest(
@@ -449,6 +458,7 @@ export function useCourseManagement(role: UserRole) {
     enrollStudent,
     BulkEnrollStudent,
     unenrollStudent,
+    UnEnrollAllStudents,
     AddTA,
     RemoveTA,
     saveMarks,
