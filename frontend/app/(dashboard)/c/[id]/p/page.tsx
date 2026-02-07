@@ -31,7 +31,13 @@ export default function PeoplePage() {
     handleRemoveTA,
     handleUnenrollAllStudents,
     handleBulkEnroll,
-  } = usePeopleManagement(courseId, role as 'ta' | 'instructor', setShowEnrollDialog, setShowAddDialog, setShowBulkEnrollDialog);
+  } = usePeopleManagement(
+    courseId,
+    role as 'ta' | 'instructor',
+    setShowEnrollDialog,
+    setShowAddDialog,
+    setShowBulkEnrollDialog
+  );
 
   useEffect(() => {
     if (!isLoading && hasAccess && !isFetchingData) {
