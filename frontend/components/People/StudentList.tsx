@@ -1,18 +1,7 @@
 'use client';
+import { StudentListProps } from '@/lib/types/people/studentlist';
 import { useState, useMemo } from 'react';
 import { BiPencil, BiSearch } from 'react-icons/bi';
-
-interface StudentData {
-  index: number;
-  id: string;
-  email: string;
-}
-
-interface StudentListProps {
-  students: StudentData[];
-  onRemoveStudent: (studentId: number) => Promise<void>;
-  isLoading?: boolean;
-}
 
 export default function StudentList({
   students,

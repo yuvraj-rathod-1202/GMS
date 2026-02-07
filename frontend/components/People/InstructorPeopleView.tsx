@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import EnrollStudentDialog from './EnrollStudentDialog';
+import EnrollStudentDialog from './Dialogs/EnrollStudentDialog';
 import InstructorNavbar from '../Course/InstructorNavbar';
 import AddTADialog from './AddTADialog';
 import BulkEnrollDialog from './BulkEnrollDialog';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
 import TAList from './TAList';
-import { StatCard } from './StateCard';
-import { EmptyState } from './EmptyState';
+import { StatCard } from './Cards/StateCard';
+import { EmptyState } from './Cards/EmptyState';
 import { StudentSection } from './StudentSection';
 
 interface Student {

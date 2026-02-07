@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import TANavbar from '../Course/TANavbar';
-import EnrollStudentDialog from './EnrollStudentDialog';
+import EnrollStudentDialog from './Dialogs/EnrollStudentDialog';
 import StudentList from './StudentList';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
 import { BiUserPlus } from 'react-icons/bi';
-import { StatCard } from './StateCard';
-import { EmptyState } from './EmptyState';
+import { StatCard } from './Cards/StateCard';
+import { EmptyState } from './Cards/EmptyState';
 
 interface Student {
   user_id: number;

@@ -1,6 +1,6 @@
 import { BiUserPlus, BiTrash } from 'react-icons/bi';
 import StudentList from './StudentList';
-import { EmptyState } from './EmptyState';
+import { EmptyState } from './Cards/EmptyState';
 
 export function StudentSection({
   students,
