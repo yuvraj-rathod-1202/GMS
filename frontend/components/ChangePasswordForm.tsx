@@ -49,38 +49,13 @@ export default function ChangePasswordForm({ onSubmit, loading, error, success }
 
   return (
     <form onSubmit={handleSubmit} className="max-w-sm mx-auto text-left">
-      <div className="mb-4">
-        <label className="block mb-1.5 text-gray-700">Current Password</label>
-        <input
-          value={oldPassword}
-          onChange={(e) => setOldPassword(e.target.value)}
-          type="password"
-          placeholder="Enter current password"
-          className="w-full px-3 py-2 rounded-md border border-gray-300 outline-none focus:ring-2 focus:ring-gray-400"
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1.5 text-gray-700">New Password</label>
-        <input
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          type="password"
-          placeholder="Enter new password"
-          className="w-full px-3 py-2 rounded-md border border-gray-300 outline-none focus:ring-2 focus:ring-gray-400"
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1.5 text-gray-700">Confirm New Password</label>
-        <input
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          type="password"
-          placeholder="Confirm new password"
-          className="w-full px-3 py-2 rounded-md border border-gray-300 outline-none focus:ring-2 focus:ring-gray-400"
-        />
-      </div>
+      <Inputbox label="Current Password" value={oldPassword} OnChange={setOldPassword} />
+      <Inputbox label="New Password" value={newPassword} OnChange={setNewPassword} />
+      <Inputbox
+        label="Confirm New Password"
+        value={confirmPassword}
+        OnChange={setConfirmPassword}
+      />
 
       {localError && <div className="text-red-600 mb-2 text-sm">{localError}</div>}
       {error && <div className="text-red-600 mb-2 text-sm">{error}</div>}
@@ -94,5 +69,28 @@ export default function ChangePasswordForm({ onSubmit, loading, error, success }
         {loading ? 'Changing Password...' : 'Change Password'}
       </button>
     </form>
+  );
+}
+
+function Inputbox({
+  label,
+  value,
+  OnChange,
+}: {
+  label: string;
+  value: string;
+  OnChange: (val: string) => void;
+}) {
+  return (
+    <div className="mb-4">
+      <label className="block mb-1.5 text-gray-700">{label}</label>
+      <input
+        value={value}
+        onChange={(e) => OnChange(e.target.value)}
+        type="password"
+        placeholder={label}
+        className="w-full px-3 py-2 rounded-md border border-gray-300 outline-none focus:ring-2 focus:ring-gray-400"
+      />
+    </div>
   );
 }
