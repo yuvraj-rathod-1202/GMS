@@ -1,14 +1,4 @@
-interface AssessmentTableColumn {
-  header: string;
-  key: string;
-  render?: (value: any, row: any) => React.ReactNode;
-}
-
-interface AssessmentTableProps {
-  columns: AssessmentTableColumn[];
-  data: any[];
-  emptyMessage?: string;
-}
+import { AssessmentTableProps } from '@/lib/types/ui/studentassessmenttable';
 
 export default function AssessmentTable({
   columns,

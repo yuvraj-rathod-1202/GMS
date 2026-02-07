@@ -3,7 +3,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useUserRoleInCourse } from '@/hooks/useUserRoleInCourse';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
-import StudentCourseView from './StudentCourseView';
+import StudentCourseView from './Student/StudentCourseView';
 import TACourseView from './TACourseView';
 import InstructorCourseView from './InstructorCourseView';
 
