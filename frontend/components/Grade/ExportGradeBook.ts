@@ -1,18 +1,6 @@
 import { InstructorCourseData } from '@/lib/store/courseDetail';
+import { getAssessmentTypeLabel } from '@/lib/utils/assessmentlabel';
 import ExcelJS from 'exceljs';
-
-const getAssessmentTypeLabel = (typeId: number): string => {
-  const types: { [key: number]: string } = {
-    1: 'Quiz',
-    2: 'Assignment',
-    3: 'Midsem',
-    4: 'EndSem',
-    5: 'Project',
-    6: 'Attendance',
-    7: 'Lab',
-  };
-  return types[typeId] || `Type ${typeId}`;
-};
 
 function getColLetter(colIndex: number): string {
   let letter = '';
@@ -168,6 +156,7 @@ export const exportGradeBookToExcel = async (
   const columns = [
     'RollNo',
     'Email Id',
+    'Applied Policy',
     ...assessmentCategories.map((catId) => getAssessmentTypeLabel(catId)),
     'Total Score',
   ];
@@ -182,7 +171,12 @@ export const exportGradeBookToExcel = async (
 
   sortedStudents.forEach((student, index) => {
     const rowIndex = index + 2;
-    const rowData: any[] = [student.user_id, student.email];
+    const rowData: any[] = [
+      student.user_id,
+      student.email,
+      instructorData.policies.find((p) => p.id === instructorData.studentPolicyMap[student.user_id])
+        ?.policy_name || DefaulPolicy?.policy_name,
+    ];
 
     assessmentCategories.forEach((categoryId) => {
       const targetSheetName = getAssessmentTypeLabel(categoryId);

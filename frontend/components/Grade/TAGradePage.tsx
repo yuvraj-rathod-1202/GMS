@@ -3,7 +3,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
 import TANavbar from '@/components/Course/TANavbar';
-import AssessmentCard from '@/components/Grade/AssessmentCard';
+import AssessmentCard from '@/components/Grade/Cards/AssessmentCard';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useCourseManagement } from '@/hooks/useCourseManagement';
 import OverviewCard from './Cards/OverviewCard';

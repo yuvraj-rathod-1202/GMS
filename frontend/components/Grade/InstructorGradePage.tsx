@@ -12,7 +12,7 @@ import { AssessmentDBObject } from '@/lib/types/assessments';
 import Link from 'next/link';
 import { BiSpreadsheet } from 'react-icons/bi';
 import OverviewCard from './Cards/OverviewCard';
-import AssessmentCard from './AssessmentCard';
+import AssessmentCard from './Cards/AssessmentCard';
 
 export default function InstructorGradePage() {
   const params = useParams();
@@ -149,7 +149,10 @@ export default function InstructorGradePage() {
             </div>
           </div>
 
-          <OverviewCard currentCourse={currentCourse} assessments={instructorData?.assessments || null} />
+          <OverviewCard
+            currentCourse={currentCourse}
+            assessments={instructorData?.assessments || null}
+          />
 
           {/* Assessments Section */}
           <div>

@@ -28,7 +28,10 @@ export default function AssessmentCard({
   const formattedDate = formatDate(assessment.assessment_date);
 
   return (
-    <div onClick={onClick} className="flex flex-col border border-gray-200 rounded-2xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+    <div
+      onClick={onClick}
+      className="flex flex-col border border-gray-200 rounded-2xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
+    >
       <div className="px-6 py-5 grow">
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-bold text-gray-900 line-clamp-1" title={assessment.name}>
@@ -76,13 +79,19 @@ export default function AssessmentCard({
             <BiEdit className="text-xl" />
           </button>
         )}
-        
 
         <div className="flex items-center gap-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handlePublishToggle(e, assessment, setIsPublishing, UnpublishMarks, PublishMarks, onPublishToggle);
+              handlePublishToggle(
+                e,
+                assessment,
+                setIsPublishing,
+                UnpublishMarks,
+                PublishMarks,
+                onPublishToggle
+              );
             }}
             disabled={isPublishing}
             className={`text-xs font-medium px-3 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
