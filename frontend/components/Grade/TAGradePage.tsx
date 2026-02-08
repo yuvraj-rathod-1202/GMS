@@ -6,6 +6,7 @@ import TANavbar from '@/components/Course/TANavbar';
 import AssessmentCard from '@/components/Grade/AssessmentCard';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useCourseManagement } from '@/hooks/useCourseManagement';
+import OverviewCard from './Cards/OverviewCard';
 
 export default function TAGradePage() {
   const params = useParams();
@@ -83,45 +84,7 @@ export default function TAGradePage() {
             </div>
           </div>
 
-          <div>
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">
-              Course Overview
-            </h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
-                <div className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide mb-2">
-                  Total Students
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {currentCourse?.total_students || 0}
-                </div>
-              </div>
-              <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
-                <div className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide mb-2">
-                  Total Assessments
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {taData?.assessments?.length || 0}
-                </div>
-              </div>
-              <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
-                <div className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide mb-2">
-                  Published Assessments
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {taData?.assessments?.filter((a) => a.is_marks_published).length || 0}
-                </div>
-              </div>
-              <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
-                <div className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide mb-2">
-                  Unpublished Assessments
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {taData?.assessments?.filter((a) => !a.is_marks_published).length || 0}
-                </div>
-              </div>
-            </div>
-          </div>
+          <OverviewCard currentCourse={currentCourse} assessments={taData?.assessments || null} />
 
           {/* Assessments Section */}
           <div>
@@ -143,6 +106,8 @@ export default function TAGradePage() {
                 {taData.assessments.map((assessment: any) => (
                   <AssessmentCard
                     key={assessment.id}
+                    isInstructor={false}
+                    onClick={() => handleOnEnterMarks(assessment.id)}
                     assessment={assessment}
                     onPublishToggle={() => handlePublishToggle()}
                     onEnterMarks={() => {

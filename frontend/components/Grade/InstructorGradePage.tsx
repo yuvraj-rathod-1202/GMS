@@ -6,12 +6,13 @@ import { useCourseDetailStore } from '@/lib/store/courseDetail';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useCourseManagement } from '@/hooks/useCourseManagement';
 import InstructorNavbar from '../Course/InstructorNavbar';
-import InstructorAssessmentCard from './InstructorAssessmentCard';
-import AssessmentDialog, { AssessmentFormData } from './AssessmentDialog';
+import AssessmentDialog, { AssessmentFormData } from './Dialogs/AssessmentDialog';
 import { MarksApi } from '@/lib/api/marks';
 import { AssessmentDBObject } from '@/lib/types/assessments';
 import Link from 'next/link';
 import { BiSpreadsheet } from 'react-icons/bi';
+import OverviewCard from './Cards/OverviewCard';
+import AssessmentCard from './AssessmentCard';
 
 export default function InstructorGradePage() {
   const params = useParams();
@@ -148,45 +149,7 @@ export default function InstructorGradePage() {
             </div>
           </div>
 
-          <div>
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">
-              Course Overview
-            </h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
-                <div className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide mb-2">
-                  Total Students
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {currentCourse?.total_students || 0}
-                </div>
-              </div>
-              <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
-                <div className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide mb-2">
-                  Total Assessments
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {instructorData?.assessments?.length || 0}
-                </div>
-              </div>
-              <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
-                <div className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide mb-2">
-                  Published Assessments
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {instructorData?.assessments?.filter((a) => a.is_marks_published).length || 0}
-                </div>
-              </div>
-              <div className="border border-gray-300 rounded-2xl bg-white p-4 sm:p-6">
-                <div className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide mb-2">
-                  Unpublished Assessments
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {instructorData?.assessments?.filter((a) => !a.is_marks_published).length || 0}
-                </div>
-              </div>
-            </div>
-          </div>
+          <OverviewCard currentCourse={currentCourse} assessments={instructorData?.assessments || null} />
 
           {/* Assessments Section */}
           <div>
@@ -212,8 +175,10 @@ export default function InstructorGradePage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {instructorData.assessments.map((assessment) => (
-                  <InstructorAssessmentCard
+                  <AssessmentCard
                     key={assessment.id}
+                    isInstructor={true}
+                    onClick={() => handleEditAssessment(assessment)}
                     assessment={assessment}
                     onPublishToggle={handlePublishToggle}
                     onEdit={() => handleEditAssessment(assessment)}
