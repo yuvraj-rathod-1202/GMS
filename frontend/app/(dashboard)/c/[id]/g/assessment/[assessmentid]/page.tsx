@@ -11,19 +11,7 @@ import GradeSheetButtons from '@/components/ui/GradeSheetButtons';
 import { useTACourse } from '@/hooks/useTACourse';
 import UnenrolledStudentsDialog from '@/components/ui/UnenrolledStudentsDialog';
 import * as XLSX from 'xlsx';
-
-const getAssessmentTypeLabel = (typeId: number): string => {
-  const types: { [key: number]: string } = {
-    1: 'Quiz',
-    2: 'Assignment',
-    3: 'Midsem',
-    4: 'EndSem',
-    5: 'Project',
-    6: 'Attendance',
-    7: 'Lab',
-  };
-  return types[typeId] || `Type ${typeId}`;
-};
+import { getAssessmentTypeLabel } from '@/lib/utils/assessmentlabel';
 
 export default function AssessmentPage() {
   const params = useParams();
@@ -193,6 +181,7 @@ export default function AssessmentPage() {
   // Handle local mark changes
   const handleMarkChange = useCallback((newValue: any, oldValue: any, row: any) => {
     const newMark = Number(newValue);
+    if (newMark === oldValue) return;
     if (isNaN(newMark) || (currentAssessment && newMark > currentAssessment?.max_marks)) return;
 
     setChangedMarks((prev) => {
@@ -212,6 +201,15 @@ export default function AssessmentPage() {
       return row;
     });
   }, [mergedData, changedMarks]);
+
+  const changedCellsSet = useMemo(() => {
+    const set = new Set<string>();
+    changedMarks.forEach((_, key) => {
+      const studentId = key;
+      set.add(`${studentId}`);
+    });
+    return set;
+  }, [changedMarks]);
 
   if (isLoading || !role) {
     return (
@@ -495,7 +493,13 @@ export default function AssessmentPage() {
   ];
 
   const handleBackClick = () => {
-    router.push(`/c/${courseId}/g`);
+    if (
+      changedCellsSet.size > 0 &&
+      !confirm('Any unsaved changes will be lost. Are you sure you want to go back?')
+    ) {
+      return;
+    }
+    router.back();
   };
 
   const formattedDate = currentAssessment
@@ -529,6 +533,7 @@ export default function AssessmentPage() {
         columns={columns}
         data={displayData}
         max_marks={currentAssessment ? currentAssessment.max_marks : undefined}
+        changedCells={changedCellsSet}
       />
 
       {/* Unenrolled Students Dialog */}

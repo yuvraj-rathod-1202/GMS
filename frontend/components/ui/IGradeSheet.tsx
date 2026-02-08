@@ -1,31 +1,7 @@
 'use client';
 
+import { IGradeSheetColumn, IGradeSheetProps } from '@/lib/types/grade/gradesheet';
 import React, { useState, useMemo } from 'react';
-
-export interface GradeSheetColumn<T = any> {
-  header: string | React.ReactNode;
-  key: keyof T | string;
-  width?: string;
-  editable?: boolean;
-  max_marks?: number;
-  headerActions?: React.ReactNode;
-  render?: (value: any, row: T, rowIndex: number) => React.ReactNode;
-  onEdit?: (value: any, row: T, rowIndex: number) => void | Promise<void>;
-  onEditComplete?: (newValue: any, oldValue: any, row: T, rowIndex: number) => void | Promise<void>;
-}
-
-export interface GradeSheetProps<T = any> {
-  columns: GradeSheetColumn<T>[];
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  data: T[];
-  searchable?: boolean;
-  searchKeys?: (keyof T | string)[];
-  emptyMessage?: string;
-  className?: string;
-  onRowClick?: (row: T, rowIndex: number) => void;
-  changedCells?: Set<string>; // Format: "studentId-columnKey"
-}
 
 export default function IGradeSheet<T extends Record<string, any>>({
   columns,
@@ -38,7 +14,7 @@ export default function IGradeSheet<T extends Record<string, any>>({
   className = '',
   onRowClick,
   changedCells,
-}: GradeSheetProps<T>) {
+}: IGradeSheetProps<T>) {
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnKey: string } | null>(
     null
   );
@@ -69,14 +45,14 @@ export default function IGradeSheet<T extends Record<string, any>>({
   }, [data, searchTerm, searchable, searchKeys, columns]);
 
   // Handle edit start
-  const handleEditStart = (rowIndex: number, column: GradeSheetColumn<T>, currentValue: any) => {
+  const handleEditStart = (rowIndex: number, column: IGradeSheetColumn<T>, currentValue: any) => {
     if (!column.editable) return;
     setEditingCell({ rowIndex, columnKey: column.key as string });
     setEditValue(currentValue ?? '');
   };
 
   // Handle edit save
-  const handleEditSave = async (rowIndex: number, column: GradeSheetColumn<T>) => {
+  const handleEditSave = async (rowIndex: number, column: IGradeSheetColumn<T>) => {
     if (!editingCell) return;
 
     const row = filteredData[rowIndex];
@@ -123,7 +99,11 @@ export default function IGradeSheet<T extends Record<string, any>>({
   };
 
   // Handle keyboard events in edit mode
-  const handleKeyDown = (e: React.KeyboardEvent, rowIndex: number, column: GradeSheetColumn<T>) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    rowIndex: number,
+    column: IGradeSheetColumn<T>
+  ) => {
     if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
       handleEditSave(rowIndex, column);
