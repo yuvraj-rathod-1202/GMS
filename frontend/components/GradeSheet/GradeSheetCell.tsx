@@ -1,4 +1,4 @@
-import { GradeSheetColumn } from '@/lib/types/grade/gradesheet';
+import { GradeSheetColumn, IGradeSheetColumn } from '@/lib/types/grade/gradesheet';
 import React from 'react';
 
 export default function GradeSheetCell({
@@ -18,12 +18,19 @@ export default function GradeSheetCell({
 }: {
   row: any;
   rowIndex: number;
-  column: GradeSheetColumn<any>;
+  column: GradeSheetColumn<any> | IGradeSheetColumn<any>;
   isEditing: boolean;
   editValue: any;
   setEditValue: React.Dispatch<React.SetStateAction<any>>;
-  handleEditStart: (rowIndex: number, column: GradeSheetColumn<any>, currentValue: any) => void;
-  handleEditSave: (rowIndex: number, column: GradeSheetColumn<any>) => Promise<void>;
+  handleEditStart: (
+    rowIndex: number,
+    column: GradeSheetColumn<any> | IGradeSheetColumn<any>,
+    currentValue: any
+  ) => void;
+  handleEditSave: (
+    rowIndex: number,
+    column: GradeSheetColumn<any> | IGradeSheetColumn<any>
+  ) => Promise<void>;
   handleEditCancel: () => void;
   isProcessing: boolean;
   validationError: string;
@@ -35,7 +42,7 @@ export default function GradeSheetCell({
   const handleKeyDown = (
     e: React.KeyboardEvent,
     rowIndex: number,
-    column: GradeSheetColumn<any>
+    column: GradeSheetColumn<any> | IGradeSheetColumn<any>
   ) => {
     if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
@@ -81,16 +88,12 @@ export default function GradeSheetCell({
           }}
         >
           {(() => {
-            const isChanged = changedCells?.has(`${row.student_id}`);
+            const isChanged = changedCells?.has(`${row.student_id}-${String(column.key)}`);
             const content = column.render
               ? column.render(cellValue, row, rowIndex)
               : (cellValue ?? '-');
 
-            return (
-              <span className={isChanged && column.editable ? 'text-red-600 font-semibold' : ''}>
-                {content}
-              </span>
-            );
+            return <span className={isChanged ? 'text-red-600 font-semibold' : ''}>{content}</span>;
           })()}
 
           {column.editable && max_marks !== undefined && (

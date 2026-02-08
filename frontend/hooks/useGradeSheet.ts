@@ -1,4 +1,4 @@
-import { GradeSheetColumn } from '@/lib/types/grade/gradesheet';
+import { GradeSheetColumn, IGradeSheetColumn } from '@/lib/types/grade/gradesheet';
 import { useMemo, useState } from 'react';
 
 export function useGradeSheet({
@@ -11,7 +11,7 @@ export function useGradeSheet({
   data: any[];
   searchable?: boolean;
   searchKeys?: (keyof any | string)[];
-  columns: GradeSheetColumn<any>[];
+  columns: GradeSheetColumn<any>[] | IGradeSheetColumn<any>[];
   max_marks?: number;
 }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,7 +32,7 @@ export function useGradeSheet({
     }
 
     const lowerSearchTerm = searchTerm.toLowerCase();
-    const keysToSearch = searchKeys || columns.map((col) => col.key as string);
+    const keysToSearch = searchKeys || ['student_id', 'email'];
 
     return data.filter((row) => {
       return keysToSearch.some((key) => {
@@ -43,22 +43,28 @@ export function useGradeSheet({
     });
   }, [data, searchTerm, searchable, searchKeys, columns]);
 
-  const handleEditStart = (rowIndex: number, column: GradeSheetColumn<any>, currentValue: any) => {
+  const handleEditStart = (
+    rowIndex: number,
+    column: GradeSheetColumn<any> | IGradeSheetColumn<any>,
+    currentValue: any
+  ) => {
     if (!column.editable) return;
     setEditingCell({ rowIndex, columnKey: column.key as string });
     setEditValue(currentValue ?? '');
   };
 
-  const handleEditSave = async (rowIndex: number, column: GradeSheetColumn<any>) => {
+  const handleEditSave = async (
+    rowIndex: number,
+    column: GradeSheetColumn<any> | IGradeSheetColumn<any>
+  ) => {
     if (!editingCell) return;
 
     const row = filteredData[rowIndex];
     const oldValue = row[column.key];
-
-    // Validate marks against max_marks
+    const maxMarks = max_marks !== undefined ? max_marks : (column as any)?.max_marks;
     const numericValue = Number(editValue);
-    if (!isNaN(numericValue) && max_marks !== undefined && numericValue > max_marks) {
-      setValidationError(`Marks cannot exceed ${max_marks}`);
+    if (!isNaN(numericValue) && maxMarks !== undefined && numericValue > maxMarks) {
+      setValidationError(`Marks cannot exceed ${maxMarks}`);
       return;
     }
     setValidationError('');

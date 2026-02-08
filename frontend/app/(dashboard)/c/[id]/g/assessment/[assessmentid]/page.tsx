@@ -206,7 +206,8 @@ export default function AssessmentPage() {
     const set = new Set<string>();
     changedMarks.forEach((_, key) => {
       const studentId = key;
-      set.add(`${studentId}`);
+      const columnKey = 'marks_obtained';
+      set.add(`${studentId}-${columnKey}`);
     });
     return set;
   }, [changedMarks]);
