@@ -10,22 +10,8 @@ import UnenrolledStudentsDialog from '@/components/ui/UnenrolledStudentsDialog';
 import BulkUploadDialog from '@/components/ui/BulkUploadDialog';
 import IGradeSheet from '@/components/ui/IGradeSheet';
 import { IGradeSheetButtons } from '@/components/Grade/IGradeSheetButtons';
-import * as XLSX from 'xlsx';
-import { BiArrowBack, BiDotsVerticalRounded, BiHide, BiShow, BiSliderAlt } from 'react-icons/bi';
+import { BiArrowBack, BiDotsVerticalRounded, BiHide, BiShow, BiSliderAlt, BiSortAlt2, BiSortUp, BiSortDown } from 'react-icons/bi';
 import { exportGradeBookToExcel } from '@/components/Grade/ExportGradeBook';
-
-const getAssessmentTypeLabel = (typeId: number): string => {
-  const types: { [key: number]: string } = {
-    1: 'Quiz',
-    2: 'Assignment',
-    3: 'Midsem',
-    4: 'EndSem',
-    5: 'Project',
-    6: 'Attendance',
-    7: 'Lab',
-  };
-  return types[typeId] || `Type ${typeId}`;
-};
 
 export default function GradeSheetView() {
   const params = useParams();
@@ -81,6 +67,18 @@ export default function GradeSheetView() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isExportingSheet, setIsExportingSheet] = useState(false);
+  
+  // Sorting and Filtering state
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
+  const [filters, setFilters] = useState<{
+    minGrade?: number;
+    maxGrade?: number;
+    selectedAssessmentForFilter?: string;
+    selectedPolicies?: number[];
+  }>({});
 
   const { role, course, isLoading, hasAccess } = useRoleAccess({
     allowedRoles: ['instructor'],
@@ -91,7 +89,6 @@ export default function GradeSheetView() {
   const {
     loading: managementLoading,
     getallassessmentmarks,
-    getmarksofassessment,
     fetchCourseRoles,
     fetchAllAssessments,
     saveMarks,
@@ -408,6 +405,97 @@ export default function GradeSheetView() {
     });
   }, [mergedData, changedMarks]);
 
+  // Apply filtering and sorting
+  const filteredAndSortedData = useMemo(() => {
+    let filtered = [...displayData];
+
+    // Apply grade filter
+    if (filters.selectedAssessmentForFilter) {
+      const assessmentKey = filters.selectedAssessmentForFilter;
+      filtered = filtered.filter((row) => {
+        const grade = row[assessmentKey];
+        if (grade === null || grade === undefined) return true;
+        
+        const meetsMin = filters.minGrade === undefined || grade >= filters.minGrade;
+        const meetsMax = filters.maxGrade === undefined || grade <= filters.maxGrade;
+        return meetsMin && meetsMax;
+      });
+    }
+
+    // Apply policy filter
+    if (filters.selectedPolicies && filters.selectedPolicies.length > 0) {
+      filtered = filtered.filter((row) => 
+        filters.selectedPolicies!.includes(row.policy_id)
+      );
+    }
+
+    // Apply sorting
+    if (sortConfig) {
+      filtered.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        // Handle null/undefined values
+        if (aValue === null || aValue === undefined) return 1;
+        if (bValue === null || bValue === undefined) return -1;
+
+        // For student_id, sort numerically
+        if (sortConfig.key === 'student_id') {
+          aValue = Number(aValue);
+          bValue = Number(bValue);
+        }
+
+        // For email and policy_name, sort as strings
+        if (sortConfig.key === 'email' || sortConfig.key === 'policy_name') {
+          aValue = String(aValue).toLowerCase();
+          bValue = String(bValue).toLowerCase();
+        }
+
+        // For numbers (marks, total)
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+
+        // For strings
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [displayData, filters, sortConfig]);
+
+  // Handle sort toggle
+  const handleSort = (key: string) => {
+    setSortConfig((current) => {
+      if (!current || current.key !== key) {
+        return { key, direction: 'asc' };
+      }
+      if (current.direction === 'asc') {
+        return { key, direction: 'desc' };
+      }
+      return null; // Remove sorting
+    });
+  };
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setFilters({});
+    setSortConfig(null);
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = 
+    filters.minGrade !== undefined ||
+    filters.maxGrade !== undefined ||
+    filters.selectedAssessmentForFilter !== undefined ||
+    (filters.selectedPolicies && filters.selectedPolicies.length > 0);
+
   const changedCellsSet = useMemo(() => {
     const set = new Set<string>();
     changedMarks.forEach((_, key) => {
@@ -675,14 +763,34 @@ export default function GradeSheetView() {
     router.push(`/c/${courseId}/gp`);
   };
 
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <BiSortAlt2 className="text-gray-400" />;
+    }
+    return sortConfig.direction === 'asc' ? (
+      <BiSortUp className="text-blue-600" />
+    ) : (
+      <BiSortDown className="text-blue-600" />
+    );
+  };
+
   const assessmentColumns =
     instructorData?.assessments.map((a) => ({
       header: (
         <div className="flex flex-col">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-bold text-gray-900 truncate" title={a.name}>
-              {a.name}
-            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSort(String(a.id));
+              }}
+              className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+            >
+              <span className="font-bold text-gray-900 truncate" title={a.name}>
+                {a.name}
+              </span>
+              {getSortIcon(String(a.id))}
+            </button>
             <div className="relative group">
               <button
                 onClick={(e) => {
@@ -725,7 +833,18 @@ export default function GradeSheetView() {
 
   const columns = [
     {
-      header: 'Student',
+      header: (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSort('student_id');
+          }}
+          className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+        >
+          <span>Student</span>
+          {getSortIcon('student_id')}
+        </button>
+      ),
       key: 'student_info',
       width: '250px',
       render: (_: any, row: any) => (
@@ -736,7 +855,18 @@ export default function GradeSheetView() {
       ),
     },
     {
-      header: 'Policy',
+      header: (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSort('policy_name');
+          }}
+          className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+        >
+          <span>Policy</span>
+          {getSortIcon('policy_name')}
+        </button>
+      ),
       key: 'policy_name',
       width: '200px',
       render: (value: any, row: any) => {
@@ -795,7 +925,18 @@ export default function GradeSheetView() {
     },
     ...assessmentColumns,
     {
-      header: 'Total',
+      header: (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSort('total_marks');
+          }}
+          className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+        >
+          <span>Total</span>
+          {getSortIcon('total_marks')}
+        </button>
+      ),
       key: 'total_marks',
       width: '100px',
       render: (val: any) => <span className="font-bold text-gray-900">{val}</span>,
@@ -854,11 +995,16 @@ export default function GradeSheetView() {
 
         {/* The Table Container */}
         <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+          {filteredAndSortedData.length !== displayData.length && (
+            <div className="px-6 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-700">
+              Showing {filteredAndSortedData.length} of {displayData.length} students
+            </div>
+          )}
           <IGradeSheet
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             columns={columns}
-            data={displayData}
+            data={filteredAndSortedData}
             changedCells={changedCellsSet}
           />
         </div>
