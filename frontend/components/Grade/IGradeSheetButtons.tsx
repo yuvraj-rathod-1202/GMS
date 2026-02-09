@@ -37,6 +37,7 @@ export const IGradeSheetButtons = ({
         <button
           onClick={onRecalculate}
           disabled={isRecalculating}
+          title="Recalculate total marks based on the current grading policy and assessment marks"
           className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors shadow-sm disabled:opacity-50"
         >
           <BiCalculator className="text-xl" />

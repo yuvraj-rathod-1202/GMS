@@ -61,6 +61,7 @@ export default function GPView() {
     updatePolicy,
     updatePolicyComponent,
     AddPolicyComponent,
+    DeletePolicyComponent,
     fetchAllAssessments,
     DeletePolicy,
   } = useCourseManagement(role || 'instructor');
@@ -216,6 +217,20 @@ export default function GPView() {
     }
   };
 
+  const handleDeletePolicyComponent = async (policyId: number, componentId: number) => {
+    setUpdatingPolicyComponentId(true);
+    try {
+      await DeletePolicyComponent(courseId, policyId, componentId);
+      fetchAllPolicy(courseId, true);
+    } catch (error) {
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error deleting policy component:', error);
+      }
+    } finally {
+      setUpdatingPolicyComponentId(false);
+    }
+  }
+
   const handleDeletePolicy = async (policyId: number) => {
     if (!confirm('Are you sure you want to delete this policy? This action cannot be undone.')) {
       return;
@@ -242,6 +257,14 @@ export default function GPView() {
           policy_name: policyData.policy_name,
           total_weightage: policyData.total_weightage,
         });
+        const removed_component_ids = editingPolicy.components
+          .filter(
+            (existingComp) =>
+              !policyData.components.some(
+                (comp) => comp.component_id === existingComp.id
+              )
+          )
+          .map((comp) => comp.id) as number[];
         policyData.components.forEach(async (component) => {
           if (component.component_id) {
             await handleUpdatePolicyComponent(editingPolicy.id, component.component_id, {
@@ -264,6 +287,11 @@ export default function GPView() {
             });
           }
         });
+        // Handle removed components
+        for (let compId of removed_component_ids) {
+          await handleDeletePolicyComponent(editingPolicy.id, compId);
+        }
+        
       } else {
         await handleAddPolicy({
           policy_name: policyData.policy_name,

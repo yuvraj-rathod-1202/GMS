@@ -172,6 +172,7 @@ export default function PolicyDialog({
   };
 
   const removeComponent = (index: number) => {
+    // await deleteComponent();
     setFormData((prev) => ({
       ...prev,
       components: prev.components.filter((comp, i) => comp.assessment_category_id !== index),
@@ -460,7 +461,7 @@ export default function PolicyDialog({
                 {/* Warning strip if overweight */}
                 {isOverweight && <div className="bg-red-500 flex-1 animate-pulse" />}
               </div>
-              <p className="text-xs font-semibold text-gray-500 mt-2">
+              <div className="text-xs font-semibold text-gray-500 mt-2">
                 <div className="space-y-2">
                   <div className="text-blue-500">
                     {isUnderweight && 'You still have percentage points to assign.'}
@@ -484,7 +485,7 @@ export default function PolicyDialog({
                     </div>
                   }
                 </div>
-              </p>
+              </div>
             </div>
 
             <div>

@@ -15,7 +15,10 @@ async def create_policy(course_id: int, data: CreatePolicyRequest):
             detail="Instructor privileges required"
         )
         
+    is_first_policy = get_policy_from_db(course_id) is None
     policy_id = add_policy_to_db(course_id, data)
+    if is_first_policy and policy_id:
+        set_policy_as_default_in_db(course_id, policy_id)
     
     if not policy_id:
         raise HTTPException(
@@ -93,6 +96,7 @@ async def update_policy(course_id: int, data: UpdatePolicyRequest):
             detail="Failed to update policy"
         )
         
+    await initialize_total_recalculation(course_id, data.updated_by_id)
     return {"detail": "Policy updated successfully"}
 
 @router.put("/courses/{course_id}/policy/{policy_id}/default")
@@ -112,6 +116,7 @@ async def set_policy_as_default(course_id: int, policy_id: int, user_id: int):
             detail="Failed to set policy as default"
         )
         
+    await initialize_total_recalculation(course_id, user_id)
     return {"detail": "Policy set as default successfully"}
 
 @router.delete("/courses/{course_id}/policy/{policy_id}/components/{component_id}")
@@ -131,6 +136,7 @@ async def delete_policy_component(course_id: int, policy_id: int, component_id: 
             detail="Failed to delete policy component"
         )
         
+    await initialize_total_recalculation(course_id, user_id)
     return {"detail": "Policy component deleted successfully"}
 
 @router.post("/courses/{course_id}/policy/{policy_id}/components")
@@ -149,7 +155,8 @@ async def create_policy_component(course_id: int, policy_id: int, data: CreatePo
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create policy component"
         )
-        
+    
+    await initialize_total_recalculation(course_id, data.added_by_id)
     return {"component_id": component_id}
 
 @router.put("/courses/{course_id}/policy/{policy_id}/components/{component_id}")
@@ -169,6 +176,7 @@ async def update_policy_component(course_id: int, policy_id: int, component_id: 
             detail="Failed to update policy component"
         )
         
+    await initialize_total_recalculation(course_id, data.updated_by_id)
     return {"detail": "Policy component updated successfully"}
 
 @router.post("/courses/{course_id}/policy-assignments")
@@ -188,6 +196,7 @@ async def assign_policy_to_student(course_id: int, data: AssignPolicyRequest):
             detail="Failed to assign policy to student"
         )
         
+    await initialize_total_recalculation(course_id, data.assigned_by_id)
     return {"detail": "Policy assigned to student successfully"}
 
 @router.get("/courses/{course_id}/policy-assignments")

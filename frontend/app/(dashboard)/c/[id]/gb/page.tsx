@@ -12,6 +12,7 @@ import IGradeSheet from '@/components/ui/IGradeSheet';
 import { IGradeSheetButtons } from '@/components/Grade/IGradeSheetButtons';
 import { BiArrowBack, BiDotsVerticalRounded, BiHide, BiShow, BiSliderAlt, BiSortAlt2, BiSortUp, BiSortDown } from 'react-icons/bi';
 import { exportGradeBookToExcel } from '@/components/Grade/ExportGradeBook';
+import calculateTotalMarks, { calculateTotalMarksOptimized } from '@/services/totalCalculation';
 
 export default function GradeSheetView() {
   const params = useParams();
@@ -45,6 +46,7 @@ export default function GradeSheetView() {
   const [changedMarks, setChangedMarks] = useState<Map<[number, number | undefined], number>>(
     new Map()
   );
+  const [calculatedTotals, setCalculatedTotals] = useState<Map<number, number>>(new Map());
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -73,6 +75,7 @@ export default function GradeSheetView() {
     key: string;
     direction: 'asc' | 'desc';
   } | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<{
     minGrade?: number;
     maxGrade?: number;
@@ -354,6 +357,71 @@ export default function GradeSheetView() {
   const isLoadingData =
     managementLoading || isFetchingMarks || isFetchingRoles || isFetchingAssessments;
 
+  // Optimized: Calculate totals for all affected students in batch using useMemo
+  useEffect(() => {
+    if (!instructorData?.assessments || !instructorData?.assessmentMarks || 
+        !instructorData?.policies || !instructorData?.studentPolicyMap) {
+      return;
+    }
+
+    // Only recalculate if there are changed marks
+    if (changedMarks.size === 0) {
+      setCalculatedTotals(new Map());
+      return;
+    }
+
+    // Get unique student IDs that have changes
+    const affectedStudentIds = new Set<number>();
+    changedMarks.forEach((_, key) => {
+      const [studentId] = key;
+      affectedStudentIds.add(studentId);
+    });
+
+    const newCalculatedTotals = new Map<number, number>();
+
+    // Calculate totals only for affected students
+    affectedStudentIds.forEach((studentId) => {
+      // Get student's policy
+      const assignedPolicyId = instructorData.studentPolicyMap[studentId];
+      const defaultPolicy = instructorData.policies.find((p) => p.is_default);
+      const studentPolicy = assignedPolicyId
+        ? instructorData.policies.find((p) => p.id === assignedPolicyId)
+        : defaultPolicy;
+
+      if (!studentPolicy) return;
+
+      // Build student marks map efficiently
+      const studentMarksMap = new Map<number, number | null>();
+      
+      // First, add all existing marks from server
+      instructorData.assessments.forEach((assessment) => {
+        const marksArray = instructorData.assessmentMarks[assessment.id] || [];
+        const markEntry = marksArray.find((m) => m.student_id === studentId);
+        studentMarksMap.set(assessment.id, markEntry ? markEntry.marks_obtained : null);
+      });
+
+      // Then, override with local changes
+      changedMarks.forEach((marks, key) => {
+        const [sid, assessmentId] = key;
+        if (sid === studentId && assessmentId !== undefined) {
+          studentMarksMap.set(assessmentId, marks);
+        }
+      });
+
+      // Calculate total using optimized function
+      const total = calculateTotalMarksOptimized(
+        studentId,
+        studentPolicy,
+        instructorData.assessments,
+        studentMarksMap
+      );
+
+      newCalculatedTotals.set(studentId, Number(total.toFixed(2)));
+    });
+
+    setCalculatedTotals(newCalculatedTotals);
+  }, [instructorData, changedMarks]);
+
   // Handle local mark changes
   const handleMarkChange = useCallback((assessmentId: number, maxMarks: number) => {
     return (newValue: any, oldValue: any, row: any) => {
@@ -378,6 +446,8 @@ export default function GradeSheetView() {
         await updateStudentPolicy(courseId, studentId, newPolicyId);
         // Refresh student policy map and total marks after assignment
         await fetchStudentPolicyMap(courseId, true);
+        
+        // Total will be recalculated automatically via useEffect
       } catch (error) {
         console.error('Failed to update policy:', error);
         alert('Failed to update policy. Please try again.');
@@ -385,7 +455,7 @@ export default function GradeSheetView() {
         setIsUpdatingPolicy(null);
       }
     },
-    [courseId, updateStudentPolicy, fetchStudentPolicyMap, fetchTotalMarks]
+    [courseId, updateStudentPolicy, fetchStudentPolicyMap]
   );
 
   // Merge server data with local changes
@@ -401,9 +471,14 @@ export default function GradeSheetView() {
         }
       });
 
+      // Use calculated total if available, otherwise use server total
+      if (calculatedTotals.has(row.student_id)) {
+        updatedRow.total_marks = calculatedTotals.get(row.student_id);
+      }
+
       return updatedRow;
     });
-  }, [mergedData, changedMarks]);
+  }, [mergedData, changedMarks, calculatedTotals]);
 
   // Apply filtering and sorting
   const filteredAndSortedData = useMemo(() => {
@@ -561,8 +636,61 @@ export default function GradeSheetView() {
         )
       );
 
-      await getallassessmentmarks(courseId, true);
+      // Update instructor data with the saved marks and calculated totals
+      if (instructorData) {
+        const updatedAssessmentMarks = { ...instructorData.assessmentMarks };
+        const updatedTotalMarks = instructorData.totalMarks ? [...instructorData.totalMarks] : [];
+
+        // Update assessment marks
+        changedMarks.forEach((marks_obtained, key) => {
+          const [student_id, assessment_id] = key;
+          if (assessment_id !== undefined) {
+            if (!updatedAssessmentMarks[assessment_id]) {
+              updatedAssessmentMarks[assessment_id] = [];
+            }
+            const existingIndex = updatedAssessmentMarks[assessment_id].findIndex(
+              (m) => m.student_id === student_id
+            );
+            if (existingIndex >= 0) {
+              updatedAssessmentMarks[assessment_id][existingIndex] = {
+                ...updatedAssessmentMarks[assessment_id][existingIndex],
+                marks_obtained,
+              };
+            } else {
+              updatedAssessmentMarks[assessment_id].push({
+                student_id,
+                marks_obtained,
+              } as any);
+            }
+          }
+        });
+
+        // Update total marks with calculated values
+        calculatedTotals.forEach((total_marks, student_id) => {
+          const existingIndex = updatedTotalMarks.findIndex((tm) => tm.student_id === student_id);
+          if (existingIndex >= 0) {
+            updatedTotalMarks[existingIndex] = {
+              ...updatedTotalMarks[existingIndex],
+              total_marks,
+            };
+          } else {
+            updatedTotalMarks.push({
+              student_id,
+              total_marks,
+            } as any);
+          }
+        });
+
+        // Update the store
+        useCourseDetailStore.getState().setInstructorData({
+          ...instructorData,
+          assessmentMarks: updatedAssessmentMarks,
+          totalMarks: updatedTotalMarks,
+        });
+      }
+
       setChangedMarks(new Map());
+      setCalculatedTotals(new Map());
       setHasUnsavedChanges(false);
     } catch (error) {
       alert('Failed to save marks. Please try again.');
@@ -610,6 +738,7 @@ export default function GradeSheetView() {
   const handleDiscard = () => {
     if (window.confirm('Are you sure you want to discard your changes?')) {
       setChangedMarks(new Map());
+      setCalculatedTotals(new Map());
       setHasUnsavedChanges(false);
     }
   };

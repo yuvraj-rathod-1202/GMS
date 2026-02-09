@@ -194,6 +194,11 @@ def delete_policy_from_db(course_id: int, policy_id: int):
             (policy_id,)
         )
         
+        cursor.execute(
+            "DELETE FROM student_course_policy WHERE course_policy_id = %s",
+            (policy_id,)
+        )
+        
         db.commit()
         return True
     except Exception as e:
