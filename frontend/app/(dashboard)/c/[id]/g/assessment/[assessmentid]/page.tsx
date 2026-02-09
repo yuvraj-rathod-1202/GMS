@@ -12,6 +12,7 @@ import { useTACourse } from '@/hooks/useTACourse';
 import UnenrolledStudentsDialog from '@/components/ui/UnenrolledStudentsDialog';
 import * as XLSX from 'xlsx';
 import { getAssessmentTypeLabel } from '@/lib/utils/assessmentlabel';
+import { BiSortAlt2, BiSortUp, BiSortDown, BiSliderAlt } from 'react-icons/bi';
 
 export default function AssessmentPage() {
   const params = useParams();
@@ -49,6 +50,16 @@ export default function AssessmentPage() {
     Array<{ student_id: number; email: string; marks_obtained: number }>
   >([]);
   const [isProcessingEnrollment, setIsProcessingEnrollment] = useState(false);
+
+  // Sorting and Filtering state
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
+  const [filters, setFilters] = useState<{
+    minGrade?: number;
+    maxGrade?: number;
+  }>({});
 
   const { role, course, assessment, isLoading, hasAccess } = useRoleAccess({
     allowedRoles: ['ta'],
@@ -201,6 +212,99 @@ export default function AssessmentPage() {
       return row;
     });
   }, [mergedData, changedMarks]);
+
+  // Apply filtering and sorting
+  const filteredAndSortedData = useMemo(() => {
+    let filtered = [...displayData];
+
+    // Apply grade filter
+    if (filters.minGrade !== undefined || filters.maxGrade !== undefined) {
+      filtered = filtered.filter((row) => {
+        const grade = row.marks_obtained;
+        if (grade === null || grade === undefined) return true;
+        
+        const meetsMin = filters.minGrade === undefined || grade >= filters.minGrade;
+        const meetsMax = filters.maxGrade === undefined || grade <= filters.maxGrade;
+        return meetsMin && meetsMax;
+      });
+    }
+
+    // Apply sorting
+    if (sortConfig) {
+      filtered.sort((a, b) => {
+        let aValue = a[sortConfig.key as 'student_id' | 'email' | 'marks_obtained'];
+        let bValue = b[sortConfig.key as 'student_id' | 'email' | 'marks_obtained'];
+
+        // Handle null/undefined values
+        if (aValue === null || aValue === undefined) return 1;
+        if (bValue === null || bValue === undefined) return -1;
+
+        // For student_id, sort numerically
+        if (sortConfig.key === 'student_id') {
+          aValue = Number(aValue);
+          bValue = Number(bValue);
+        }
+
+        // For email, sort as strings
+        if (sortConfig.key === 'email') {
+          aValue = String(aValue).toLowerCase();
+          bValue = String(bValue).toLowerCase();
+        }
+
+        // For numbers (marks)
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+
+        // For strings
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [displayData, filters, sortConfig]);
+
+  // Handle sort toggle
+  const handleSort = (key: string) => {
+    setSortConfig((current) => {
+      if (!current || current.key !== key) {
+        return { key, direction: 'asc' };
+      }
+      if (current.direction === 'asc') {
+        return { key, direction: 'desc' };
+      }
+      return null; // Remove sorting
+    });
+  };
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setFilters({});
+    setSortConfig(null);
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = 
+    filters.minGrade !== undefined ||
+    filters.maxGrade !== undefined;
+
+  // Helper function to get sort icon
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <BiSortAlt2 className="text-gray-400" />;
+    }
+    return sortConfig.direction === 'asc' ? (
+      <BiSortUp className="text-blue-600" />
+    ) : (
+      <BiSortDown className="text-blue-600" />
+    );
+  };
 
   const changedCellsSet = useMemo(() => {
     const set = new Set<string>();
@@ -483,10 +587,49 @@ export default function AssessmentPage() {
   };
 
   const columns = [
-    { header: 'Student ID', key: 'student_id' },
-    { header: 'Email', key: 'email' },
     {
-      header: 'Marks Obtained',
+      header: (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSort('student_id');
+          }}
+          className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+        >
+          <span>Student ID</span>
+          {getSortIcon('student_id')}
+        </button>
+      ),
+      key: 'student_id',
+    },
+    {
+      header: (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSort('email');
+          }}
+          className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+        >
+          <span>Email</span>
+          {getSortIcon('email')}
+        </button>
+      ),
+      key: 'email',
+    },
+    {
+      header: (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSort('marks_obtained');
+          }}
+          className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+        >
+          <span>Marks Obtained</span>
+          {getSortIcon('marks_obtained')}
+        </button>
+      ),
       key: 'marks_obtained',
       editable: true,
       onEditComplete: handleMarkChange,
@@ -532,7 +675,7 @@ export default function AssessmentPage() {
       />
       <GradeSheet
         columns={columns}
-        data={displayData}
+        data={filteredAndSortedData}
         max_marks={currentAssessment ? currentAssessment.max_marks : undefined}
         changedCells={changedCellsSet}
       />

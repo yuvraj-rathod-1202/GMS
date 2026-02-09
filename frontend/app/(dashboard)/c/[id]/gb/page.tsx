@@ -161,7 +161,7 @@ export default function GradeSheetView() {
       const fetchRoles = async () => {
         setIsFetchingRoles(true);
         try {
-          await fetchCourseRoles(courseId);
+          await fetchCourseRoles(courseId, false, true);
           setIsRolesFetched(true);
         } catch (error) {
           if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
@@ -704,14 +704,14 @@ export default function GradeSheetView() {
     try {
       const enrollData = selected.map((s) => ({ student_id: s.student_id, email: s.email }));
       await BulkEnrollStudent(courseId, enrollData);
-      await fetchCourseRoles(courseId, true);
+      await fetchCourseRoles(courseId, true, true);
 
       const toImport = pendingMarksData;
 
       setShowUnenrolledDialog(false);
       await importMarks(assessmentId, toImport);
 
-      await fetchCourseRoles(courseId);
+      await fetchCourseRoles(courseId, true, true);
     } catch (error) {
       console.error('Enrollment error:', error);
       alert('Failed to enroll students. Please try again.');

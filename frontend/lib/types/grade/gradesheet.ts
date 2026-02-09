@@ -1,5 +1,5 @@
 export interface GradeSheetColumn<T = any> {
-  header: string;
+  header: string | React.ReactNode;
   key: keyof T | string;
   width?: string;
   editable?: boolean;
