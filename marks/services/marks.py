@@ -145,15 +145,25 @@ async def add_marks_to_db(course_id: int, assessment_id: int, data: AddMarksRequ
             "assessment_id": assessment_id,
             "changes": []
         }
+        bodyP = {
+            "cpurse_id": course_id,
+            "changes": [],
+            "initiated_by": data.recorded_by_id
+        }
         for marks in data.marks:
             body["changes"].append({
                 "student_id": marks.student_id,
                 "old_marks": old_marks_dict.get(marks.student_id, None),
                 "new_marks": marks.marks_obtained
             })
+            bodyP["changes"].append({
+                "student_id": marks.student_id,
+                "email": None,
+            })
             
         # Publish message asynchronously
         await publish_message_async('marks_updates', body)
+        await publish_message_async('compute_total', bodyP)
 
         return True
         
@@ -205,7 +215,7 @@ def get_marks_from_db(assessment_id: int, student_id: int | None = None):
             detail="An error occurred while retrieving marks" if IS_PRODUCTION else f"Failed to retrieve marks from the database : {e}"
         )
         
-async def delete_marks_from_db(course_id: int, assessment_id: int, student_id: int):
+async def delete_marks_from_db(course_id: int, assessment_id: int, student_id: int, user_id: int):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -235,11 +245,21 @@ async def delete_marks_from_db(course_id: int, assessment_id: int, student_id: i
             }]
         }
         
+        bodyP = {
+            "course_id": course_id,
+            "changes": [{
+                "student_id": student_id,
+                "email": None
+            }],
+            "initiated_by": user_id
+        }
+        
         cursor.execute(query, (assessment_id, student_id))
         db.commit()
         
         # Publish message asynchronously
         await publish_message_async('marks_updates', body)
+        await publish_message_async('compute_total', bodyP)
         
         return cursor.rowcount > 0
         

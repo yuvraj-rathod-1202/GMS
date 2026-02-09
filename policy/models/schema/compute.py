@@ -4,7 +4,7 @@ from datetime import datetime
 
 class ChangeItem(BaseModel):
     student_id: int
-    email: str
+    email: str | None
 
 class ComputeQueueMessage(BaseModel):
     course_id: int

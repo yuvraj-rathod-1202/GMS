@@ -71,7 +71,7 @@ async def delete_student_marks(course_id: int, assessment_id: int, student_id: i
             detail="Instructor or TA privileges required"
         )
         
-    success = await delete_marks_from_db(course_id, assessment_id, student_id)
+    success = await delete_marks_from_db(course_id, assessment_id, student_id, user_id)
     
     if not success:
         raise HTTPException(
