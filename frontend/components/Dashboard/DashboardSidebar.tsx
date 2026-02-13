@@ -46,6 +46,16 @@ export default function DashboardSidebar() {
             <span>Home</span>
           </Link>
 
+          <Link
+            href="/feedback"
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-900 hover:bg-mms-indigoLight rounded-xl text-sm font-medium transition-colors ${
+              pathname === '/feedback' ? 'bg-mms-grayLight' : ''
+            }`}
+          >
+            <FaUserCheck className="size-5" />
+            <span>Bug Report</span>
+          </Link>
+
           <div className="bg-white py-2">
             <SectionHeader
               title="Teaching"

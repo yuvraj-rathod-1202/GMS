@@ -1,11 +1,12 @@
 import os, logging, datetime, bcrypt
 from fastapi import HTTPException, status
-from models.schema import User, BulkEnrollStudentRequest, ChangePasswordRequest, ForgotPasswordRequest
+from models.schema import User, BulkEnrollStudentRequest, ChangePasswordRequest, ForgotPasswordRequest, FeedbackRequest
 from utils.security import create_jwt_token, verify_password
 from utils.db import get_db
 from models.schema import SignUpUser
 from utils.email import request_password_reset
 from dotenv import load_dotenv
+from utils.security import verify_jwt_token
 
 load_dotenv()
 
@@ -182,3 +183,16 @@ def forgot_user_password(data: ForgotPasswordRequest):
         
     except Exception as e:
         _handle_service_error("Forgot password", e, "Failed to process forgot password request")
+        
+def submit_user_feedback(data: FeedbackRequest, user_id: int):
+    db = _get_db_or_raise()
+    try:
+        cur = db.cursor()
+        cur.execute(
+            "INSERT INTO feedback (user_id, feedback_text) VALUES (%s, %s)",
+            (user_id, data.feedback_text)
+        )
+        db.commit()
+        return {"text": "Feedback submitted successfully"}
+    except Exception as e:
+        _handle_service_error("Submit feedback", e, "Failed to submit feedback")

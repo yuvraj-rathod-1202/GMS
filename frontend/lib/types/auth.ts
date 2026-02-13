@@ -26,3 +26,7 @@ export interface AuthState {
   setAuth: (user: User, token: string) => void;
   logout: () => void;
 }
+
+export interface FeedBackSubmitRequest {
+  feedback_text: string;
+}

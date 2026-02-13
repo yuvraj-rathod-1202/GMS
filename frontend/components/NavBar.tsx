@@ -3,7 +3,7 @@ import { useCoursesStore } from '@/lib/store/courses';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { FaUserCircle } from 'react-icons/fa';
+import { FaUserCheck, FaUserCircle } from 'react-icons/fa';
 import { MdLogout } from 'react-icons/md';
 import { RiLockPasswordLine } from 'react-icons/ri';
 import { useAuth } from '@/hooks/useAuth';
@@ -57,6 +57,11 @@ export default function NavBar() {
     setMenuOpen(false);
   };
 
+  const handleFeedback = () => {
+    router.push('/feedback');
+    setMenuOpen(false);
+  };
+
   return (
     <div className="w-full relative z-9999">
       <nav className="bg-white h-12 gap-4 border-b-2 border-mms-grayLight flex text-sm items-center px-6 justify-between relative z-9999">
@@ -100,6 +105,13 @@ export default function NavBar() {
               >
                 <RiLockPasswordLine className="size-4" />
                 Change Password
+              </button>
+              <button
+                onClick={handleFeedback}
+                className="w-full text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center transition"
+              >
+                <FaUserCheck className="size-4" />
+                Bug Report
               </button>
               <button
                 onClick={handleLogout}

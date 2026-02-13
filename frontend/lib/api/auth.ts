@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { handleRequest } from './utils';
-import { SignUpRequest, ChangePasswordRequest, ForgotPasswordRequest } from '@/lib/types/auth';
+import { SignUpRequest, ChangePasswordRequest, ForgotPasswordRequest, FeedBackSubmitRequest } from '@/lib/types/auth';
 
 export const Authapi = {
   login: async (username: number, password: string) => {
@@ -25,5 +25,9 @@ export const Authapi = {
 
   forgotPassword: async (data: ForgotPasswordRequest) => {
     return handleRequest(apiClient.post('/auth/forgot-password', data));
+  },
+
+  feedBack: async (data: FeedBackSubmitRequest) => {
+    return handleRequest(apiClient.post('/auth/feedback', data));
   },
 };

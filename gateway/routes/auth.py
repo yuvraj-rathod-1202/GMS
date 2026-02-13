@@ -4,7 +4,7 @@ import httpx, os
 from dotenv import load_dotenv
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from models.schema import SignUpUser, ChangePasswordRequest, ForgotPasswordRequest
+from models.schema import SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, FeedbackRequest
 from utils.auth import verify_token
 
 load_dotenv()
@@ -141,4 +141,25 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest):
             raise HTTPException(
                 status_code=503,
                 detail=f"Auth service unavailable: {str(e)}"
+            )
+            
+@router.post("/feedback", dependencies=[Depends(verify_token)])
+async def submit_feedback(data: FeedbackRequest, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                f"{AUTH_SERVICE_URL}/feedback",
+                json={"feedback_text": data.feedback_text, "user_id": user_info.get("user_id")}
+            )
+            if response.status_code == 200:
+                return {"text": "Feedback submitted successfully"}
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to submit feedback")
+                )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Auth service Error: {str(e)}"
             )

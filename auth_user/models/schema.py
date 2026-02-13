@@ -19,3 +19,7 @@ class ChangePasswordRequest(BaseModel):
     
 class ForgotPasswordRequest(BaseModel):
     id: int
+    
+class FeedbackRequest(BaseModel):
+    user_id: int
+    feedback_text: str

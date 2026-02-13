@@ -2,9 +2,9 @@ import os, logging
 from fastapi import FastAPI, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
-from models.schema import SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, BulkEnrollStudentRequest
+from models.schema import FeedbackRequest, SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, BulkEnrollStudentRequest
 from utils.security import verify_jwt_token
-from services.auth import login_user, signup_user, bulk_signup_users, change_user_password, forgot_user_password
+from services.auth import login_user, signup_user, bulk_signup_users, change_user_password, forgot_user_password, submit_user_feedback
 
 load_dotenv()
 
@@ -45,3 +45,7 @@ def change_password(data: ChangePasswordRequest):
 @app.post("/forgot-password")
 def forgot_password(data: ForgotPasswordRequest):
     return forgot_user_password(data)
+
+@app.post("/feedback")
+def submit_feedback(feedback: FeedbackRequest):
+    return submit_user_feedback(feedback, feedback.user_id)

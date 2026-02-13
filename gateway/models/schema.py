@@ -107,3 +107,6 @@ class StudentPolicyMapping(BaseModel):
     course_policy_id: int
 class AssignPolicyRequest(BaseModel):
     mapping: List[StudentPolicyMapping]
+    
+class FeedbackRequest(BaseModel):
+    feedback_text: str
