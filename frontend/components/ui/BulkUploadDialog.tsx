@@ -72,12 +72,16 @@ export default function BulkUploadDialog({
             continue;
           }
 
-          const marks = parseFloat(marksStr);
-          if (isNaN(marks) || marksStr === '') {
+          let marks = parseFloat(marksStr);
+          if (isNaN(marks) && marksStr != "") {
             validationErrors.push(
               `Row ${i + 1}: Marks must be a valid number (found: "${marksStr}")`
             );
             continue;
+          }
+
+          if(marksStr == "") {
+            marks = 0;
           }
 
           parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
@@ -113,12 +117,16 @@ export default function BulkUploadDialog({
             continue;
           }
 
-          const marks = parseFloat(marksStr);
-          if (isNaN(marks) || marksStr === '') {
+          let marks = parseFloat(marksStr);
+          if (isNaN(marks) && marksStr != "") {
             validationErrors.push(
               `Row ${i + 1}: Marks must be a valid number (found: "${marksStr}")`
             );
             continue;
+          }
+
+          if (marksStr == "") {
+            marks = 0;
           }
 
           parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
