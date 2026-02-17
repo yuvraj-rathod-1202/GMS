@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaUserCircle } from 'react-icons/fa';
 import { MdLogout } from 'react-icons/md';
@@ -13,27 +13,6 @@ export default function UserMenu() {
   const { logout } = useAuth();
   const user = useAuthStore((s) => s.user);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleMouseEnter = () => setUserMenuOpen(true);
-    const handleMouseLeave = () => {
-      setTimeout(() => setUserMenuOpen(false), 1000);
-    };
-
-    const element = menuRef.current;
-    if (element) {
-      element.addEventListener('mouseenter', handleMouseEnter);
-      element.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    return () => {
-      if (element) {
-        element.removeEventListener('mouseenter', handleMouseEnter);
-        element.removeEventListener('mouseleave', handleMouseLeave);
-      }
-    };
-  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -47,8 +26,8 @@ export default function UserMenu() {
   };
 
   return (
-    <div ref={menuRef} className="relative">
-      <button className="w-full px-4 py-2 flex items-center gap-3 hover:bg-mms-indigoLight rounded-lg">
+    <div className="relative">
+      <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="w-full px-4 py-2 flex items-center gap-3 hover:bg-mms-indigoLight rounded-lg">
         <FaUserCircle className="size-6 text-mms-black" />
         <span
           className="truncate font-semibold text-base text-gray-900"
