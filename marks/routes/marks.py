@@ -122,7 +122,12 @@ async def unpublish_marks(course_id: int, assessment_id: int, user_id: int = Que
 @router.get("/{course_id}/marks/all/{student_id}")
 async def get_all_marks_for_student(course_id: int, student_id: int, user_id: int = Query(...)):
     verified = await verifyRoleInCourse(user_id, course_id)
-    if not verified:
+    if verified.get("role", "") == 'student' and student_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    if not verified.get("success", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied"
