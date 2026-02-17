@@ -34,8 +34,8 @@ export function useStudentCourse() {
         const marksList = (marksData as any)?.marks || [];
         const analyticsList = (marksData as any)?.analytics || [];
 
-        console.log('Fetched student marks data:', marksList);
-        console.log('Fetched student analytics data:', analyticsList);
+        // console.log('Fetched student marks data:', marksList);
+        // console.log('Fetched student analytics data:', analyticsList);
 
         // Store in the shared store
         setStudentData({

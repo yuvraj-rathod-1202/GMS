@@ -40,6 +40,14 @@ export default function LoginPage() {
       <div className="w-90 p-6 border border-zinc-200 rounded-xl shadow-lg bg-white items-center text-center">
         <h1 className="m-0 mb-3 text-black text-xl font-bold">Login</h1>
         <LoginForm onSubmit={handleSubmit} loading={loading} error={error} />
+        <div className="mt-4">
+          <button
+            onClick={() => router.push('/feedback')}
+            className="text-sm text-mms-blue hover:text-mms-indigo underline transition-colors"
+          >
+            Report a Bug
+          </button>
+        </div>
       </div>
     </main>
   );

@@ -18,19 +18,13 @@ export default function FeedbackPage() {
     setSuccess(false);
 
     try {
-      await Authapi.feedBack({ feedback_text: feedbackText });
+      await Authapi.feedBack({ feedback_text: feedbackText, user_id: user?.id || 11111111 });
       setSuccess(true);
     } catch (err: any) {
       setError(err?.message || 'Failed to submit feedback');
     } finally {
       setLoading(false);
     }
-  }
-
-  // Redirect if not logged in
-  if (!user) {
-    router.push('/login');
-    return null;
   }
 
   return (

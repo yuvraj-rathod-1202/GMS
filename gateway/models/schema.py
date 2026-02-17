@@ -110,3 +110,4 @@ class AssignPolicyRequest(BaseModel):
     
 class FeedbackRequest(BaseModel):
     feedback_text: str
+    user_id: Optional[int] = None

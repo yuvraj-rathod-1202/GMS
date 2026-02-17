@@ -29,4 +29,5 @@ export interface AuthState {
 
 export interface FeedBackSubmitRequest {
   feedback_text: string;
+  user_id?: number;
 }

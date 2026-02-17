@@ -143,13 +143,14 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest):
                 detail=f"Auth service unavailable: {str(e)}"
             )
             
-@router.post("/feedback", dependencies=[Depends(verify_token)])
-async def submit_feedback(data: FeedbackRequest, user_info: dict = Depends(verify_token)):
+@router.post("/feedback")
+@limiter.limit("10/hour")
+async def submit_feedback(request: Request, data: FeedbackRequest):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
                 f"{AUTH_SERVICE_URL}/feedback",
-                json={"feedback_text": data.feedback_text, "user_id": user_info.get("user_id")}
+                json={"feedback_text": data.feedback_text, "user_id": data.user_id or 11111111}
             )
             if response.status_code == 200:
                 return {"text": "Feedback submitted successfully"}
