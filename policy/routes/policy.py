@@ -31,7 +31,7 @@ async def create_policy(course_id: int, data: CreatePolicyRequest):
 @router.get("/courses/{course_id}/policy")
 async def get_all_policy(course_id: int, user_id: int):
     verified = await verifyRoleInCourse(user_id, course_id)
-    if not verified:
+    if not verified.get("success", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Instructor privileges required"
@@ -44,7 +44,7 @@ async def get_all_policy(course_id: int, user_id: int):
 @router.get("/courses/{course_id}/policy/{policy_id}")
 async def get_policy_by_id(course_id: int, policy_id: int, user_id: int):
     verified = await verifyRoleInCourse(user_id, course_id)
-    if not verified:
+    if not verified.get("success", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Instructor privileges required"
@@ -241,7 +241,12 @@ async def get_total_scores_of_all_students(course_id: int, user_id: int):
 @router.get("/courses/{course_id}/total/{student_id}")
 async def get_total_score_for_studet(course_id: int, student_id: int, user_id: int):
     verified = await verifyRoleInCourse(user_id, course_id)
-    if not verified:
+    if verified.get("role", "") == 'student' and student_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    if not verified.get("success", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Instructor, TA, or student privileges required"
