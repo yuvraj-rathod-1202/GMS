@@ -55,7 +55,7 @@ export default function FeedbackForm({ onSubmit, loading, error, success }: Prop
         disabled={loading}
         className="w-full py-2.5 rounded-md bg-mms-blue text-white disabled:opacity-60 hover:bg-mms-indigo transition-colors"
       >
-        {loading ? 'Submitting...' : 'Submit Feedback'}
+        {loading ? 'Submitting...' : 'Submit Report'}
       </button>
     </form>
   );

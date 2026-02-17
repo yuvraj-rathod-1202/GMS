@@ -51,7 +51,7 @@ export default function FeedbackPage() {
             </svg>
             Back
           </button>
-          <h1 className="text-2xl font-semibold text-gray-900">Feedback</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Bug Report</h1>
           <p className="text-sm text-gray-600 mt-2">
             We value your Bug Reports. Share your thoughts with us!
           </p>
