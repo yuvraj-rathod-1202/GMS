@@ -1,5 +1,5 @@
-import os, logging
-from fastapi import FastAPI, Depends
+import os, logging, time
+from fastapi import FastAPI, Depends, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from models.schema import FeedbackRequest, SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, BulkEnrollStudentRequest
@@ -8,10 +8,35 @@ from services.auth import login_user, signup_user, bulk_signup_users, change_use
 
 load_dotenv()
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
 app = FastAPI()
 
 logger = logging.getLogger(__name__)
 IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
+
+# Logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    # Get client IP (consider X-Forwarded-For for proxies)
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+    
+    # Log incoming request
+    logger.info(f"Incoming request from IP: {client_ip} | Method: {request.method} | Path: {request.url.path}")
+    
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    # Log response
+    logger.info(f"Request completed | IP: {client_ip} | Status: {response.status_code} | Duration: {process_time:.3f}s")
+    
+    return response
 
 basic_auth = HTTPBasic()
 bearer_auth = HTTPBearer()
