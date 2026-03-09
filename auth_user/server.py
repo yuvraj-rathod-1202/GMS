@@ -1,10 +1,11 @@
 import os, logging, time
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
-from models.schema import FeedbackRequest, SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, BulkEnrollStudentRequest
+from models.schema import FeedbackRequest, SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, BulkEnrollStudentRequest, InstructorResetPasswordRequest
 from utils.security import verify_jwt_token
-from services.auth import login_user, signup_user, bulk_signup_users, change_user_password, forgot_user_password, submit_user_feedback
+from utils.auth import verifyInstructor
+from services.auth import login_user, signup_user, bulk_signup_users, change_user_password, forgot_user_password, submit_user_feedback, instructor_reset_user_password
 
 load_dotenv()
 
@@ -74,3 +75,13 @@ def forgot_password(data: ForgotPasswordRequest):
 @app.post("/feedback")
 def submit_feedback(feedback: FeedbackRequest):
     return submit_user_feedback(feedback, feedback.user_id)
+
+@app.post("/instructor/reset-password")
+def instructor_reset_password(data: InstructorResetPasswordRequest):
+    verified = verifyInstructor(data.user_id)
+    if not verified:
+        raise HTTPException(
+            status_code=403,
+            detail="Instructor privileges required"
+        )
+    return instructor_reset_user_password(data.target_user_id, data.new_password)

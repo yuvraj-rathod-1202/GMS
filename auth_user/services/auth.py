@@ -196,3 +196,31 @@ def submit_user_feedback(data: FeedbackRequest, user_id: int):
         return {"text": "Feedback submitted successfully"}
     except Exception as e:
         _handle_service_error("Submit feedback", e, "Failed to submit feedback")
+
+def instructor_reset_user_password(target_user_id: int, new_password: str):
+    db = _get_db_or_raise()
+    try:
+        cur = db.cursor()
+        cur.execute(
+            "SELECT id FROM users WHERE id = %s",
+            (target_user_id,)
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+            
+        password_hash = _hash_password(new_password)
+        
+        cur.execute(
+            "UPDATE users SET password_hash = %s WHERE id = %s",
+            (password_hash, target_user_id,)
+        )
+        db.commit()
+        
+        return {"text": "Password reset successfully"}
+    
+    except Exception as e:
+        _handle_service_error("Instructor reset password", e, "Failed to reset password")

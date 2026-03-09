@@ -1,18 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaUserCircle } from 'react-icons/fa';
+import { FaUserCircle, FaUserCog } from 'react-icons/fa';
 import { MdLogout } from 'react-icons/md';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/lib/store/auth';
 import { RiLockPasswordLine } from 'react-icons/ri';
+import { useCoursesStore } from '@/lib/store/courses';
 
 export default function UserMenu() {
   const router = useRouter();
   const { logout } = useAuth();
   const user = useAuthStore((s) => s.user);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const courses = useCoursesStore((s) => s.courses);
 
   const handleLogout = async () => {
     await logout();
@@ -24,6 +26,15 @@ export default function UserMenu() {
     router.push('/change-password');
     setUserMenuOpen(false);
   };
+
+  const handleInstructorResetPassword = () => {
+    router.push('/instructor/reset-password');
+    setUserMenuOpen(false);
+  };
+
+  const isInstructor = useMemo(() => {
+    return courses.some((course) => course.role === 'instructor');
+  }, [courses]);
 
   return (
     <div className="relative">
@@ -45,6 +56,15 @@ export default function UserMenu() {
           >
             <RiLockPasswordLine className="size-4" /> Change Password
           </button>
+          {isInstructor && (
+              <button
+                onClick={handleInstructorResetPassword}
+                className="w-full cursor-pointer text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center transition"
+              >
+                <FaUserCog className="size-4" />
+                Reset User Password
+              </button>
+            )}
           <button
             onClick={handleLogout}
             className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 last:rounded-b-lg  flex items-center gap-2"

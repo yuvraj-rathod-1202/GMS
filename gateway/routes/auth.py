@@ -4,7 +4,7 @@ import httpx, os
 from dotenv import load_dotenv
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from models.schema import SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, FeedbackRequest
+from models.schema import SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, FeedbackRequest, InstructorResetPasswordRequest
 from utils.auth import verify_token
 
 load_dotenv()
@@ -158,6 +158,28 @@ async def submit_feedback(request: Request, data: FeedbackRequest):
                 raise HTTPException(
                     status_code=response.status_code,
                     detail=_error_detail(response, "Failed to submit feedback")
+                )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Auth service Error: {str(e)}"
+            )
+            
+@router.post("/instructor/reset-password", dependencies=[Depends(verify_token)])
+@limiter.limit("20/hour")
+async def instructor_reset_password(request: Request, data: InstructorResetPasswordRequest, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                f"{AUTH_SERVICE_URL}/instructor/reset-password",
+                json={"user_id": user_info.get("user_id", ""), "target_user_id": data.target_user_id, "new_password": data.new_password},
+            )
+            if response.status_code == 200:
+                return {"text": "Password reset successfully"}
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to reset password")
                 )
         except httpx.RequestError as e:
             raise HTTPException(

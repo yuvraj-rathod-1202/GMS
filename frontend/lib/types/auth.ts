@@ -31,3 +31,8 @@ export interface FeedBackSubmitRequest {
   feedback_text: string;
   user_id?: number;
 }
+
+export interface InstructorResetPasswordRequest {
+  target_user_id: number;
+  new_password: string;
+}

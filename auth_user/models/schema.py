@@ -23,3 +23,8 @@ class ForgotPasswordRequest(BaseModel):
 class FeedbackRequest(BaseModel):
     user_id: int
     feedback_text: str
+    
+class InstructorResetPasswordRequest(BaseModel):
+    user_id: int
+    target_user_id: int
+    new_password: str
