@@ -15,11 +15,11 @@ def _error_detail(response, default_msg: str) -> str:
         text = (response.text or "").strip()
         return text or default_msg
 
-async def verifyInstructor(user_id: int):
+async def verifyInstructorOrTa(user_id: int):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
-                f"{COURSES_SERVICE_URL}/verifyinstructor",
+                f"{COURSES_SERVICE_URL}/verifyinstructororta",
                 params={"user_id": user_id}
             )
             if response.status_code == 200:

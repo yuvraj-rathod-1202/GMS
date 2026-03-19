@@ -68,8 +68,8 @@ export default function NavBar() {
     setMenuOpen(false);
   };
 
-  const isInstructor = useMemo(() => {
-    return courses.some((course) => course.role === 'instructor');
+  const isInstructorOrTa = useMemo(() => {
+    return courses.some((course) => course.role === 'instructor' || course.role === 'ta');
   }, [courses]);
 
   return (
@@ -116,7 +116,7 @@ export default function NavBar() {
                 <RiLockPasswordLine className="size-4" />
                 Change Password
               </button>
-              {isInstructor && (
+              {isInstructorOrTa && (
                 <button
                   onClick={handleInstructorResetPassword}
                   className="w-full text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center transition"

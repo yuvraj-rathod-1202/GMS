@@ -13,7 +13,7 @@ export default function InstructorResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [isInstructor, setIsInstructor] = useState<boolean | null>(null);
+  const [isInstructorOrTa, setIsInstructorOrTa] = useState<boolean | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -23,11 +23,11 @@ export default function InstructorResetPasswordPage() {
     }
 
     // Check if user is an instructor in any course
-    const hasInstructorRole = courses.some((course) => course.role === 'instructor');
-    setIsInstructor(hasInstructorRole);
+    const hasInstructorOrTaRole = courses.some((course) => course.role === 'instructor' || course.role === 'ta');
+    setIsInstructorOrTa(hasInstructorOrTaRole);
 
     // Redirect non-instructors
-    if (courses.length > 0 && !hasInstructorRole) {
+    if (courses.length > 0 && !hasInstructorOrTaRole) {
       router.push('/');
     }
   }, [user, courses, router]);
@@ -51,12 +51,12 @@ export default function InstructorResetPasswordPage() {
   }
 
   // Show loading while checking authorization
-  if (!user || isInstructor === null) {
+  if (!user || isInstructorOrTa === null) {
     return null;
   }
 
   // Prevent rendering if not authorized
-  if (!isInstructor) {
+  if (!isInstructorOrTa) {
     return null;
   }
 
@@ -80,7 +80,7 @@ export default function InstructorResetPasswordPage() {
           </button>
           <h1 className="text-2xl font-semibold text-gray-900">Reset User Password</h1>
           <p className="text-sm text-gray-600 mt-2">
-            As an instructor, you can reset a user&apos;s password by entering their user ID
+            As an instructor or TA, you can reset a user&apos;s password by entering their user ID(Roll No)
           </p>
         </div>
         <InstructorResetPasswordForm
