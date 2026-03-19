@@ -11,7 +11,6 @@ export default function IGradeSheet<T extends Record<string, any>>({
   setSearchTerm,
   data = [],
   searchable = true,
-  searchKeys,
   emptyMessage = 'No data available',
   className = '',
   onRowClick,
@@ -27,7 +26,14 @@ export default function IGradeSheet<T extends Record<string, any>>({
     handleEditCancel,
     isProcessing,
     validationError,
-  } = useGradeSheet({ data, searchable, searchKeys, columns });
+  } = useGradeSheet({ 
+    data, 
+    searchable, 
+    searchKeys: ['student_id', 'email'],
+    columns,
+    searchTerm,
+    setSearchTerm,
+  });
 
   // Calculate grid template columns
   const gridTemplateColumns = columns.map((col) => col.width || '1fr').join(' ');

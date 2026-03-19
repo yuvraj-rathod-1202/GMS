@@ -7,14 +7,20 @@ export function useGradeSheet({
   searchKeys,
   columns,
   max_marks,
+  searchTerm: externalSearchTerm,
+  setSearchTerm: externalSetSearchTerm,
 }: {
   data: any[];
   searchable?: boolean;
   searchKeys?: (keyof any | string)[];
   columns: GradeSheetColumn<any>[] | IGradeSheetColumn<any>[];
   max_marks?: number;
+  searchTerm?: string;
+  setSearchTerm?: (term: string) => void;
 }) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [internalSearchTerm, setInternalSearchTerm] = useState('');
+  const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
+  const setSearchTerm = externalSetSearchTerm || setInternalSearchTerm;
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; columnKey: string } | null>(
     null
   );
