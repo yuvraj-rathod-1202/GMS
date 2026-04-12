@@ -17,4 +17,8 @@ export const AnalyticsApi = {
       apiClient.get(`/courses/${courseId}/assessments/${assessmentId}/frequencies`)
     );
   },
+
+  GetSystemOverview: async () => {
+    return handleRequest(apiClient.get(`/analytics/system/overview`));
+  },
 };

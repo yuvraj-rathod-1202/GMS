@@ -73,4 +73,8 @@ export const CoursesApi = {
   FetchMyCourses: async () => {
     return handleRequest(apiClient.get('/courses/users/me/courses'));
   },
+
+  VerifyAdmin: async () => {
+    return handleRequest(apiClient.get('/verify/verifyadmin'));
+  },
 };

@@ -1,8 +1,10 @@
 import os
 import logging
+import MySQLdb
 from fastapi import HTTPException, status
 from utils.db import get_db
-from models.dbobj.assessments import CourseOverviewBDObj, AssessmentAnalyticsBDObj, AssessmentMarkFrequencyBDObj
+from models.dbobj.assessments import CourseOverviewBDObj, AssessmentAnalyticsBDObj, AssessmentMarkFrequencyBDObj, SystemOverviewBDObj
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -92,4 +94,86 @@ def get_assessment_frequencies_from_db(course_id: int, assessment_id: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while retrieving assessment frequency data" if IS_PRODUCTION else f"Database error: {str(e)}"
+        )
+
+def get_system_overview_from_db():
+    db_host = os.getenv("DB_HOST")
+    db_user = os.getenv("DB_USER")
+    db_password = os.getenv("DB_PASSWORD")
+    db_port = int(os.getenv("DB_PORT", 3306))
+
+    try:
+        courses_db = MySQLdb.connect(
+            host=db_host,
+            user=db_user,
+            passwd=db_password,
+            db="courses",
+            port=db_port,
+        )
+        courses_cursor = courses_db.cursor()
+        
+        # Get course statistics
+        courses_cursor.execute(
+            "SELECT COUNT(*) as total, SUM(CASE WHEN status = 'ongoing' THEN 1 ELSE 0 END) as active, "
+            "SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed FROM courses"
+        )
+        course_stats = courses_cursor.fetchone()
+        total_courses = course_stats[0] or 0
+        active_courses = course_stats[1] or 0
+        inactive_courses = course_stats[2] or 0
+        
+        # Get unique students count (from courses_role where role = 'student')
+        courses_cursor.execute(
+            "SELECT COUNT(DISTINCT user_id) FROM courses_role WHERE role = 'student'"
+        )
+        total_students = courses_cursor.fetchone()[0] or 0
+        
+        # Get unique instructors count
+        courses_cursor.execute(
+            "SELECT COUNT(DISTINCT user_id) FROM courses_role WHERE role = 'instructor'"
+        )
+        total_instructors = courses_cursor.fetchone()[0] or 0
+        
+        courses_cursor.close()
+        courses_db.close()
+        
+        marks_db = MySQLdb.connect(
+            host=db_host,
+            user=db_user,
+            passwd=db_password,
+            db="marks",
+            port=db_port,
+        )
+        marks_cursor = marks_db.cursor()
+        
+        # Get total assessments
+        marks_cursor.execute("SELECT COUNT(*) FROM assessments")
+        total_assessments = marks_cursor.fetchone()[0] or 0
+        
+        # Get average student grade
+        marks_cursor.execute(
+            "SELECT AVG(marks_obtained / (SELECT max_marks FROM assessments a WHERE a.id = m.assessment_id)) * 100 as avg_grade "
+            "FROM marks m"
+        )
+        result = marks_cursor.fetchone()
+        average_student_grade = result[0] if result and result[0] else 0.0
+        
+        marks_cursor.close()
+        marks_db.close()
+        
+        return SystemOverviewBDObj(
+            total_courses=total_courses,
+            active_courses=active_courses,
+            inactive_courses=inactive_courses,
+            total_students=total_students,
+            total_instructors=total_instructors,
+            total_assessments=total_assessments,
+            average_student_grade=round(average_student_grade, 2),
+            computed_at=datetime.now()
+        )
+    except Exception as e:
+        logger.error(f"Database error in get_system_overview_from_db: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while retrieving system overview" if IS_PRODUCTION else f"Database error: {str(e)}"
         )

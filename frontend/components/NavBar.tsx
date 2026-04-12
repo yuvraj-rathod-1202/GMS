@@ -6,20 +6,24 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { FaUserCheck, FaUserCircle } from 'react-icons/fa';
 import { MdLogout } from 'react-icons/md';
 import { RiLockPasswordLine } from 'react-icons/ri';
-import { FaUserCog } from 'react-icons/fa';
+import { FaUserCog, FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
+import { CoursesApi } from '@/lib/api/courses';
 
 export default function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useAuth();
   const courseMatch = useMemo(() => pathname.match(/^\/c\/(\d+)/), [pathname]);
+  const adminMatch = useMemo(() => pathname.match(/^\/admin/), [pathname]);
   const courses = useCoursesStore((s) => s.courses);
   const [courseCode, setCourseCode] = React.useState<string | null>(null);
   const PeopleMatch = useMemo(() => pathname.match(/^\/c\/(\d+)\/p/), [pathname]);
   const GradeMatch = useMemo(() => pathname.match(/^\/c\/(\d+)\/g/), [pathname]);
   const [courseId, setCourseId] = React.useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminLoading, setAdminLoading] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,6 +34,27 @@ export default function NavBar() {
       setCourseCode(course ? course.course_code : null);
     }
   }, [pathname, courses, courseMatch]);
+
+  // Check admin status
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await CoursesApi.VerifyAdmin();
+        setIsAdmin((response as any).isAdmin || false);
+        console.log('Admin status:', (response as any).isAdmin);
+      } catch (err) {
+        setIsAdmin(false);
+      } finally {
+        setAdminLoading(false);
+      }
+    };
+
+    if (!adminLoading) {
+      return; // Already checked
+    }
+
+    checkAdminStatus();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -79,7 +104,15 @@ export default function NavBar() {
           <Link href="/">
             <p>Dashboard</p>
           </Link>
-          <p>/</p>
+          {!courseMatch && !adminMatch && <p>/</p>}
+          {adminMatch && (
+            <>
+              <p>/</p>
+              <Link href="/admin">
+                <p className="text-mms-blue font-medium">Admin</p>
+              </Link>
+            </>
+          )}
           {courseMatch && (
             <Link href={`/c/${courseId}`}>
               <p>{courseCode}</p>
@@ -98,6 +131,18 @@ export default function NavBar() {
           )}
         </div>
 
+        {/* Desktop Admin Link */}
+        <div className="hidden md:flex gap-4 items-center">
+          {isAdmin && (
+            <Link href="/admin">
+              <button className="px-3 py-1.5 text-sm text-mms-blue font-medium hover:bg-blue-50 rounded-md transition-colors flex items-center gap-2">
+                <FaShieldAlt className="size-4" />
+                Admin
+              </button>
+            </Link>
+          )}
+        </div>
+
         <div className="md:hidden bg-white relative z-9999" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -109,9 +154,23 @@ export default function NavBar() {
 
           {menuOpen && (
             <div className="fixed right-2 top-14 bg-white rounded-lg shadow-xl z-9999 min-w-180px border border-gray-200">
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    router.push('/admin');
+                    setMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-sm text-mms-blue flex gap-2 items-center first:rounded-t-lg transition font-medium border-b border-gray-100"
+                >
+                  <FaShieldAlt className="size-4" />
+                  Admin Dashboard
+                </button>
+              )}
               <button
                 onClick={handleChangePassword}
-                className="w-full text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center first:rounded-t-lg transition"
+                className={`w-full text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center transition ${
+                  !isAdmin ? 'first:rounded-t-lg' : ''
+                }`}
               >
                 <RiLockPasswordLine className="size-4" />
                 Change Password

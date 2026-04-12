@@ -33,3 +33,14 @@ export interface AssessmentMarkFrequencyDBObject {
   frequency: number;
   computed_at: Date;
 }
+
+export interface SystemOverviewDBObject {
+  total_courses: number;
+  active_courses: number;
+  inactive_courses: number;
+  total_students: number;
+  total_instructors: number;
+  total_assessments: number;
+  average_student_grade: number;
+  computed_at: Date;
+}

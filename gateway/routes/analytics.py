@@ -84,4 +84,26 @@ async def get_assessment_frequencies(course_id: int, assessment_id: int, user_in
                 status_code=500,
                 detail=f"Error connecting to Analytics Service: {str(e)}"
             )
+
+@router.get("/system/overview")
+@limiter.limit("100/minute")
+async def get_system_overview(request: Request, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{ANALYTICS_SERVICE_URL}/system/overview",
+                params={"user_id": user_info["user_id"]}
+            )
             
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to retrieve system analytics overview")
+                )
+                
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Analytics Service: {str(e)}"
+            )
