@@ -1,7 +1,13 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { FiTrash2 } from 'react-icons/fi';
 import { AdminApi } from '@/lib/api/admin';
 import { CourseDBObject } from '@/lib/types/courses';
+
+type InstructorAssignment = {
+  user_id: number;
+  email: string | null;
+};
 
 interface EditCourseFormProps {
   userId: number;
@@ -18,8 +24,46 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
     status: course.status,
   });
   const [loading, setLoading] = useState(false);
+  const [instructorsLoading, setInstructorsLoading] = useState(false);
+  const [removingInstructorId, setRemovingInstructorId] = useState<number | null>(null);
+  const [instructors, setInstructors] = useState<InstructorAssignment[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [instructorError, setInstructorError] = useState<string | null>(null);
   const [localErrors, setLocalErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchInstructors = async () => {
+      try {
+        setInstructorsLoading(true);
+        setInstructorError(null);
+        const response = await AdminApi.GetCourseInstructors(course.id);
+        if (!isActive) {
+          return;
+        }
+
+        setInstructors((response as any).roles || []);
+      } catch (err: any) {
+        if (!isActive) {
+          return;
+        }
+
+        console.error('Error fetching course instructors:', err);
+        setInstructorError(err?.message || 'Failed to load assigned instructors');
+      } finally {
+        if (isActive) {
+          setInstructorsLoading(false);
+        }
+      }
+    };
+
+    fetchInstructors();
+
+    return () => {
+      isActive = false;
+    };
+  }, [course.id]);
 
   const validateForm = (): boolean => {
     const errors: { [key: string]: string } = {};
@@ -79,6 +123,25 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
         delete updated[field];
         return updated;
       });
+    }
+  };
+
+  const handleRemoveInstructor = async (instructorId: number) => {
+    if (!window.confirm('Remove this instructor from the course?')) {
+      return;
+    }
+
+    try {
+      setRemovingInstructorId(instructorId);
+      setInstructorError(null);
+      await AdminApi.RemoveInstructor(course.id, instructorId, userId);
+      setInstructors((prev) => prev.filter((instructor) => instructor.user_id !== instructorId));
+      onSuccess();
+    } catch (err: any) {
+      console.error('Error removing instructor:', err);
+      setInstructorError(err?.message || 'Failed to remove instructor');
+    } finally {
+      setRemovingInstructorId(null);
     }
   };
 
@@ -145,6 +208,55 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
               <option value="active">active</option>
               <option value="inactive">inactive</option>
             </select>
+          </div>
+
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-4 space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Assigned Instructors</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Manage who can teach this course from the admin panel.
+              </p>
+            </div>
+
+            {instructorError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+                {instructorError}
+              </div>
+            )}
+
+            {instructorsLoading ? (
+              <p className="text-sm text-gray-600">Loading instructors...</p>
+            ) : instructors.length === 0 ? (
+              <p className="text-sm text-gray-500">No instructors are assigned to this course.</p>
+            ) : (
+              <div className="space-y-2">
+                {instructors.map((instructor) => (
+                  <div
+                    key={instructor.user_id}
+                    className="flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        Instructor #{instructor.user_id}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {instructor.email || 'No email on file'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveInstructor(instructor.user_id)}
+                      disabled={removingInstructorId === instructor.user_id}
+                      className="inline-flex items-center gap-1 rounded-md px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      title="Remove instructor"
+                    >
+                      <FiTrash2 size={14} />
+                      {removingInstructorId === instructor.user_id ? 'Removing...' : 'Remove'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">
