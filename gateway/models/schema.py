@@ -48,14 +48,14 @@ class GetAllCourseRoleRequest(BaseModel):
 class CreateAssessmentRequest(BaseModel):
     name: str
     assessment_type_id: int
-    max_marks: int
+    max_marks: float
     is_marks_published: bool
     assessment_date: datetime
     
 class UpdateAssessmentRequest(BaseModel):
     name: Optional[str] = None
     assessment_type_id: Optional[int] = None
-    max_marks: Optional[int] = None
+    max_marks: Optional[float] = None
     is_marks_published: Optional[bool] = None
     assessment_date: Optional[datetime] = None
     

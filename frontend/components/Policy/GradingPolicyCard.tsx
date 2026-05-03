@@ -13,6 +13,7 @@ const getAssessmentTypeLabel = (typeId: number): string => {
     5: 'Project',
     6: 'Attendance',
     7: 'Lab',
+    8: 'Other',
   };
   return types[typeId] || `Type ${typeId}`;
 };

@@ -76,4 +76,5 @@ INSERT INTO assessment_category (type) VALUES
     ('Endsem'),
     ('Project'),
     ('Attendance'),
-    ('Lab');
+    ('Lab'),
+    ('Other');

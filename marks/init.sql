@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS assessments (
     course_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     assessment_type_id INT NOT NULL,
-    max_marks INT NOT NULL,
+    max_marks FLOAT NOT NULL,
     is_marks_published BOOLEAN DEFAULT FALSE,
     assessment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by_id INT NOT NULL,
@@ -55,7 +55,7 @@ CREATE TRIGGER before_marks_insert
 BEFORE INSERT ON marks
 FOR EACH ROW
 BEGIN
-    DECLARE max_m INT;
+    DECLARE max_m FLOAT;
 
     SELECT max_marks
     INTO max_m

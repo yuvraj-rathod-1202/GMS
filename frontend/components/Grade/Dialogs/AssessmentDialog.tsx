@@ -25,6 +25,7 @@ const ASSESSMENT_TYPES = [
   { id: 5, name: 'Project' },
   { id: 6, name: 'Attendance' },
   { id: 7, name: 'Lab' },
+  { id: 8, name: 'Other' },
 ];
 
 export default function AssessmentDialog({
@@ -72,8 +73,8 @@ export default function AssessmentDialog({
       newErrors.name = 'Assessment name is required';
     }
 
-    if (formData.max_marks < 0) {
-      newErrors.max_marks = 'Max marks must be greater than 0';
+    if (!Number.isFinite(formData.max_marks) || formData.max_marks < 0) {
+      newErrors.max_marks = 'Max marks must be a positive number';
     }
 
     if (!formData.assessment_date) {
@@ -179,8 +180,9 @@ export default function AssessmentDialog({
             <input
               type="number"
               value={formData.max_marks}
-              onChange={(e) => handleChange('max_marks', Number(e.target.value))}
+              onChange={(e) => handleChange('max_marks', parseFloat(e.target.value))}
               min="0"
+              step="0.01"
               className={`w-full px-4 py-2 border rounded-lg outline-none transition-colors ${
                 errors.max_marks ? 'border-red-500' : 'border-gray-300 focus:border-gray-500'
               }`}

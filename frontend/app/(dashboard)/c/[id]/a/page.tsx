@@ -15,14 +15,13 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
-  LineElement,
   PointElement,
   Title,
   Tooltip,
   Legend,
   ArcElement,
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import InstructorNavbar from '@/components/Course/InstructorNavbar';
 import { BiArrowBack, BiBarChartAlt2, BiHash, BiStats, BiTrendingUp, BiUser } from 'react-icons/bi';
 
@@ -31,7 +30,6 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  LineElement,
   PointElement,
   Title,
   Tooltip,
@@ -140,20 +138,43 @@ export default function AnalyticsPage() {
     );
   }
 
+  const selectedAssessment = assessments.find((assessment) => assessment.id === selectedAssessmentId);
+  const maxPossibleMarks = selectedAssessment?.max_marks ?? assessmentAnalytics?.max ?? 100;
+  const observedMaxMark = assessmentFrequencies.reduce(
+    (highest, entry) => Math.max(highest, entry.mark),
+    0
+  );
+  const histogramUpperBound = Math.max(maxPossibleMarks, observedMaxMark, 1);
+  const binCount = Math.min(10, Math.max(5, Math.ceil(Math.sqrt(Math.max(assessmentFrequencies.length, 1)))));
+  const binSize = Math.max(1, Math.ceil(histogramUpperBound / binCount));
+  const bins = Array.from({ length: Math.ceil(histogramUpperBound / binSize) }, (_, index) => {
+    const start = index * binSize;
+    const end = Math.min(start + binSize, histogramUpperBound);
+    const isLastBin = index === Math.ceil(histogramUpperBound / binSize) - 1;
+    const frequency = assessmentFrequencies.reduce((count, entry) => {
+      const inRange = isLastBin
+        ? entry.mark >= start && entry.mark <= end
+        : entry.mark >= start && entry.mark < end;
+      return inRange ? count + entry.frequency : count;
+    }, 0);
+
+    return {
+      label: start === end ? `${start}` : `${start}-${end}`,
+      frequency,
+    };
+  });
+
   const frequencyChartData = {
-    labels: assessmentFrequencies.map((f) => f.mark.toString()),
+    labels: bins.map((bin) => bin.label),
     datasets: [
       {
         label: 'Student Count',
-        data: assessmentFrequencies.map((f) => f.frequency),
+        data: bins.map((bin) => bin.frequency),
         backgroundColor: 'rgba(59, 130, 246, 0.2)',
         borderColor: 'rgba(59, 130, 246, 1)',
         borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: 'rgba(59, 130, 246, 1)',
-        pointRadius: 4,
+        borderRadius: 10,
+        maxBarThickness: 48,
       },
     ],
   };
@@ -169,7 +190,7 @@ export default function AnalyticsPage() {
         cornerRadius: 8,
         displayColors: false,
         callbacks: {
-          title: (items: any) => `Mark: ${items[0].label}`,
+          title: (items: any) => `Mark range: ${items[0].label}`,
           label: (item: any) => `${item.raw} Students`,
         },
       },
@@ -182,7 +203,11 @@ export default function AnalyticsPage() {
       },
       x: {
         grid: { display: true, borderDash: [2, 4], color: '#f3f4f6' },
-        title: { display: true, text: 'Marks Obtained' },
+        title: { display: true, text: 'Marks Range' },
+        ticks: {
+          maxRotation: 0,
+          autoSkip: true,
+        },
       },
     },
   };
@@ -256,7 +281,7 @@ export default function AnalyticsPage() {
                     <select
                       value={selectedAssessmentId || ''}
                       onChange={(e) => setSelectedAssessmentId(Number(e.target.value))}
-                      className="appearance-none bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium min-w-[240px]"
+                      className="appearance-none bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium min-w-60"
                     >
                       {assessments.map((a) => (
                         <option key={a.id} value={a.id}>
@@ -322,11 +347,11 @@ export default function AnalyticsPage() {
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-base font-semibold text-gray-900">Grade Distribution</h3>
                       <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded text-gray-600">
-                        Frequency Curve
+                        Frequency Histogram
                       </span>
                     </div>
                     <div className="h-64 md:h-80">
-                      <Line data={frequencyChartData} options={chartOptions} />
+                      <Bar data={frequencyChartData} options={chartOptions} />
                     </div>
                   </div>
                 </div>

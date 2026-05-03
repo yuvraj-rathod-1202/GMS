@@ -6,7 +6,7 @@ class AssessmentsBDObj(BaseModel):
     course_id: int
     name: str
     assessment_type_id: int
-    max_marks: int
+    max_marks: float
     is_marks_published: bool
     assessment_date: datetime
     created_by_id: int
