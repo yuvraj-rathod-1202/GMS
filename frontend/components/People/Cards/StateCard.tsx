@@ -1,3 +1,7 @@
+'use client';
+
+import Button from '@/components/ui/Button';
+
 export function StatCard({
   label,
   count,
@@ -10,7 +14,8 @@ export function StatCard({
   onClick: () => void;
 }) {
   return (
-    <div
+    <Button
+      type="button"
       onClick={onClick}
       className={`p-6 rounded-2xl border cursor-pointer transition-all ${
         isActive
@@ -20,6 +25,6 @@ export function StatCard({
     >
       <p className="text-gray-500 text-sm font-medium">{label}</p>
       <p className="text-3xl font-bold text-gray-900 mt-2">{count}</p>
-    </div>
+    </Button>
   );
 }

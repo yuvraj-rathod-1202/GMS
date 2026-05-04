@@ -1,6 +1,17 @@
 'use client';
+
 import React, { useState } from 'react';
+import Alert from '@/components/ui/Alert';
+import Button from '@/components/ui/Button';
+import FormFields from '@/components/ui/FormFields';
+import Modal from '@/components/ui/Modal';
 import { AdminApi } from '@/lib/api/admin';
+import { AddCourseRequest } from '@/lib/types/courses';
+import { CourseFormValues, createCourseFields, validateCourseForm } from './courseFormConfig';
+
+type CourseCreateFormState = Omit<CourseFormValues, 'credits'> & {
+  credits: number | '';
+};
 
 interface CreateCourseFormProps {
   userId: number;
@@ -9,175 +20,78 @@ interface CreateCourseFormProps {
 }
 
 export default function CreateCourseForm({ userId, onClose, onSuccess }: CreateCourseFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CourseCreateFormState>({
     course_code: '',
     name: '',
     semester: '',
     credits: 3,
+    status: 'ongoing',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [localErrors, setLocalErrors] = useState<{ [key: string]: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof CourseFormValues, string>>>({});
 
-  const validateForm = (): boolean => {
-    const errors: { [key: string]: string } = {};
-
-    if (!formData.course_code.trim()) {
-      errors.course_code = 'Course code is required';
-    } else if (formData.course_code.trim().length > 10) {
-      errors.course_code = 'Course code must be 10 characters or less';
-    }
-
-    if (!formData.name.trim()) {
-      errors.name = 'Course name is required';
-    } else if (formData.name.trim().length > 100) {
-      errors.name = 'Course name must be 100 characters or less';
-    }
-
-    if (!formData.semester.trim()) {
-      errors.semester = 'Semester is required';
-    }
-
-    if (!formData.credits || formData.credits < 0 || formData.credits > 12) {
-      errors.credits = 'Credits must be between 0 and 12';
-    }
-
-    setLocalErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
 
-    if (!validateForm()) {
+    const validationErrors = validateCourseForm(formData, { requireSemester: true });
+    setFieldErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
       return;
     }
 
     try {
       setLoading(true);
-      await AdminApi.CreateCourse({
-        user_id: userId,
-        ...formData,
-      });
 
-      // Success - close modal and refresh
+      const payload: AddCourseRequest & { user_id: number } = {
+        user_id: userId,
+        course_code: formData.course_code.trim(),
+        name: formData.name.trim(),
+        semester: formData.semester.trim(),
+        credits: Number(formData.credits),
+      };
+
+      await AdminApi.CreateCourse(payload);
       onSuccess();
       onClose();
-    } catch (err: any) {
-      console.error('Error creating course:', err);
-      setError(err?.message || 'Failed to create course');
+    } catch (error: unknown) {
+      console.error('Error creating course:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create course');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error for this field when user starts typing
-    if (localErrors[field]) {
-      setLocalErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[field];
-        return updated;
-      });
-    }
-  };
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Create New Course</h2>
+    <Modal
+      open
+      title="Create New Course"
+      description="Add a new course to the admin catalog."
+      onClose={onClose}
+      className="max-w-lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && <Alert variant="error">{error}</Alert>}
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-            {error}
-          </div>
-        )}
+        <FormFields
+          fields={createCourseFields}
+          values={formData}
+          errors={fieldErrors}
+          onChange={(field, value) => setFormData((prev) => ({ ...prev, [field]: value }))}
+          disabled={loading}
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Course Code *
-            </label>
-            <input
-              type="text"
-              value={formData.course_code}
-              onChange={(e) => handleChange('course_code', e.target.value)}
-              placeholder="e.g., CS101"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mms-blue"
-            />
-            {localErrors.course_code && (
-              <p className="mt-1 text-sm text-red-600">{localErrors.course_code}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Course Name *
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="e.g., Introduction to Computer Science"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mms-blue"
-            />
-            {localErrors.name && <p className="mt-1 text-sm text-red-600">{localErrors.name}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Semester *
-            </label>
-            <input
-              type="text"
-              value={formData.semester}
-              onChange={(e) => handleChange('semester', e.target.value)}
-              placeholder="e.g., Fall 2024"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mms-blue"
-            />
-            {localErrors.semester && (
-              <p className="mt-1 text-sm text-red-600">{localErrors.semester}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Credits *
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="12"
-              value={formData.credits}
-              onChange={(e) => handleChange('credits', parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-mms-blue"
-            />
-            {localErrors.credits && (
-              <p className="mt-1 text-sm text-red-600">{localErrors.credits}</p>
-            )}
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 font-medium text-sm"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-mms-blue text-white rounded-md hover:bg-mms-indigo transition-colors disabled:opacity-50 font-medium text-sm"
-            >
-              {loading ? 'Creating...' : 'Create Course'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
+          <Button type="button" variant="secondary" className="flex-1" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button type="submit" className="flex-1" disabled={loading}>
+            {loading ? 'Creating...' : 'Create Course'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

@@ -1,8 +1,12 @@
 'use client';
+
 import React, { useState } from 'react';
+import Alert from '@/components/ui/Alert';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 type Props = {
-  onSubmit: (id: number, password: string) => Promise<any>;
+  onSubmit: (id: number, password: string) => Promise<void>;
   loading?: boolean;
   error?: string | null;
 };
@@ -12,8 +16,8 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setLocalError(null);
 
     const parsed = Number(id);
@@ -21,6 +25,7 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
       setLocalError('Please enter a valid numeric ID');
       return;
     }
+
     if (!password) {
       setLocalError('Please enter your password');
       return;
@@ -28,45 +33,39 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
 
     try {
       await onSubmit(parsed, password);
-    } catch (err) {
-      // error is handled by parent; nothing to do here
+    } catch {
+      // Error is handled by the parent component.
     }
-  }
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-sm mx-auto text-left">
-      <div className="mb-4">
-        <label className="block mb-1.5 text-black">User ID</label>
-        <input
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-          placeholder="Enter user id"
-          inputMode="numeric"
-          className="w-full px-3 py-2 rounded-md border text-black border-zinc-300 bg-mms-grayLight outline-none focus:ring-2 focus:ring-mms-blue"
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1.5 text-black">Password</label>
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-          placeholder="Enter password"
-          className="w-full px-3 py-2 rounded-md border text-black border-zinc-300 bg-mms-grayLight outline-none focus:ring-2 focus:ring-mms-blue"
-        />
-      </div>
-
-      {localError && <div className="text-red-600 mb-2 text-sm">{localError}</div>}
-      {error && <div className="text-red-600 mb-2 text-sm">{error}</div>}
-
-      <button
-        type="submit"
+    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-sm space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <Input
+        label="User ID"
+        value={id}
+        onChange={(event) => setId(event.target.value)}
+        placeholder="Enter user ID"
+        inputMode="numeric"
         disabled={loading}
-        className="w-full py-2.5 hover:cursor-pointer rounded-md bg-mms-blue text-white disabled:opacity-60 hover:bg-mms-indigo transition-colors"
-      >
+        required
+      />
+
+      <Input
+        label="Password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        type="password"
+        placeholder="Enter password"
+        disabled={loading}
+        required
+      />
+
+      {localError && <Alert variant="error">{localError}</Alert>}
+      {error && <Alert variant="error">{error}</Alert>}
+
+      <Button type="submit" className="w-full" disabled={loading}>
         {loading ? 'Logging in...' : 'Login'}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -1,8 +1,9 @@
-import { PolicyDBObject } from '@/lib/types/policy';
 import React from 'react';
-import { FaEdit } from 'react-icons/fa';
 import { FaPencil } from 'react-icons/fa6';
 import { MdDelete } from 'react-icons/md';
+import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
+import { PolicyDBObject } from '@/lib/types/policy';
 
 const getAssessmentTypeLabel = (typeId: number): string => {
   const types: { [key: number]: string } = {
@@ -36,31 +37,33 @@ export default function GradingPolicyCard({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-gray-900">{policy.policy_name}</h3>
-            {policy.is_default && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-                Default
-              </span>
-            )}
+            {policy.is_default && <Badge variant="info">Default</Badge>}
           </div>
-          <div className="flex flex-row gap-4 text-sm text-gray-500 items-center">
+          <div className="flex flex-row items-center gap-4 text-sm text-gray-500">
             <p>
               Total Weightage:{' '}
               <span className="font-medium text-gray-900">{policy.total_weightage}%</span>
             </p>
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={onEdit}
               title="Edit Policy"
-              className="cursor-pointer text-gray-600 hover:text-mms-indigo hover:underline"
+              className="h-9 w-9 p-0 text-gray-600 hover:text-mms-indigo"
             >
               <FaPencil className="size-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={onDelete}
               title="Delete Policy"
-              className="cursor-pointer text-red-600 hover:text-red-800 hover:underline"
+              className="h-9 w-9 p-0 text-red-600 hover:text-red-800"
             >
               <MdDelete className="size-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -73,16 +76,16 @@ export default function GradingPolicyCard({
               <div key={component.id} className="p-3 rounded-md bg-gray-50 border border-gray-100">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white border border-gray-300 text-xs font-medium text-gray-700">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white text-xs font-medium text-gray-700">
                       {index + 1}
                     </span>
                     <span className="text-sm font-medium text-gray-700">
                       {getAssessmentTypeLabel(component.assessment_category_id)}
                     </span>
                   </div>
-                  <span className="text-sm font-medium text-gray-900 ml-8 sm:ml-0">
+                  <Badge variant="default" className="ml-8 sm:ml-0">
                     {component.weightage}%
-                  </span>
+                  </Badge>
                 </div>
 
                 {component.rules && (
@@ -90,9 +93,9 @@ export default function GradingPolicyCard({
                     <div className="flex flex-col sm:flex-row gap-2 text-xs">
                       <div className="flex items-center gap-1">
                         <span className="text-gray-500">Rule:</span>
-                        <span className="px-2 py-0.5 bg-white border border-gray-200 rounded text-gray-700 font-medium">
+                        <Badge variant="default" className="rounded-md px-2 py-0.5">
                           {component.rules.rule_type}
-                        </span>
+                        </Badge>
                       </div>
                       {Object.keys(component.rules.rule_params).length > 0 && (
                         <div className="flex items-center gap-1">
@@ -118,16 +121,13 @@ export default function GradingPolicyCard({
       </div>
 
       {/* Footer */}
-      <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-100 rounded-b-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-gray-500">
+      <div className="rounded-b-lg border-t border-gray-100 bg-gray-50 px-4 py-3 sm:px-6">
+        <div className="flex flex-col gap-2 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
           <span>Updated {new Date(policy.updated_at).toLocaleDateString()}</span>
           {!policy.is_default && (
-            <button
-              onClick={SetDefault}
-              className="text-xs text-mms-blue cursor-pointer hover:underline"
-            >
+            <Button type="button" variant="ghost" size="sm" onClick={SetDefault} className="px-0 text-xs text-mms-blue hover:bg-transparent hover:underline">
               set as default
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -1,4 +1,7 @@
+'use client';
+
 import { BiGroup } from 'react-icons/bi';
+import Button from '@/components/ui/Button';
 
 export function EmptyState({
   title,
@@ -28,21 +31,15 @@ export function EmptyState({
       <div className="flex gap-3">
         {showSecondary && onSecondaryAction && (
           <>
-            <button
-              onClick={onSecondaryAction}
-              className="text-blue-600 font-medium hover:underline text-sm"
-            >
+            <Button type="button" variant="ghost" onClick={onSecondaryAction} className="px-0 text-sm text-blue-600 hover:bg-transparent hover:text-blue-700">
               {secondaryActionText}
-            </button>
+            </Button>
             <span className="text-gray-300">|</span>
           </>
         )}
-        <button
-          onClick={onPrimaryAction}
-          className="text-blue-600 font-medium hover:underline text-sm"
-        >
+        <Button type="button" variant="ghost" onClick={onPrimaryAction} className="px-0 text-sm text-blue-600 hover:bg-transparent hover:text-blue-700">
           {primaryActionText}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -1,8 +1,12 @@
 'use client';
+
 import React, { useState } from 'react';
+import Alert from '@/components/ui/Alert';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 type Props = {
-  onSubmit: (oldPassword: string, newPassword: string) => Promise<any>;
+  onSubmit: (oldPassword: string, newPassword: string) => Promise<void>;
   loading?: boolean;
   error?: string | null;
   success?: boolean;
@@ -14,26 +18,30 @@ export default function ChangePasswordForm({ onSubmit, loading, error, success }
   const [confirmPassword, setConfirmPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setLocalError(null);
 
     if (!oldPassword) {
       setLocalError('Please enter your current password');
       return;
     }
+
     if (!newPassword) {
       setLocalError('Please enter a new password');
       return;
     }
+
     if (newPassword.length < 6) {
       setLocalError('New password must be at least 6 characters');
       return;
     }
+
     if (newPassword !== confirmPassword) {
       setLocalError('New passwords do not match');
       return;
     }
+
     if (oldPassword === newPassword) {
       setLocalError('New password must be different from current password');
       return;
@@ -44,53 +52,50 @@ export default function ChangePasswordForm({ onSubmit, loading, error, success }
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (err) {}
-  }
+    } catch {
+      // Parent component owns the API error state.
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-sm mx-auto text-left">
-      <Inputbox label="Current Password" value={oldPassword} OnChange={setOldPassword} />
-      <Inputbox label="New Password" value={newPassword} OnChange={setNewPassword} />
-      <Inputbox
+    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-sm space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm text-left">
+      <Input
+        label="Current Password"
+        value={oldPassword}
+        onChange={(event) => setOldPassword(event.target.value)}
+        type="password"
+        placeholder="Current password"
+        disabled={loading}
+        required
+      />
+
+      <Input
+        label="New Password"
+        value={newPassword}
+        onChange={(event) => setNewPassword(event.target.value)}
+        type="password"
+        placeholder="New password"
+        disabled={loading}
+        required
+      />
+
+      <Input
         label="Confirm New Password"
         value={confirmPassword}
-        OnChange={setConfirmPassword}
-      />
-
-      {localError && <div className="text-red-600 mb-2 text-sm">{localError}</div>}
-      {error && <div className="text-red-600 mb-2 text-sm">{error}</div>}
-      {success && <div className="text-green-600 mb-2 text-sm">Password changed successfully!</div>}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full py-2.5 rounded-md bg-gray-800 text-white disabled:opacity-60 hover:bg-gray-700 transition-colors"
-      >
-        {loading ? 'Changing Password...' : 'Change Password'}
-      </button>
-    </form>
-  );
-}
-
-function Inputbox({
-  label,
-  value,
-  OnChange,
-}: {
-  label: string;
-  value: string;
-  OnChange: (val: string) => void;
-}) {
-  return (
-    <div className="mb-4">
-      <label className="block mb-1.5 text-gray-700">{label}</label>
-      <input
-        value={value}
-        onChange={(e) => OnChange(e.target.value)}
+        onChange={(event) => setConfirmPassword(event.target.value)}
         type="password"
-        placeholder={label}
-        className="w-full px-3 py-2 rounded-md border border-gray-300 outline-none focus:ring-2 focus:ring-gray-400"
+        placeholder="Confirm new password"
+        disabled={loading}
+        required
       />
-    </div>
+
+      {localError && <Alert variant="error">{localError}</Alert>}
+      {error && <Alert variant="error">{error}</Alert>}
+      {success && <Alert variant="success">Password changed successfully!</Alert>}
+
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? 'Changing Password...' : 'Change Password'}
+      </Button>
+    </form>
   );
 }

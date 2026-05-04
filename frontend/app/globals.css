@@ -33,12 +33,21 @@ body,
 html,
 #__next,
 #root {
-  background: #ffffff !important;
-  color: #171717 !important;
+  background: var(--background) !important;
+  color: var(--foreground) !important;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background-image:
+    radial-gradient(circle at top left, rgba(146, 191, 255, 0.12), transparent 30%),
+    radial-gradient(circle at top right, rgba(159, 159, 248, 0.12), transparent 25%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(146, 191, 255, 0.28);
+  color: #111827;
 }

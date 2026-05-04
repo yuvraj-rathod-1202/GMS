@@ -20,6 +20,7 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
   const [formData, setFormData] = useState({
     course_code: course.course_code,
     name: course.name,
+    semester: course.semester,
     credits: course.credits,
     status: course.status,
   });
@@ -38,19 +39,19 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
       try {
         setInstructorsLoading(true);
         setInstructorError(null);
-        const response = await AdminApi.GetCourseInstructors(course.id);
+        const response = (await AdminApi.GetCourseInstructors(course.id)) as { roles?: InstructorAssignment[] };
         if (!isActive) {
           return;
         }
 
-        setInstructors((response as any).roles || []);
-      } catch (err: any) {
+        setInstructors(response.roles || []);
+      } catch (error: unknown) {
         if (!isActive) {
           return;
         }
 
-        console.error('Error fetching course instructors:', err);
-        setInstructorError(err?.message || 'Failed to load assigned instructors');
+        console.error('Error fetching course instructors:', error);
+        setInstructorError(error instanceof Error ? error.message : 'Failed to load assigned instructors');
       } finally {
         if (isActive) {
           setInstructorsLoading(false);
@@ -107,15 +108,15 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      console.error('Error updating course:', err);
-      setError(err?.message || 'Failed to update course');
+    } catch (error: unknown) {
+      console.error('Error updating course:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update course');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (localErrors[field]) {
       setLocalErrors((prev) => {
@@ -137,9 +138,9 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
       await AdminApi.RemoveInstructor(course.id, instructorId, userId);
       setInstructors((prev) => prev.filter((instructor) => instructor.user_id !== instructorId));
       onSuccess();
-    } catch (err: any) {
-      console.error('Error removing instructor:', err);
-      setInstructorError(err?.message || 'Failed to remove instructor');
+    } catch (error: unknown) {
+      console.error('Error removing instructor:', error);
+      setInstructorError(error instanceof Error ? error.message : 'Failed to remove instructor');
     } finally {
       setRemovingInstructorId(null);
     }
