@@ -23,6 +23,8 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import InstructorNavbar from '@/components/Course/InstructorNavbar';
+import TANavbar from '@/components/Course/TANavbar';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { BiArrowBack, BiBarChartAlt2, BiHash, BiStats, BiTrendingUp, BiUser } from 'react-icons/bi';
 
 // Register Chart.js components
@@ -43,6 +45,11 @@ export default function AnalyticsPage() {
   const courseId = params?.id ? Number(params.id) : null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { role } = useRoleAccess({
+    allowedRoles: ['instructor', 'ta'],
+    courseId: courseId || 0,
+  });
 
   // Data states
   const [courseOverview, setCourseOverview] = useState<CourseOverviewDBObject | null>(null);
@@ -219,7 +226,7 @@ export default function AnalyticsPage() {
 
   return (
     <>
-      <InstructorNavbar />
+      {role === 'instructor' ? <InstructorNavbar /> : <TANavbar />}
       <div className="flex flex-col overflow-y-auto h-[calc(100vh-96px)] bg-gray-50">
         <div className="bg-white border-b border-gray-200 px-6 py-4 shrink-0">
           <div className="max-w-7xl mx-auto flex justify-between items-center">

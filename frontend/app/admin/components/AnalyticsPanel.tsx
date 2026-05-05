@@ -110,27 +110,6 @@ export default function AnalyticsPanel() {
           subtext="Teaching courses"
           color="bg-purple-500"
         />
-
-        <StatCard
-          title="Total Assessments"
-          value={analytics.total_assessments}
-          subtext="Created by instructors"
-          color="bg-orange-500"
-        />
-
-        <StatCard
-          title="Avg Student Grade"
-          value={`${analytics.average_student_grade.toFixed(2)}%`}
-          subtext="System-wide average"
-          color="bg-rose-500"
-        />
-
-        <StatCard
-          title="Last Updated"
-          value={new Date(analytics.computed_at).toLocaleDateString()}
-          subtext={new Date(analytics.computed_at).toLocaleTimeString()}
-          color="bg-gray-500"
-        />
       </div>
 
       <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">

@@ -1,17 +1,23 @@
 'use client';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export default function TANavbar() {
   const params = useParams();
   const pathname = usePathname();
   const courseId = params.id;
+  const { isFeatureEnabled } = useFeatureFlags(Number(courseId));
 
   const navItems = [
     { label: 'Overview', href: `/c/${courseId}` },
     { label: 'Students', href: `/c/${courseId}/p` },
     { label: 'Grades', href: `/c/${courseId}/g` },
   ];
+
+  if (isFeatureEnabled('course.ta_analytics_visibility')) {
+    navItems.push({ label: 'Analytics', href: `/c/${courseId}/a` });
+  }
 
   const isActive = (href: string) => {
     if (href === `/c/${courseId}`) {

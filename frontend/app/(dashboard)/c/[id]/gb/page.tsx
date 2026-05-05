@@ -1201,12 +1201,6 @@ export default function GradeSheetView() {
       {showUnenrolledDialog && (
         <UnenrolledStudentsDialog
           students={unenrolledStudents}
-          onEnrollAll={() =>
-            handleEnrollAndImport(
-              assessmentId,
-              unenrolledStudents.map((s) => ({ student_id: s.student_id, email: s.email }))
-            )
-          }
           onSkipAll={() => handleSkipUnenrolled(assessmentId)}
           onSelectiveEnroll={(selected) => handleEnrollAndImport(assessmentId, selected)}
           onClose={() => setShowUnenrolledDialog(false)}

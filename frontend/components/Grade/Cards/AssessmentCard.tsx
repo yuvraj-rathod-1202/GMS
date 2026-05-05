@@ -16,6 +16,7 @@ interface AssessmentCardProps {
   onPublishToggle?: () => void;
   onEnterMarks?: () => void;
   onEdit?: () => void;
+  canManage?: boolean;
 }
 
 export default function AssessmentCard({
@@ -25,6 +26,7 @@ export default function AssessmentCard({
   onPublishToggle,
   onEnterMarks,
   onEdit,
+  canManage,
 }: AssessmentCardProps) {
   const [isPublishing, setIsPublishing] = useState(false);
   const { PublishMarks, UnpublishMarks } = useTACourse();
@@ -69,7 +71,7 @@ export default function AssessmentCard({
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-gray-200 bg-gray-50 p-4">
-        {isInstructor && (
+        {(isInstructor || canManage) && (
           <Button
             type="button"
             variant="ghost"

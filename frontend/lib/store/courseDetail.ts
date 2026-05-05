@@ -15,6 +15,7 @@ import { AssessmentAnalyticsDBObject } from '../types/analytics';
 export interface StudentCourseData {
   marks: AllMarksDBObject[];
   analytics: AssessmentAnalyticsDBObject[] | [];
+  totalMarks?: TotalScoreDBObject;
 }
 
 export interface TACourseData {
