@@ -68,7 +68,7 @@ async def get_user_courses_by_role(role: str, data: GetAllCourseRoleRequest, use
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{COURSES_SERVICE_URL}/me/courses?roles={role}",
-            params={**data.dict(), "user_id": user_info.get("user_id", 0)},
+            params={**data.model_dump(), "user_id": user_info.get("user_id", 0)},
         )
         if response.status_code != 200:
             raise HTTPException(

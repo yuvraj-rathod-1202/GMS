@@ -52,7 +52,7 @@ async def create_course(request: Request, course: AddCourseRequest, user_info: d
         try:
             response = await client.post(
                 f"{COURSES_SERVICE_URL}/",
-                json={**course.dict(), "user_id": user_info.get("user_id", 0)},
+                json={**course.model_dump(), "user_id": user_info.get("user_id", 0)},
             )
             if response.status_code not in (200, 201):
                 raise HTTPException(
@@ -91,7 +91,7 @@ async def update_course(course_id: str, data: UpdateCourseStatusRequest, user_in
         try:
             response = await client.put(
                 f"{COURSES_SERVICE_URL}/id/{course_id}",
-                json={**data.dict(exclude_unset=True), "user_id": user_info.get("user_id", 0)},
+                json={**data.model_dump(exclude_unset=True), "user_id": user_info.get("user_id", 0)},
             )
             if response.status_code != 200:
                 raise HTTPException(
@@ -156,7 +156,7 @@ async def enroll_in_course(course_id: str, data: EnrollStudentRequest, user_info
         try:
             response = await client.post(
                 f"{COURSES_SERVICE_URL}/{course_id}/enroll",
-                json={**data.dict(), "user_id": user_info.get("user_id", 0)},
+                json={**data.model_dump(), "user_id": user_info.get("user_id", 0)},
             )
             if response.status_code != 200:
                 raise HTTPException(
@@ -176,7 +176,7 @@ async def enroll_multiple_in_course(course_id: str, data: list[EnrollStudentRequ
         try:
             response = await client.post(
                 f"{COURSES_SERVICE_URL}/{course_id}/enroll/bulk",
-                json={"students": [d.dict() for d in data], "user_id": user_info.get("user_id", 0)},
+                json={"students": [d.model_dump() for d in data], "user_id": user_info.get("user_id", 0)},
             )
             if response.status_code != 200:
                 raise HTTPException(
@@ -236,7 +236,7 @@ async def add_ta_to_course(course_id: str, data: EnrollTaRequest, user_info: dic
         try:
             response = await client.post(
                 f"{COURSES_SERVICE_URL}/{course_id}/tas",
-                json={**data.dict(), "user_id": user_info.get("user_id", 0)},
+                json={**data.model_dump(), "user_id": user_info.get("user_id", 0)},
             )
             if response.status_code != 200:
                 raise HTTPException(
@@ -276,7 +276,7 @@ async def add_instructor_to_course(course_id: str, data: EnrollInstructorRequest
         try:
             response = await client.post(
                 f"{COURSES_SERVICE_URL}/{course_id}/instructors",
-                json={**data.dict(), "user_id": user_info.get("user_id", 0)},
+                json={**data.model_dump(), "user_id": user_info.get("user_id", 0)},
             )
             if response.status_code != 200:
                 raise HTTPException(

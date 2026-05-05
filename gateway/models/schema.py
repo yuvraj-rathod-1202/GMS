@@ -1,3 +1,4 @@
+from pydantic import ConfigDict
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 from typing import Dict, List, Optional
@@ -27,8 +28,7 @@ class UpdateCourseStatusRequest(BaseModel):
     name: Optional[str] = None
     credits: Optional[int] = None
     
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
     
 class EnrollStudentRequest(BaseModel):
     student_id: int
@@ -58,9 +58,8 @@ class UpdateAssessmentRequest(BaseModel):
     max_marks: Optional[float] = None
     is_marks_published: Optional[bool] = None
     assessment_date: Optional[datetime] = None
-    
-    class Config:
-        extra = "forbid"
+        
+    model_config = ConfigDict(extra="forbid")
         
 class StudentMark(BaseModel):
     student_id: int
