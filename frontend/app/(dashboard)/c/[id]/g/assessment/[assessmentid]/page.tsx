@@ -222,7 +222,7 @@ export default function AssessmentPage() {
       filtered = filtered.filter((row) => {
         const grade = row.marks_obtained;
         if (grade === null || grade === undefined) return true;
-        
+
         const meetsMin = filters.minGrade === undefined || grade >= filters.minGrade;
         const meetsMax = filters.maxGrade === undefined || grade <= filters.maxGrade;
         return meetsMin && meetsMax;
@@ -290,9 +290,7 @@ export default function AssessmentPage() {
   };
 
   // Check if any filters are active
-  const hasActiveFilters = 
-    filters.minGrade !== undefined ||
-    filters.maxGrade !== undefined;
+  const hasActiveFilters = filters.minGrade !== undefined || filters.maxGrade !== undefined;
 
   // Helper function to get sort icon
   const getSortIcon = (key: string) => {

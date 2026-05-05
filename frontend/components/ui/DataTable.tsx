@@ -33,7 +33,9 @@ export default function DataTable<T extends object>({
   className = '',
 }: DataTableProps<T>) {
   return (
-    <div className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${className}`}>
+    <div
+      className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${className}`}
+    >
       <div className="overflow-x-auto">
         <table className="min-w-full border-separate border-spacing-0">
           <thead className="bg-gray-50">
@@ -57,13 +59,19 @@ export default function DataTable<T extends object>({
           <tbody>
             {loading ? (
               <tr>
-                <td className="px-6 py-8 text-center text-sm text-gray-500" colSpan={columns.length}>
+                <td
+                  className="px-6 py-8 text-center text-sm text-gray-500"
+                  colSpan={columns.length}
+                >
                   {loadingMessage}
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td className="px-6 py-8 text-center text-sm text-gray-500" colSpan={columns.length}>
+                <td
+                  className="px-6 py-8 text-center text-sm text-gray-500"
+                  colSpan={columns.length}
+                >
                   {emptyMessage}
                 </td>
               </tr>
@@ -92,7 +100,9 @@ export default function DataTable<T extends object>({
                       >
                         {(() => {
                           const rowValue = (row as Record<string, unknown>)[column.key];
-                          return column.render ? column.render(rowValue, row, index) : (rowValue as React.ReactNode);
+                          return column.render
+                            ? column.render(rowValue, row, index)
+                            : (rowValue as React.ReactNode);
                         })()}
                       </td>
                     ))}

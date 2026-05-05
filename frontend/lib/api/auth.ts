@@ -1,6 +1,12 @@
 import { apiClient } from './client';
 import { handleRequest } from './utils';
-import { SignUpRequest, ChangePasswordRequest, ForgotPasswordRequest, FeedBackSubmitRequest, InstructorResetPasswordRequest } from '@/lib/types/auth';
+import {
+  SignUpRequest,
+  ChangePasswordRequest,
+  ForgotPasswordRequest,
+  FeedBackSubmitRequest,
+  InstructorResetPasswordRequest,
+} from '@/lib/types/auth';
 
 export const Authapi = {
   login: async (username: number, password: string) => {

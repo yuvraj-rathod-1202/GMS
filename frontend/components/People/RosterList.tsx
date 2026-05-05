@@ -46,7 +46,8 @@ export default function RosterList({
     const filtered = !query
       ? [...items]
       : items.filter(
-          (item) => item.id.toLowerCase().includes(query) || item.email.toLowerCase().includes(query)
+          (item) =>
+            item.id.toLowerCase().includes(query) || item.email.toLowerCase().includes(query)
         );
 
     if (!sortConfig) {

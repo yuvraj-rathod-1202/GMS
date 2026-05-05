@@ -113,12 +113,19 @@ export default function AssignInstructorModal({
         <Alert variant="info">
           <p className="font-medium">Tip:</p>
           <p className="mt-1">
-            Enter the instructor&apos;s ID and email address. Make sure the email matches their registered account.
+            Enter the instructor&apos;s ID and email address. Make sure the email matches their
+            registered account.
           </p>
         </Alert>
 
         <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
-          <Button type="button" variant="secondary" className="flex-1" onClick={onClose} disabled={loading}>
+          <Button
+            type="button"
+            variant="secondary"
+            className="flex-1"
+            onClick={onClose}
+            disabled={loading}
+          >
             Cancel
           </Button>
           <Button type="submit" className="flex-1" disabled={loading}>

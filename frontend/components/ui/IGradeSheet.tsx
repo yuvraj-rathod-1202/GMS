@@ -26,9 +26,9 @@ export default function IGradeSheet<T extends Record<string, any>>({
     handleEditCancel,
     isProcessing,
     validationError,
-  } = useGradeSheet({ 
-    data, 
-    searchable, 
+  } = useGradeSheet({
+    data,
+    searchable,
     searchKeys: ['student_id', 'email'],
     columns,
     searchTerm,

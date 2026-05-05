@@ -50,12 +50,7 @@ export default function FeedbackPage() {
             We value your Bug Reports. Share your thoughts with us!
           </p>
         </div>
-        <FeedbackForm
-          onSubmit={handleSubmit}
-          loading={loading}
-          error={error}
-          success={success}
-        />
+        <FeedbackForm onSubmit={handleSubmit} loading={loading} error={error} success={success} />
       </div>
     </main>
   );

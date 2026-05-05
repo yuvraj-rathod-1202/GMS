@@ -25,9 +25,7 @@ export function TASection({
       primaryAction={{ label: 'Add TA', onClick: onAdd }}
       showSecondaryEmptyAction={false}
     >
-      {hasTAs ? (
-        <TAList students={tas} onRemoveStudent={onRemoveTA} isLoading={isLoading} />
-      ) : null}
+      {hasTAs ? <TAList students={tas} onRemoveStudent={onRemoveTA} isLoading={isLoading} /> : null}
     </PeopleSectionShell>
   );
 }

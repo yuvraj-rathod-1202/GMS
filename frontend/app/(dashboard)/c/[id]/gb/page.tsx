@@ -10,7 +10,16 @@ import UnenrolledStudentsDialog from '@/components/ui/UnenrolledStudentsDialog';
 import BulkUploadDialog from '@/components/ui/BulkUploadDialog';
 import IGradeSheet from '@/components/ui/IGradeSheet';
 import { IGradeSheetButtons } from '@/components/Grade/IGradeSheetButtons';
-import { BiArrowBack, BiDotsVerticalRounded, BiHide, BiShow, BiSliderAlt, BiSortAlt2, BiSortUp, BiSortDown } from 'react-icons/bi';
+import {
+  BiArrowBack,
+  BiDotsVerticalRounded,
+  BiHide,
+  BiShow,
+  BiSliderAlt,
+  BiSortAlt2,
+  BiSortUp,
+  BiSortDown,
+} from 'react-icons/bi';
 import { exportGradeBookToExcel } from '@/components/Grade/ExportGradeBook';
 import calculateTotalMarks, { calculateTotalMarksOptimized } from '@/services/totalCalculation';
 
@@ -69,7 +78,7 @@ export default function GradeSheetView() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isExportingSheet, setIsExportingSheet] = useState(false);
-  
+
   // Sorting and Filtering state
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -359,8 +368,12 @@ export default function GradeSheetView() {
 
   // Optimized: Calculate totals for all affected students in batch using useMemo
   useEffect(() => {
-    if (!instructorData?.assessments || !instructorData?.assessmentMarks || 
-        !instructorData?.policies || !instructorData?.studentPolicyMap) {
+    if (
+      !instructorData?.assessments ||
+      !instructorData?.assessmentMarks ||
+      !instructorData?.policies ||
+      !instructorData?.studentPolicyMap
+    ) {
       return;
     }
 
@@ -392,7 +405,7 @@ export default function GradeSheetView() {
 
       // Build student marks map efficiently
       const studentMarksMap = new Map<number, number | null>();
-      
+
       // First, add all existing marks from server
       instructorData.assessments.forEach((assessment) => {
         const marksArray = instructorData.assessmentMarks[assessment.id] || [];
@@ -446,7 +459,7 @@ export default function GradeSheetView() {
         await updateStudentPolicy(courseId, studentId, newPolicyId);
         // Refresh student policy map and total marks after assignment
         await fetchStudentPolicyMap(courseId, true);
-        
+
         // Total will be recalculated automatically via useEffect
       } catch (error) {
         console.error('Failed to update policy:', error);
@@ -490,7 +503,7 @@ export default function GradeSheetView() {
       filtered = filtered.filter((row) => {
         const grade = row[assessmentKey];
         if (grade === null || grade === undefined) return true;
-        
+
         const meetsMin = filters.minGrade === undefined || grade >= filters.minGrade;
         const meetsMax = filters.maxGrade === undefined || grade <= filters.maxGrade;
         return meetsMin && meetsMax;
@@ -499,9 +512,7 @@ export default function GradeSheetView() {
 
     // Apply policy filter
     if (filters.selectedPolicies && filters.selectedPolicies.length > 0) {
-      filtered = filtered.filter((row) => 
-        filters.selectedPolicies!.includes(row.policy_id)
-      );
+      filtered = filtered.filter((row) => filters.selectedPolicies!.includes(row.policy_id));
     }
 
     // Apply sorting
@@ -565,7 +576,7 @@ export default function GradeSheetView() {
   };
 
   // Check if any filters are active
-  const hasActiveFilters = 
+  const hasActiveFilters =
     filters.minGrade !== undefined ||
     filters.maxGrade !== undefined ||
     filters.selectedAssessmentForFilter !== undefined ||

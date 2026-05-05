@@ -138,14 +138,19 @@ export default function AnalyticsPage() {
     );
   }
 
-  const selectedAssessment = assessments.find((assessment) => assessment.id === selectedAssessmentId);
+  const selectedAssessment = assessments.find(
+    (assessment) => assessment.id === selectedAssessmentId
+  );
   const maxPossibleMarks = selectedAssessment?.max_marks ?? assessmentAnalytics?.max ?? 100;
   const observedMaxMark = assessmentFrequencies.reduce(
     (highest, entry) => Math.max(highest, entry.mark),
     0
   );
   const histogramUpperBound = Math.max(maxPossibleMarks, observedMaxMark, 1);
-  const binCount = Math.min(10, Math.max(5, Math.ceil(Math.sqrt(Math.max(assessmentFrequencies.length, 1)))));
+  const binCount = Math.min(
+    10,
+    Math.max(5, Math.ceil(Math.sqrt(Math.max(assessmentFrequencies.length, 1))))
+  );
   const binSize = Math.max(1, Math.ceil(histogramUpperBound / binCount));
   const bins = Array.from({ length: Math.ceil(histogramUpperBound / binSize) }, (_, index) => {
     const start = index * binSize;

@@ -213,7 +213,7 @@ export default function GPView() {
     } finally {
       setUpdatingPolicyComponentId(false);
     }
-  }
+  };
 
   const handleDeletePolicy = async (policyId: number) => {
     if (!confirm('Are you sure you want to delete this policy? This action cannot be undone.')) {
@@ -244,9 +244,7 @@ export default function GPView() {
         const removed_component_ids = editingPolicy.components
           .filter(
             (existingComp) =>
-              !policyData.components.some(
-                (comp) => comp.component_id === existingComp.id
-              )
+              !policyData.components.some((comp) => comp.component_id === existingComp.id)
           )
           .map((comp) => comp.id) as number[];
         policyData.components.forEach(async (component) => {
@@ -275,7 +273,6 @@ export default function GPView() {
         for (const compId of removed_component_ids) {
           await handleDeletePolicyComponent(editingPolicy.id, compId);
         }
-        
       } else {
         await handleAddPolicy({
           policy_name: policyData.policy_name,
@@ -371,4 +368,3 @@ function EmptyPolicyState({ onCreate }: { onCreate: () => void }) {
     </div>
   );
 }
-

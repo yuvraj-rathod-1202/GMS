@@ -49,7 +49,8 @@ export default function CourseManagementTable({
   const handleStatusToggle = useCallback(async (courseId: number, currentStatus: string) => {
     try {
       setUpdatingStatus((prev) => ({ ...prev, [courseId]: true }));
-      const newStatus: CourseDBObject['status'] = currentStatus === 'ongoing' ? 'completed' : 'ongoing';
+      const newStatus: CourseDBObject['status'] =
+        currentStatus === 'ongoing' ? 'completed' : 'ongoing';
 
       await AdminApi.UpdateCourseStatus(courseId, { status: newStatus });
 

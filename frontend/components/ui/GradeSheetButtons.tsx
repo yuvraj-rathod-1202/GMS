@@ -73,7 +73,9 @@ export default function GradeSheetButtons({
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data);
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as Array<Array<unknown>>;
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as Array<
+          Array<unknown>
+        >;
         if (!jsonData || jsonData.length < 2) throw new Error('No data found');
         const header = jsonData[0].map((h: unknown) => String(h).trim());
         const idxStudent = header.findIndex((h) => h.toLowerCase() === student_id.toLowerCase());
@@ -138,7 +140,12 @@ export default function GradeSheetButtons({
           title={hasUnsavedChanges ? 'Discard all unsaved changes' : 'No changes to discard'}
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
           Discard Changes
         </Button>
@@ -189,7 +196,12 @@ export default function GradeSheetButtons({
           <div className="space-y-4">
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <h3 className="mb-3 flex items-center gap-2 font-medium text-gray-900">
-                <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="h-5 w-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -217,7 +229,12 @@ export default function GradeSheetButtons({
 
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <h3 className="mb-3 flex items-center gap-2 font-medium text-gray-900">
-                <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="h-5 w-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -294,7 +311,12 @@ export default function GradeSheetButtons({
               className="flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:bg-gray-100"
             >
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <svg className="mb-3 h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="mb-3 h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -321,8 +343,20 @@ export default function GradeSheetButtons({
 
           {isUploading && (
             <div className="flex items-center justify-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <svg className="h-5 w-5 animate-spin text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <svg
+                className="h-5 w-5 animate-spin text-gray-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
                 <path
                   className="opacity-75"
                   fill="currentColor"
@@ -334,7 +368,12 @@ export default function GradeSheetButtons({
           )}
 
           <div className="flex justify-end gap-3 border-t border-gray-200 bg-gray-50 pt-4">
-            <Button type="button" variant="secondary" onClick={handleCloseDialog} disabled={isUploading}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCloseDialog}
+              disabled={isUploading}
+            >
               Cancel
             </Button>
           </div>

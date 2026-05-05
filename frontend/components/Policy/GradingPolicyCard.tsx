@@ -125,7 +125,13 @@ export default function GradingPolicyCard({
         <div className="flex flex-col gap-2 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
           <span>Updated {new Date(policy.updated_at).toLocaleDateString()}</span>
           {!policy.is_default && (
-            <Button type="button" variant="ghost" size="sm" onClick={SetDefault} className="px-0 text-xs text-mms-blue hover:bg-transparent hover:underline">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={SetDefault}
+              className="px-0 text-xs text-mms-blue hover:bg-transparent hover:underline"
+            >
               set as default
             </Button>
           )}

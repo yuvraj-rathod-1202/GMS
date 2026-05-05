@@ -38,7 +38,10 @@ export default function UserMenu() {
 
   return (
     <div className="relative">
-      <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="w-full px-4 py-2 flex items-center gap-3 hover:bg-mms-indigoLight rounded-lg">
+      <button
+        onClick={() => setUserMenuOpen(!userMenuOpen)}
+        className="w-full px-4 py-2 flex items-center gap-3 hover:bg-mms-indigoLight rounded-lg"
+      >
         <FaUserCircle className="size-6 text-mms-black" />
         <span
           className="truncate font-semibold text-base text-gray-900"
@@ -57,14 +60,14 @@ export default function UserMenu() {
             <RiLockPasswordLine className="size-4" /> Change Password
           </button>
           {isInstructorOrTa && (
-              <button
-                onClick={handleInstructorResetPassword}
-                className="w-full cursor-pointer text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center transition"
-              >
-                <FaUserCog className="size-4" />
-                Reset User Password
-              </button>
-            )}
+            <button
+              onClick={handleInstructorResetPassword}
+              className="w-full cursor-pointer text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center transition"
+            >
+              <FaUserCog className="size-4" />
+              Reset User Password
+            </button>
+          )}
           <button
             onClick={handleLogout}
             className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 last:rounded-b-lg  flex items-center gap-2"

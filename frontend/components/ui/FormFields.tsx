@@ -100,7 +100,7 @@ export default function FormFields<T extends object>({
             label={field.label}
             name={field.name}
             type={inputType}
-              value={typeof value === 'string' || typeof value === 'number' ? value : ''}
+            value={typeof value === 'string' || typeof value === 'number' ? value : ''}
             onChange={(event) => {
               if (inputType === 'number') {
                 const numericValue = event.target.value === '' ? '' : Number(event.target.value);

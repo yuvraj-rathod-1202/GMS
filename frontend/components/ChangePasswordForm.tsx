@@ -58,7 +58,10 @@ export default function ChangePasswordForm({ onSubmit, loading, error, success }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-sm space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm text-left">
+    <form
+      onSubmit={handleSubmit}
+      className="mx-auto w-full max-w-sm space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm text-left"
+    >
       <Input
         label="Current Password"
         value={oldPassword}

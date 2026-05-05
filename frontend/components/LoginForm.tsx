@@ -39,7 +39,10 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-sm space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <form
+      onSubmit={handleSubmit}
+      className="mx-auto w-full max-w-sm space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+    >
       <Input
         label="User ID"
         value={id}

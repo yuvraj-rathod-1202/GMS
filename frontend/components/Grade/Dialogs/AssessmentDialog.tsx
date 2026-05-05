@@ -91,8 +91,15 @@ function createInitialFormData(assessment?: AssessmentDBObject | null): Assessme
   };
 }
 
-function AssessmentDialogForm({ assessment, isLoading, onClose, onSubmit }: AssessmentDialogFormProps) {
-  const [formData, setFormData] = useState<AssessmentFormData>(() => createInitialFormData(assessment));
+function AssessmentDialogForm({
+  assessment,
+  isLoading,
+  onClose,
+  onSubmit,
+}: AssessmentDialogFormProps) {
+  const [formData, setFormData] = useState<AssessmentFormData>(() =>
+    createInitialFormData(assessment)
+  );
   const [errors, setErrors] = useState<Partial<Record<keyof AssessmentFormData, string>>>({});
 
   const validateForm = () => {

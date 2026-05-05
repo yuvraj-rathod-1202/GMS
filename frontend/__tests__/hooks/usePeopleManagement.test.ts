@@ -6,60 +6,63 @@ import { useCourseManagement } from '../../hooks/useCourseManagement';
 jest.mock('../../hooks/useCourseManagement');
 
 describe('usePeopleManagement hook', () => {
-    const mockEnrollStudent = jest.fn();
-    const mockFetchRoles = jest.fn();
-    const mockSetShowEnroll = jest.fn();
+  const mockEnrollStudent = jest.fn();
+  const mockFetchRoles = jest.fn();
+  const mockSetShowEnroll = jest.fn();
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        (useCourseManagement as jest.Mock).mockReturnValue({
-            enrollStudent: mockEnrollStudent,
-            fetchCourseRoles: mockFetchRoles,
-            loading: false
-        });
-        window.confirm = jest.fn().mockReturnValue(true);
-        window.alert = jest.fn();
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useCourseManagement as jest.Mock).mockReturnValue({
+      enrollStudent: mockEnrollStudent,
+      fetchCourseRoles: mockFetchRoles,
+      loading: false,
+    });
+    window.confirm = jest.fn().mockReturnValue(true);
+    window.alert = jest.fn();
+  });
+
+  it('handleEnrollStudent calls enrollStudent and fetchCourseRoles', async () => {
+    mockEnrollStudent.mockResolvedValue({});
+
+    const { result } = renderHook(() =>
+      usePeopleManagement(101, 'instructor', mockSetShowEnroll, jest.fn(), jest.fn())
+    );
+
+    await act(async () => {
+      await result.current.handleEnrollStudent('123', 'test@test.com');
     });
 
-    it('handleEnrollStudent calls enrollStudent and fetchCourseRoles', async () => {
-        mockEnrollStudent.mockResolvedValue({});
-        
-        const { result } = renderHook(() => usePeopleManagement(
-            101, 'instructor', mockSetShowEnroll, jest.fn(), jest.fn()
-        ));
+    expect(mockEnrollStudent).toHaveBeenCalledWith(101, {
+      student_id: 123,
+      email: 'test@test.com',
+    });
+    expect(mockFetchRoles).toHaveBeenCalledWith(101, true, true);
+    expect(mockSetShowEnroll).toHaveBeenCalledWith(false);
+  });
 
-        await act(async () => {
-            await result.current.handleEnrollStudent('123', 'test@test.com');
-        });
+  it('does nothing if user cancels confirmation', async () => {
+    window.confirm = jest.fn().mockReturnValue(false);
 
-        expect(mockEnrollStudent).toHaveBeenCalledWith(101, { student_id: 123, email: 'test@test.com' });
-        expect(mockFetchRoles).toHaveBeenCalledWith(101, true, true);
-        expect(mockSetShowEnroll).toHaveBeenCalledWith(false);
+    const { result } = renderHook(() =>
+      usePeopleManagement(101, 'instructor', mockSetShowEnroll, jest.fn(), jest.fn())
+    );
+
+    await act(async () => {
+      await result.current.handleEnrollStudent('123', 'test@test.com');
     });
 
-    it('does nothing if user cancels confirmation', async () => {
-        window.confirm = jest.fn().mockReturnValue(false);
-        
-        const { result } = renderHook(() => usePeopleManagement(
-            101, 'instructor', mockSetShowEnroll, jest.fn(), jest.fn()
-        ));
+    expect(mockEnrollStudent).not.toHaveBeenCalled();
+  });
 
-        await act(async () => {
-            await result.current.handleEnrollStudent('123', 'test@test.com');
-        });
+  it('alerts if studentId is empty', async () => {
+    const { result } = renderHook(() =>
+      usePeopleManagement(101, 'instructor', jest.fn(), jest.fn(), jest.fn())
+    );
 
-        expect(mockEnrollStudent).not.toHaveBeenCalled();
+    await act(async () => {
+      await result.current.handleEnrollStudent(' ', '');
     });
 
-    it('alerts if studentId is empty', async () => {
-        const { result } = renderHook(() => usePeopleManagement(
-            101, 'instructor', jest.fn(), jest.fn(), jest.fn()
-        ));
-
-        await act(async () => {
-            await result.current.handleEnrollStudent(' ', '');
-        });
-
-        expect(window.alert).toHaveBeenCalledWith('Please enter a student ID');
-    });
+    expect(window.alert).toHaveBeenCalledWith('Please enter a student ID');
+  });
 });

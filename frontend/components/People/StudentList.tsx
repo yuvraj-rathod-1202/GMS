@@ -1,7 +1,11 @@
 import { StudentListProps } from '@/lib/types/people/studentlist';
 import RosterList from './RosterList';
 
-export default function StudentList({ students, onRemoveStudent, isLoading = false }: StudentListProps) {
+export default function StudentList({
+  students,
+  onRemoveStudent,
+  isLoading = false,
+}: StudentListProps) {
   return (
     <RosterList
       items={students}

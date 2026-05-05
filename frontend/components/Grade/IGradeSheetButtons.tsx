@@ -40,7 +40,12 @@ export const IGradeSheetButtons = ({
       </div>
 
       <div className="flex w-full flex-wrap justify-end gap-2 md:w-auto">
-        <Button type="button" variant="secondary" onClick={onImportClick} className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onImportClick}
+          className="flex items-center gap-2"
+        >
           <BiCloudUpload className="text-xl" />
           <span>Import CSV</span>
         </Button>

@@ -58,7 +58,9 @@ export const AdminApi = {
   // Remove instructor from a course
   RemoveInstructor: async (courseId: number, instructorId: number, userId: number) => {
     return handleRequest(
-      apiClient.delete(`/courses/${courseId}/instructors?user_id=${userId}&instructor_id=${instructorId}`)
+      apiClient.delete(
+        `/courses/${courseId}/instructors?user_id=${userId}&instructor_id=${instructorId}`
+      )
     );
   },
 };

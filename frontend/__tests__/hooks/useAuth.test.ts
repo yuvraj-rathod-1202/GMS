@@ -15,72 +15,72 @@ jest.mock('@/lib/store/courseDetail');
 global.fetch = jest.fn() as jest.Mock;
 
 describe('useAuth hook', () => {
-    const mockSetAuth = jest.fn();
-    const mockLogoutStore = jest.fn();
-    const mockClearCourses = jest.fn();
-    const mockClearCourseDetail = jest.fn();
+  const mockSetAuth = jest.fn();
+  const mockLogoutStore = jest.fn();
+  const mockClearCourses = jest.fn();
+  const mockClearCourseDetail = jest.fn();
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        (useAuthStore as unknown as jest.Mock).mockImplementation((selector) => {
-            const state = { setAuth: mockSetAuth, logout: mockLogoutStore };
-            return selector(state);
-        });
-        (useCoursesStore as unknown as jest.Mock).mockImplementation((selector) => {
-            const state = { clearCourses: mockClearCourses };
-            return selector(state);
-        });
-        (useCourseDetailStore as unknown as jest.Mock).mockImplementation((selector) => {
-            const state = { clearCourseDetail: mockClearCourseDetail };
-            return selector(state);
-        });
-        (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector) => {
+      const state = { setAuth: mockSetAuth, logout: mockLogoutStore };
+      return selector(state);
+    });
+    (useCoursesStore as unknown as jest.Mock).mockImplementation((selector) => {
+      const state = { clearCourses: mockClearCourses };
+      return selector(state);
+    });
+    (useCourseDetailStore as unknown as jest.Mock).mockImplementation((selector) => {
+      const state = { clearCourseDetail: mockClearCourseDetail };
+      return selector(state);
+    });
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
+  });
+
+  it('login sets auth on success', async () => {
+    const mockUser = { id: 123, name: 'Test' };
+    const mockToken = 'test-token';
+    (Authapi.login as jest.Mock).mockResolvedValue({ user: mockUser, token: mockToken });
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.login(123, 'password');
     });
 
-    it('login sets auth on success', async () => {
-        const mockUser = { id: 123, name: 'Test' };
-        const mockToken = 'test-token';
-        (Authapi.login as jest.Mock).mockResolvedValue({ user: mockUser, token: mockToken });
+    expect(mockSetAuth).toHaveBeenCalledWith(mockUser, mockToken);
+    expect(global.fetch).toHaveBeenCalledWith('/api/session', expect.anything());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.error).toBe(null);
+  });
 
-        const { result } = renderHook(() => useAuth());
+  it('login sets error on failure', async () => {
+    (Authapi.login as jest.Mock).mockRejectedValue(new Error('Login failed'));
 
-        await act(async () => {
-            await result.current.login(123, 'password');
-        });
+    const { result } = renderHook(() => useAuth());
 
-        expect(mockSetAuth).toHaveBeenCalledWith(mockUser, mockToken);
-        expect(global.fetch).toHaveBeenCalledWith('/api/session', expect.anything());
-        await waitFor(() => expect(result.current.loading).toBe(false));
-        expect(result.current.error).toBe(null);
+    await act(async () => {
+      try {
+        await result.current.login(123, 'wrong');
+      } catch (e: any) {
+        expect(e.message).toBe('Login failed');
+      }
     });
 
-    it('login sets error on failure', async () => {
-        (Authapi.login as jest.Mock).mockRejectedValue(new Error('Login failed'));
+    expect(result.current.error).toBe('Login failed');
+    expect(result.current.loading).toBe(false);
+  });
 
-        const { result } = renderHook(() => useAuth());
+  it('logout clears stores and removes session', async () => {
+    const { result } = renderHook(() => useAuth());
 
-        await act(async () => {
-            try {
-                await result.current.login(123, 'wrong');
-            } catch (e: any) {
-                expect(e.message).toBe('Login failed');
-            }
-        });
-
-        expect(result.current.error).toBe('Login failed');
-        expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.logout();
     });
 
-    it('logout clears stores and removes session', async () => {
-        const { result } = renderHook(() => useAuth());
-
-        await act(async () => {
-            await result.current.logout();
-        });
-
-        expect(global.fetch).toHaveBeenCalledWith('/api/session', { method: 'DELETE' });
-        expect(mockClearCourses).toHaveBeenCalled();
-        expect(mockClearCourseDetail).toHaveBeenCalled();
-        expect(mockLogoutStore).toHaveBeenCalled();
-    });
+    expect(global.fetch).toHaveBeenCalledWith('/api/session', { method: 'DELETE' });
+    expect(mockClearCourses).toHaveBeenCalled();
+    expect(mockClearCourseDetail).toHaveBeenCalled();
+    expect(mockLogoutStore).toHaveBeenCalled();
+  });
 });

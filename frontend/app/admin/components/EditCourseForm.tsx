@@ -22,7 +22,12 @@ interface EditCourseFormProps {
   onSuccess: () => void;
 }
 
-export default function EditCourseForm({ userId, course, onClose, onSuccess }: EditCourseFormProps) {
+export default function EditCourseForm({
+  userId,
+  course,
+  onClose,
+  onSuccess,
+}: EditCourseFormProps) {
   const [formData, setFormData] = useState({
     course_code: course.course_code,
     name: course.name,
@@ -45,7 +50,9 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
       try {
         setInstructorsLoading(true);
         setInstructorError(null);
-        const response = (await AdminApi.GetCourseInstructors(course.id)) as { roles?: InstructorAssignment[] };
+        const response = (await AdminApi.GetCourseInstructors(course.id)) as {
+          roles?: InstructorAssignment[];
+        };
         if (!isActive) {
           return;
         }
@@ -141,12 +148,7 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
   };
 
   return (
-    <Modal
-      open
-      title="Edit Course"
-      onClose={onClose}
-      className="max-w-md"
-    >
+    <Modal open title="Edit Course" onClose={onClose} className="max-w-md">
       <div className="space-y-4">
         {error && <Alert variant="error">{error}</Alert>}
 
@@ -194,7 +196,9 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
             </div>
 
             {instructorError && (
-              <Alert variant="error" className="text-sm">{instructorError}</Alert>
+              <Alert variant="error" className="text-sm">
+                {instructorError}
+              </Alert>
             )}
 
             {instructorsLoading ? (
@@ -242,11 +246,7 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="flex-1"
-            >
+            <Button type="submit" disabled={loading} className="flex-1">
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>

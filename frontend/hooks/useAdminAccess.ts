@@ -14,10 +14,10 @@ export function useAdminAccess(redirectTo?: string) {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Call verify admin endpoint
         const response = await CoursesApi.VerifyAdmin();
-        
+
         if (response && (response as any).isAdmin) {
           setIsAdmin(true);
         } else {

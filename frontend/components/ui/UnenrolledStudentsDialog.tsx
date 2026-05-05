@@ -139,11 +139,7 @@ export default function UnenrolledStudentsDialog({
         </p>
 
         <div className="flex items-center justify-between gap-3 border-t border-gray-200 pt-4">
-          <Button
-            onClick={onSkipAll}
-            disabled={isProcessing}
-            variant="secondary"
-          >
+          <Button onClick={onSkipAll} disabled={isProcessing} variant="secondary">
             Skip All & Continue
           </Button>
           <Button

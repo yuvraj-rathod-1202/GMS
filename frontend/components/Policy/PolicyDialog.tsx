@@ -188,14 +188,18 @@ function PolicyDialogForm({
   };
 
   const getAvailableCategories = () => {
-    const usedCategoryIds = formData.components.map((component) => component.assessment_category_id);
+    const usedCategoryIds = formData.components.map(
+      (component) => component.assessment_category_id
+    );
     return CATEGORY_IDS.filter((id) => !usedCategoryIds.includes(id));
   };
 
   const removeComponent = (categoryId: number) => {
     setFormData((prev) => ({
       ...prev,
-      components: prev.components.filter((component) => component.assessment_category_id !== categoryId),
+      components: prev.components.filter(
+        (component) => component.assessment_category_id !== categoryId
+      ),
     }));
   };
 
@@ -292,7 +296,8 @@ function PolicyDialogForm({
         );
 
         if (totalCustomWeightage > component.weightage) {
-          newErrors[`components_custom_${index}`] = `Custom weightages total (${totalCustomWeightage}%) exceeds component limit (${component.weightage}%)`;
+          newErrors[`components_custom_${index}`] =
+            `Custom weightages total (${totalCustomWeightage}%) exceeds component limit (${component.weightage}%)`;
         }
       }
     });
@@ -490,7 +495,9 @@ function PolicyDialogForm({
                       }`}
                     >
                       <div className="text-xs font-bold text-gray-900">{rule.label}</div>
-                      <div className="mt-1 text-[10px] leading-tight text-gray-500">{rule.desc}</div>
+                      <div className="mt-1 text-[10px] leading-tight text-gray-500">
+                        {rule.desc}
+                      </div>
                     </Button>
                   ))}
                 </div>
@@ -505,7 +512,8 @@ function PolicyDialogForm({
 
                 {component.rules.rule_type === 'EQUAL_WEIGHTAGE' && (
                   <p className="flex items-center gap-2 text-gray-600">
-                    <BiInfoCircle /> All assessments in this category will be assigned equal weightage each.
+                    <BiInfoCircle /> All assessments in this category will be assigned equal
+                    weightage each.
                   </p>
                 )}
 
@@ -515,7 +523,11 @@ function PolicyDialogForm({
                     type="number"
                     value={component.rules.rule_params.n || 0}
                     onChange={(event) =>
-                      updateComponent(component.assessment_category_id, 'rules_n_value', event.target.value)
+                      updateComponent(
+                        component.assessment_category_id,
+                        'rules_n_value',
+                        event.target.value
+                      )
                     }
                     min={0}
                     placeholder="e.g., 3"
@@ -525,10 +537,13 @@ function PolicyDialogForm({
 
                 {component.rules.rule_type === 'CUSTOM' && (
                   <div className="space-y-2">
-                    <label className="mb-1.5 block text-xs text-gray-600">Custom Weightage per Assessment</label>
+                    <label className="mb-1.5 block text-xs text-gray-600">
+                      Custom Weightage per Assessment
+                    </label>
                     {(() => {
                       const categoryAssessments = assessments.filter(
-                        (assessment) => assessment.assessment_type_id === component.assessment_category_id
+                        (assessment) =>
+                          assessment.assessment_type_id === component.assessment_category_id
                       );
                       const customWeightages = component.rules.rule_params || {};
                       const totalCustomWeightage = Object.values(customWeightages).reduce(
@@ -540,7 +555,8 @@ function PolicyDialogForm({
                       if (categoryAssessments.length === 0) {
                         return (
                           <p className="py-2 text-xs italic text-gray-500">
-                            No assessments found for this category. First create assessments to set Custom policy.
+                            No assessments found for this category. First create assessments to set
+                            Custom policy.
                           </p>
                         );
                       }
@@ -549,7 +565,9 @@ function PolicyDialogForm({
                         <div className="space-y-2">
                           {categoryAssessments.map((assessment) => (
                             <div key={assessment.id} className="flex items-center gap-2">
-                              <label className="flex-1 truncate text-xs text-gray-700">{assessment.name}</label>
+                              <label className="flex-1 truncate text-xs text-gray-700">
+                                {assessment.name}
+                              </label>
                               <Input
                                 type="number"
                                 value={customWeightages[assessment.id] || 0}
@@ -558,7 +576,11 @@ function PolicyDialogForm({
                                     ...customWeightages,
                                     [assessment.id]: Number(event.target.value) || 0,
                                   };
-                                  updateComponent(component.assessment_category_id, 'rules_params', nextWeightages);
+                                  updateComponent(
+                                    component.assessment_category_id,
+                                    'rules_params',
+                                    nextWeightages
+                                  );
                                 }}
                                 min={0}
                                 max={component.weightage}
@@ -571,7 +593,8 @@ function PolicyDialogForm({
                           ))}
                           <div className="flex items-center justify-between gap-4 border-t border-gray-200 pt-2">
                             <div className="flex-1 text-xs text-blue-700">
-                              Sum of weightage of individual assessments should not exceed the component weightage.
+                              Sum of weightage of individual assessments should not exceed the
+                              component weightage.
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-medium text-gray-700">Total:</span>
@@ -589,7 +612,9 @@ function PolicyDialogForm({
                             </div>
                           </div>
                           {exceedsLimit && (
-                            <p className="mt-1 text-xs text-red-600">Total weightage exceeds component limit</p>
+                            <p className="mt-1 text-xs text-red-600">
+                              Total weightage exceeds component limit
+                            </p>
                           )}
                         </div>
                       );
@@ -620,7 +645,9 @@ function PolicyDialogForm({
           <div className="w-full max-w-md rounded-xl bg-white shadow-2xl">
             <div className="border-b border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900">Select Category to Add</h3>
-              <p className="mt-1 text-sm text-gray-500">Choose an assessment category for the new component</p>
+              <p className="mt-1 text-sm text-gray-500">
+                Choose an assessment category for the new component
+              </p>
             </div>
 
             <div className="p-6">

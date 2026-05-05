@@ -45,12 +45,15 @@ export default function AssessmentCard({
         </div>
 
         <div className="mb-4 text-sm text-gray-500">
-          <span>{getAssessmentTypeLabel(assessment.assessment_type_id)}</span> • Created on {formattedDate}
+          <span>{getAssessmentTypeLabel(assessment.assessment_type_id)}</span> • Created on{' '}
+          {formattedDate}
         </div>
 
         <div
           className={`flex w-fit items-center gap-2 rounded-lg px-3 py-2 text-xs ${
-            assessment.is_marks_published ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+            assessment.is_marks_published
+              ? 'bg-green-50 text-green-700'
+              : 'bg-yellow-50 text-yellow-700'
           }`}
         >
           {assessment.is_marks_published ? (
