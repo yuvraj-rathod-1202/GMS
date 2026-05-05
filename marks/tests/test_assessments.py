@@ -5,8 +5,8 @@ from unittest.mock import patch, MagicMock, AsyncMock
 async def test_create_assessment_success(client, mock_db):
     mock_conn, mock_cursor = mock_db
     
-    with patch("routes.assessments.verifyInstructor", new_callable=AsyncMock) as mock_verify:
-        mock_verify.return_value = True
+    with patch("routes.assessments.verifyRoleInCourse", new_callable=AsyncMock) as mock_verify:
+        mock_verify.return_value = {"success": True, "role": "instructor"}
         
         # Mock lastrowid for new assessment
         mock_cursor.lastrowid = 1
@@ -48,8 +48,8 @@ async def test_get_all_assessments_success(client, mock_db):
 async def test_update_assessment_success(client, mock_db):
     mock_conn, mock_cursor = mock_db
     
-    with patch("routes.assessments.verifyInstructor", new_callable=AsyncMock) as mock_verify:
-        mock_verify.return_value = True
+    with patch("routes.assessments.verifyRoleInCourse", new_callable=AsyncMock) as mock_verify:
+        mock_verify.return_value = {"success": True, "role": "instructor"}
         
         mock_cursor.rowcount = 1
         
@@ -68,8 +68,8 @@ async def test_update_assessment_success(client, mock_db):
 async def test_delete_assessment_success(client, mock_db):
     mock_conn, mock_cursor = mock_db
     
-    with patch("routes.assessments.verifyInstructor", new_callable=AsyncMock) as mock_verify:
-        mock_verify.return_value = True
+    with patch("routes.assessments.verifyRoleInCourse", new_callable=AsyncMock) as mock_verify:
+        mock_verify.return_value = {"success": True, "role": "instructor"}
         
         mock_cursor.rowcount = 1
         
