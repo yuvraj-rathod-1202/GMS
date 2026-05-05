@@ -77,8 +77,8 @@ def submit_feedback(feedback: FeedbackRequest):
     return submit_user_feedback(feedback, feedback.user_id)
 
 @app.post("/instructor/reset-password")
-def instructor_reset_password(data: InstructorResetPasswordRequest):
-    verified = verifyInstructorOrTa(data.user_id)
+async def instructor_reset_password(data: InstructorResetPasswordRequest):
+    verified = await verifyInstructorOrTa(data.user_id)
     if not verified:
         raise HTTPException(
             status_code=403,

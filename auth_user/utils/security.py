@@ -11,7 +11,7 @@ def create_jwt_token(user: User, secret: str):
         {
             "user_id": user.id,
             "email": user.email,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(days=1)
+            "exp": datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
         },
         secret,
         algorithm="HS256"

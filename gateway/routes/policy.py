@@ -27,7 +27,7 @@ async def create_policy(request: Request, course_id: int, data: CreatePolicyRequ
         try:
             response = await client.post(
                 f"{POLICY_SERVICE_URL}/courses/{course_id}/policy",
-                json={**data.dict(), "set_by_id": user_info["user_id"]},
+                json={**data.model_dump(), "set_by_id": user_info["user_id"]},
             )
             if response.status_code != 200:
                 raise HTTPException(
@@ -112,7 +112,7 @@ async def update_policy(course_id: int, data: UpdatePolicyRequest, user_info: di
         try:
             response = await client.put(
                 f"{POLICY_SERVICE_URL}/courses/{course_id}/policy",
-                json={**data.dict(), "updated_by_id": user_info["user_id"]},
+                json={**data.model_dump(), "updated_by_id": user_info["user_id"]},
             )
             if response.status_code != 200:
                 raise HTTPException(
@@ -154,7 +154,7 @@ async def add_policy_component(course_id: int, policy_id: int, data: CreatePolic
         try:
             response = await client.post(
                 f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/{policy_id}/components",
-                json={**data.dict(), "added_by_id": user_info["user_id"]},
+                json={**data.model_dump(), "added_by_id": user_info["user_id"]},
             )
             if response.status_code != 200:
                 raise HTTPException(
@@ -175,7 +175,7 @@ async def update_policy_component(course_id: int, policy_id: int, component_id: 
         try:
             response = await client.put(
                 f"{POLICY_SERVICE_URL}/courses/{course_id}/policy/{policy_id}/components/{component_id}",
-                json={**data.dict(), "updated_by_id": user_info["user_id"]},
+                json={**data.model_dump(), "updated_by_id": user_info["user_id"]},
             )
             if response.status_code != 200:
                 raise HTTPException(
@@ -196,7 +196,7 @@ async def assign_policy_to_students(course_id: int, data: AssignPolicyRequest, u
         try:
             response = await client.post(
                 f"{POLICY_SERVICE_URL}/courses/{course_id}/policy-assignments",
-                json={**data.dict(), "assigned_by_id": user_info["user_id"]},
+                json={**data.model_dump(), "assigned_by_id": user_info["user_id"]},
             )
             if response.status_code != 200:
                 raise HTTPException(

@@ -55,7 +55,7 @@ async def signup(request: Request, user: SignUpUser):
         try:
             response = await client.post(
                 f"{AUTH_SERVICE_URL}/signup",
-                json=user.dict(),
+                json=user.model_dump(),
                 auth=(str(user.id), user.password)
             )
             

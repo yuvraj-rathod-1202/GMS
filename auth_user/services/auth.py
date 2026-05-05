@@ -33,6 +33,8 @@ def _get_db_or_raise():
     return db
 
 def _handle_service_error(action: str, exc: Exception, public_message: str):
+    if isinstance(exc, HTTPException):
+        raise exc
     logger.error(f"{action} error: {str(exc)}")
     raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
