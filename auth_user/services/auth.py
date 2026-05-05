@@ -226,3 +226,24 @@ def instructor_reset_user_password(target_user_id: int, new_password: str):
     
     except Exception as e:
         _handle_service_error("Instructor reset password", e, "Failed to reset password")
+
+def get_all_users(limit: int = 50, offset: int = 0):
+    db = _get_db_or_raise()
+    try:
+        cur = db.cursor()
+        cur.execute(
+            "SELECT id, email, last_login, created_at FROM users LIMIT %s OFFSET %s",
+            (limit, offset)
+        )
+        rows = cur.fetchall()
+        users = []
+        for row in rows:
+            users.append({
+                "id": row[0],
+                "email": row[1],
+                "last_login": row[2],
+                "created_at": row[3]
+            })
+        return {"users": users}
+    except Exception as e:
+        _handle_service_error("Fetch users", e, "Failed to fetch users")

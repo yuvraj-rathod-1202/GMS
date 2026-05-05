@@ -177,3 +177,45 @@ def delete_assessment_from_db(course_id: int, assessment_id: int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while deleting assessment" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
+
+def fetch_system_wide_assessments(limit: int = 50, offset: int = 0):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+    try:
+        cursor = db.cursor()
+        select_query = """
+            SELECT id, course_id, name, assessment_type_id, max_marks,
+                is_marks_published, assessment_date, created_by_id,
+                created_at, updated_at
+            FROM assessments
+            ORDER BY created_at DESC LIMIT %s OFFSET %s
+        """
+        cursor.execute(select_query, (limit, offset))
+        rows = cursor.fetchall()
+        
+        assessments = []
+        for row in rows:
+            assessments.append({
+                "id": row[0],
+                "course_id": row[1],
+                "name": row[2],
+                "assessment_type_id": row[3],
+                "max_marks": row[4],
+                "is_marks_published": row[5],
+                "assessment_date": row[6],
+                "created_by_id": row[7],
+                "created_at": row[8],
+                "updated_at": row[9]
+            })
+        
+        return assessments
+    except Exception as e:
+        logger.error(f"Database error in fetch_system_wide_assessments: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while retrieving assessments" if IS_PRODUCTION else f"Database error: {str(e)}"
+        )

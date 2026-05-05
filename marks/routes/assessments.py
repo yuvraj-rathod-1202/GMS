@@ -2,9 +2,20 @@ from fastapi import APIRouter, HTTPException, status, Query
 from utils.auth import verifyRoleInCourse
 from utils.feature_flags import is_feature_enabled
 from models.schemas.assessments import CreateAssessmentRequest, UpdateAssessmentRequest
-from services.assessments import add_assessment_to_db, get_all_assessments_from_db, update_assessment_in_db, delete_assessment_from_db
+from services.assessments import add_assessment_to_db, get_all_assessments_from_db, update_assessment_in_db, delete_assessment_from_db, fetch_system_wide_assessments
+from utils.auth import verifyRoleInCourse, verifyAdmin
 
 router = APIRouter()
+
+@router.get("/assessments/all")
+async def get_all_assessments_admin(limit: int = 50, offset: int = 0, user_id: int = Query(...)):
+    verified = await verifyAdmin(user_id)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+    return fetch_system_wide_assessments(limit, offset)
 
 @router.post("/{course_id}/assessments")
 async def create_assessment(course_id: int, data: CreateAssessmentRequest):

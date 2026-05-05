@@ -1,9 +1,19 @@
 from fastapi import APIRouter, HTTPException, Query, status
 from utils.auth import verifyAdmin, verifyInstructor, verifyInstructorOrTa
 from models.schemas.roles import EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest, BulkEnrollStudentRequest, UnEnrollAllStudentRequest
-from services.roles import enroll_student_in_bulk, enroll_student_in_course_in_db, unenroll_all_students_in_course_in_db
+from services.roles import enroll_student_in_bulk, enroll_student_in_course_in_db, unenroll_all_students_in_course_in_db, fetch_all_enrollments_from_db
 
 router = APIRouter()
+
+@router.get("/enrollments/all")
+async def get_all_enrollments(limit: int = 50, offset: int = 0, user_id: int = Query(...)):
+    verified = verifyAdmin(user_id)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+    return fetch_all_enrollments_from_db(limit, offset)
 
 @router.post("/{course_id}/enroll")
 async def enroll_student(course_id: int, data: EnrollStudentRequest):

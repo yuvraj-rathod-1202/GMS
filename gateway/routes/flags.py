@@ -121,6 +121,70 @@ async def create_definition(data: dict, user_info: dict = Depends(verify_token))
         if db:
             db.close()
 
+@router.put("/admin/flags/definitions/{flag_id}")
+async def update_definition(flag_id: int, data: dict, user_info: dict = Depends(verify_token)):
+    if user_info.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    db = get_db()
+    if not db:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+        
+    try:
+        cursor = db.cursor()
+        
+        fields = []
+        values = []
+        
+        if 'description' in data:
+            fields.append("description = %s")
+            values.append(data['description'])
+        if 'type' in data:
+            fields.append("type = %s")
+            values.append(data['type'])
+        if 'scope_level' in data:
+            fields.append("scope_level = %s")
+            values.append(data['scope_level'])
+        if 'default_enabled' in data:
+            fields.append("default_enabled = %s")
+            values.append(data['default_enabled'])
+        if 'default_config' in data:
+            fields.append("default_config = %s")
+            values.append(json.dumps(data['default_config']))
+            
+        if not fields:
+            raise HTTPException(status_code=400, detail="No fields to update")
+            
+        values.append(flag_id)
+        
+        query = f"UPDATE feature_flag_definitions SET {', '.join(fields)} WHERE id = %s"
+        cursor.execute(query, tuple(values))
+        db.commit()
+        evaluator.refresh_definitions()
+        return {"status": "success"}
+    finally:
+        if db:
+            db.close()
+
+@router.delete("/admin/flags/definitions/{flag_id}")
+async def delete_definition(flag_id: int, user_info: dict = Depends(verify_token)):
+    if user_info.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    db = get_db()
+    if not db:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+        
+    try:
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM feature_flag_definitions WHERE id = %s", (flag_id,))
+        db.commit()
+        evaluator.refresh_definitions()
+        return {"status": "success"}
+    finally:
+        if db:
+            db.close()
+
 # --- Instructor API (Overrides) ---
 
 @router.get("/course/{course_id}/flags")

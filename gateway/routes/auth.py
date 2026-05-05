@@ -164,6 +164,27 @@ async def submit_feedback(request: Request, data: FeedbackRequest):
                 status_code=503,
                 detail=f"Auth service Error: {str(e)}"
             )
+
+@router.get("/users", dependencies=[Depends(verify_token)])
+async def get_all_users(request: Request, limit: int = 50, offset: int = 0, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{AUTH_SERVICE_URL}/users",
+                params={"limit": limit, "offset": offset}
+            )
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to fetch users")
+                )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Auth service unavailable: {str(e)}"
+            )
             
 @router.post("/instructor/reset-password", dependencies=[Depends(verify_token)])
 @limiter.limit("20/hour")
