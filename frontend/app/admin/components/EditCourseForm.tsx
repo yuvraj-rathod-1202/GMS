@@ -1,8 +1,14 @@
-'use client';
+﻿'use client';
 import React, { useEffect, useState } from 'react';
 import { FiTrash2 } from 'react-icons/fi';
 import { AdminApi } from '@/lib/api/admin';
 import { CourseDBObject } from '@/lib/types/courses';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
+import Alert from '@/components/ui/Alert';
+import Modal from '@/components/ui/Modal';
+import { UpdateCourseStatusRequest } from '@/lib/api/admin';
 
 type InstructorAssignment = {
   user_id: number;
@@ -49,9 +55,8 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
         if (!isActive) {
           return;
         }
-
-        console.error('Error fetching course instructors:', error);
-        setInstructorError(error instanceof Error ? error.message : 'Failed to load assigned instructors');
+        const message = error instanceof Error ? error.message : 'Failed to load instructors';
+        setInstructorError(message);
       } finally {
         if (isActive) {
           setInstructorsLoading(false);
@@ -66,22 +71,29 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
     };
   }, [course.id]);
 
+  const handleChange = (field: string, value: unknown) => {
+    setFormData({
+      ...formData,
+      [field]: value,
+    });
+    if (localErrors[field]) {
+      setLocalErrors({
+        ...localErrors,
+        [field]: '',
+      });
+    }
+  };
+
   const validateForm = (): boolean => {
     const errors: { [key: string]: string } = {};
 
     if (!formData.course_code.trim()) {
       errors.course_code = 'Course code is required';
-    } else if (formData.course_code.trim().length > 10) {
-      errors.course_code = 'Course code must be 10 characters or less';
     }
-
     if (!formData.name.trim()) {
       errors.name = 'Course name is required';
-    } else if (formData.name.trim().length > 100) {
-      errors.name = 'Course name must be 100 characters or less';
     }
-
-    if (!formData.credits || formData.credits < 0 || formData.credits > 12) {
+    if (formData.credits < 0 || formData.credits > 12) {
       errors.credits = 'Credits must be between 0 and 12';
     }
 
@@ -91,138 +103,98 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       setLoading(true);
-      await AdminApi.UpdateCourseStatus(course.id, {
-        course_code: formData.course_code,
-        name: formData.name,
-        credits: formData.credits,
-        status: formData.status,
-      });
+      setError(null);
 
+      const updateData: UpdateCourseStatusRequest = {
+        ...formData,
+        user_id: userId,
+      };
+      await AdminApi.UpdateCourseStatus(course.id, updateData);
       onSuccess();
       onClose();
-    } catch (error: unknown) {
-      console.error('Error updating course:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update course');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to update course';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (field: string, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (localErrors[field]) {
-      setLocalErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[field];
-        return updated;
-      });
-    }
-  };
-
   const handleRemoveInstructor = async (instructorId: number) => {
-    if (!window.confirm('Remove this instructor from the course?')) {
-      return;
-    }
-
     try {
       setRemovingInstructorId(instructorId);
       setInstructorError(null);
+
       await AdminApi.RemoveInstructor(course.id, instructorId, userId);
-      setInstructors((prev) => prev.filter((instructor) => instructor.user_id !== instructorId));
-      onSuccess();
+
+      setInstructors(instructors.filter((i) => i.user_id !== instructorId));
+      setRemovingInstructorId(null);
     } catch (error: unknown) {
-      console.error('Error removing instructor:', error);
-      setInstructorError(error instanceof Error ? error.message : 'Failed to remove instructor');
-    } finally {
+      const message = error instanceof Error ? error.message : 'Failed to remove instructor';
+      setInstructorError(message);
       setRemovingInstructorId(null);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Edit Course</h2>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-            {error}
-          </div>
-        )}
+    <Modal
+      open
+      title="Edit Course"
+      onClose={onClose}
+      className="max-w-md"
+    >
+      <div className="space-y-4">
+        {error && <Alert variant="error">{error}</Alert>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course Code *</label>
-            <input
-              type="text"
-              value={formData.course_code}
-              onChange={(e) => handleChange('course_code', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-mms-blue"
-            />
-            {localErrors.course_code && (
-              <p className="mt-1 text-sm text-red-600">{localErrors.course_code}</p>
-            )}
-          </div>
+          <Input
+            label="Course Code *"
+            value={formData.course_code}
+            onChange={(e) => handleChange('course_code', e.target.value)}
+            error={localErrors.course_code}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course Name *</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-mms-blue"
-            />
-            {localErrors.name && <p className="mt-1 text-sm text-red-600">{localErrors.name}</p>}
-          </div>
+          <Input
+            label="Course Name *"
+            value={formData.name}
+            onChange={(e) => handleChange('name', e.target.value)}
+            error={localErrors.name}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Credits *</label>
-            <input
-              type="number"
-              min="0"
-              max="12"
-              value={formData.credits}
-              onChange={(e) => handleChange('credits', parseInt(e.target.value, 10))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-mms-blue"
-            />
-            {localErrors.credits && (
-              <p className="mt-1 text-sm text-red-600">{localErrors.credits}</p>
-            )}
-          </div>
+          <Input
+            label="Credits *"
+            type="number"
+            min="0"
+            max="12"
+            value={String(formData.credits)}
+            onChange={(e) => handleChange('credits', parseInt(e.target.value, 10))}
+            error={localErrors.credits}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-mms-blue"
-            >
-              <option value="ongoing">ongoing</option>
-              <option value="completed">completed</option>
-              <option value="active">active</option>
-              <option value="inactive">inactive</option>
-            </select>
-          </div>
+          <Select
+            label="Status"
+            value={formData.status}
+            onChange={(e) => handleChange('status', e.target.value)}
+            options={[
+              { label: 'Ongoing', value: 'ongoing' },
+              { label: 'Completed', value: 'completed' },
+            ]}
+          />
 
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-4 space-y-3">
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3">
             <div>
               <h3 className="text-sm font-semibold text-gray-900">Assigned Instructors</h3>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="mt-1 text-xs text-gray-500">
                 Manage who can teach this course from the admin panel.
               </p>
             </div>
 
             {instructorError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-                {instructorError}
-              </div>
+              <Alert variant="error" className="text-sm">{instructorError}</Alert>
             )}
 
             {instructorsLoading ? (
@@ -237,10 +209,10 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
                     className="flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-3 py-2"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="truncate text-sm font-medium text-gray-900">
                         Instructor #{instructor.user_id}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="truncate text-xs text-gray-500">
                         {instructor.email || 'No email on file'}
                       </p>
                     </div>
@@ -260,25 +232,26 @@ export default function EditCourseForm({ userId, course, onClose, onSuccess }: E
             )}
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <button
+          <div className="flex gap-3 border-t border-gray-200 pt-4">
+            <Button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 font-medium text-sm"
+              variant="secondary"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-mms-blue text-white rounded-md hover:bg-mms-indigo transition-colors disabled:opacity-50 font-medium text-sm"
+              className="flex-1"
             >
               {loading ? 'Saving...' : 'Save Changes'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -1,5 +1,15 @@
+﻿'use client';
+
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
+import Alert from '@/components/ui/Alert';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Modal from '@/components/ui/Modal';
+
+interface Assessment {
+  is_marks_published?: boolean;
+}
 
 export default function GradeSheetButtons({
   handleSave,
@@ -15,7 +25,7 @@ export default function GradeSheetButtons({
   handleDiscard: () => void;
   hasUnsavedChanges: boolean;
   isSaving: boolean;
-  assessment?: any;
+  assessment?: Assessment;
   handlePublishToggle: (e: React.MouseEvent<HTMLButtonElement>) => void;
   isPublishing: boolean;
   handleBulkUpload: (file: File) => Promise<void>;
@@ -30,7 +40,6 @@ export default function GradeSheetButtons({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate column names
     const { student_id, email, marks_obtained } = columnNames;
     if (!student_id || !email || !marks_obtained) {
       setColumnError('Please enter all column names.');
@@ -40,8 +49,7 @@ export default function GradeSheetButtons({
 
     setIsUploading(true);
     try {
-      // Parse file and map columns
-      let parsedData: Array<{ student_id: number; email: string; marks_obtained: number }> = [];
+      const parsedData: Array<{ student_id: number; email: string; marks_obtained: number }> = [];
       if (file.name.endsWith('.csv')) {
         const text = await file.text();
         const lines = text.trim().split(/\r?\n/);
@@ -54,10 +62,10 @@ export default function GradeSheetButtons({
           throw new Error('Column not found');
         for (let i = 1; i < lines.length; i++) {
           const row = lines[i].split(',').map((v) => v.trim());
-          const sid = parseInt(row[idxStudent]);
+          const sid = parseInt(row[idxStudent], 10);
           const em = row[idxEmail];
           const marks = parseFloat(row[idxMarks]);
-          if (!isNaN(sid) && em && !isNaN(marks)) {
+          if (!Number.isNaN(sid) && em && !Number.isNaN(marks)) {
             parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
           }
         }
@@ -65,9 +73,9 @@ export default function GradeSheetButtons({
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data);
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as Array<Array<unknown>>;
         if (!jsonData || jsonData.length < 2) throw new Error('No data found');
-        const header = jsonData[0].map((h: any) => String(h).trim());
+        const header = jsonData[0].map((h: unknown) => String(h).trim());
         const idxStudent = header.findIndex((h) => h.toLowerCase() === student_id.toLowerCase());
         const idxEmail = header.findIndex((h) => h.toLowerCase() === email.toLowerCase());
         const idxMarks = header.findIndex((h) => h.toLowerCase() === marks_obtained.toLowerCase());
@@ -75,10 +83,10 @@ export default function GradeSheetButtons({
           throw new Error('Column not found');
         for (let i = 1; i < jsonData.length; i++) {
           const row = jsonData[i];
-          const sid = parseInt(row[idxStudent]);
-          const em = row[idxEmail];
-          const marks = parseFloat(row[idxMarks]);
-          if (!isNaN(sid) && em && !isNaN(marks)) {
+          const sid = parseInt(String(row[idxStudent]), 10);
+          const em = String(row[idxEmail] || '').trim();
+          const marks = parseFloat(String(row[idxMarks]));
+          if (!Number.isNaN(sid) && em && !Number.isNaN(marks)) {
             parsedData.push({ student_id: sid, email: em, marks_obtained: marks });
           }
         }
@@ -87,64 +95,60 @@ export default function GradeSheetButtons({
       }
       await handleBulkUpload(file);
       setShowUploadDialog(false);
-    } catch (error: any) {
-      setColumnError(error.message || 'Upload error');
-      console.error('Upload error:', error);
-    } finally {
-      setIsUploading(false);
+      setColumnNames({ student_id: '', email: '', marks_obtained: '' });
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Upload error';
+      setColumnError(message);
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setShowUploadDialog(false);
+    setColumnError('');
+    setColumnNames({ student_id: '', email: '', marks_obtained: '' });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
   return (
     <>
-      <div className="flex gap-3 mb-6 flex-wrap">
-        <button
+      <div className="mb-6 flex flex-wrap gap-3">
+        <Button
           onClick={handleSave}
           disabled={!hasUnsavedChanges || isSaving}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm border ${
-            hasUnsavedChanges && !isSaving
-              ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:shadow-md active:scale-95'
-              : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-          }`}
           title={hasUnsavedChanges ? 'Save all changes' : 'No changes to save'}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           {isSaving ? 'Saving...' : 'Save Marks'}
-        </button>
+        </Button>
 
-        {/* Discard Changes Button */}
-        <button
+        <Button
           onClick={handleDiscard}
           disabled={!hasUnsavedChanges}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm border ${
-            hasUnsavedChanges
-              ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:shadow-md active:scale-95'
-              : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-          }`}
+          variant="secondary"
           title={hasUnsavedChanges ? 'Discard all unsaved changes' : 'No changes to discard'}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
           Discard Changes
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={() => setShowUploadDialog(true)}
-          className="flex cursor-pointer items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm bg-white hover:bg-gray-50 text-gray-700 hover:shadow-md active:scale-95 border border-gray-300"
+          variant="secondary"
           title="Upload marks from CSV/Excel file"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -153,15 +157,15 @@ export default function GradeSheetButtons({
             />
           </svg>
           Bulk Upload
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={handlePublishToggle}
           disabled={isPublishing}
-          className="flex cursor-pointer items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm bg-white hover:bg-gray-50 text-gray-700 hover:shadow-md active:scale-95 border border-gray-300"
+          variant="secondary"
           title="Make marks visible to students"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -170,231 +174,172 @@ export default function GradeSheetButtons({
             />
           </svg>
           {assessment?.is_marks_published ? 'Unpublish Marks' : 'Publish Marks'}
-        </button>
+        </Button>
       </div>
 
-      {/* Bulk Upload Dialog */}
-      {showUploadDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Dialog Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Bulk Upload Marks</h2>
-              <button
-                onClick={() => setShowUploadDialog(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Bulk Upload Modal */}
+      <Modal
+        open={showUploadDialog}
+        title="Bulk Upload Marks"
+        description="Upload marks from a CSV or Excel file"
+        onClose={handleCloseDialog}
+        className="max-h-[90vh] max-w-2xl overflow-y-auto"
+      >
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h3 className="mb-3 flex items-center gap-2 font-medium text-gray-900">
+                <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-              </button>
+                File Requirements
+              </h3>
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 text-gray-400">•</span>
+                  <span>
+                    <strong>File Type:</strong> CSV (.csv) or Excel (.xlsx, .xls)
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 text-gray-400">•</span>
+                  <span>
+                    <strong>Maximum Size:</strong> 5 MB
+                  </span>
+                </li>
+              </ul>
             </div>
 
-            {/* Dialog Content */}
-            <div className="p-6 space-y-6">
-              <div className="space-y-4">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                    <svg
-                      className="w-5 h-5 text-gray-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    File Requirements
-                  </h3>
-                  <ul className="space-y-2 text-sm text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5">•</span>
-                      <span>
-                        <strong>File Type:</strong> CSV (.csv) or Excel (.xlsx, .xls)
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5">•</span>
-                      <span>
-                        <strong>Maximum Size:</strong> 5 MB
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                    <svg
-                      className="w-5 h-5 text-gray-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Column Mapping
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Student ID Column
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-2 py-1 border border-gray-300 rounded"
-                        placeholder="e.g. RollNo or student_id"
-                        value={columnNames.student_id}
-                        onChange={(e) =>
-                          setColumnNames({ ...columnNames, student_id: e.target.value })
-                        }
-                        disabled={isUploading}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Email Column
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-2 py-1 border border-gray-300 rounded"
-                        placeholder="e.g. Email id or email"
-                        value={columnNames.email}
-                        onChange={(e) => setColumnNames({ ...columnNames, email: e.target.value })}
-                        disabled={isUploading}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Marks Column
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-2 py-1 border border-gray-300 rounded"
-                        placeholder="e.g. marks_obtained or Marks"
-                        value={columnNames.marks_obtained}
-                        onChange={(e) =>
-                          setColumnNames({ ...columnNames, marks_obtained: e.target.value })
-                        }
-                        disabled={isUploading}
-                      />
-                    </div>
-                  </div>
-                  {columnError && <div className="text-xs text-red-600 mt-2">{columnError}</div>}
-                  <p className="text-xs text-gray-500 mt-2">
-                    * Enter the exact column names as in your file's header row.
-                  </p>
-                </div>
-
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h3 className="font-medium text-yellow-900 mb-2 flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
-                    Unenrolled Students
-                  </h3>
-                  <p className="text-sm text-yellow-800">
-                    If a student ID is in the file but not enrolled in the course, you'll be
-                    prompted to enroll them or skip their entry.
-                  </p>
-                </div>
-              </div>
-
-              {/* File Upload Area */}
-              <div>
-                <label
-                  htmlFor="file-upload"
-                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <svg
-                      className="w-12 h-12 mb-3 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                    <p className="mb-2 text-sm text-gray-600">
-                      <span className="font-semibold">Click to upload</span>
-                    </p>
-                    <p className="text-xs text-gray-500">CSV or Excel files (MAX. 5MB)</p>
-                  </div>
-                  <input
-                    id="file-upload"
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".csv,.xlsx,.xls"
-                    onChange={handleFileSelect}
-                    disabled={isUploading}
-                    className="hidden"
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h3 className="mb-3 flex items-center gap-2 font-medium text-gray-900">
+                <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
-                </label>
+                </svg>
+                Column Mapping
+              </h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <Input
+                  label="Student ID Column"
+                  value={columnNames.student_id}
+                  onChange={(event) => {
+                    setColumnError('');
+                    setColumnNames({ ...columnNames, student_id: event.target.value });
+                  }}
+                  placeholder="e.g. RollNo or student_id"
+                  disabled={isUploading}
+                />
+                <Input
+                  label="Email Column"
+                  value={columnNames.email}
+                  onChange={(event) => {
+                    setColumnError('');
+                    setColumnNames({ ...columnNames, email: event.target.value });
+                  }}
+                  placeholder="e.g. Email id or email"
+                  disabled={isUploading}
+                />
+                <Input
+                  label="Marks Column"
+                  value={columnNames.marks_obtained}
+                  onChange={(event) => {
+                    setColumnError('');
+                    setColumnNames({ ...columnNames, marks_obtained: event.target.value });
+                  }}
+                  placeholder="e.g. marks_obtained or Marks"
+                  disabled={isUploading}
+                />
               </div>
-
-              {isUploading && (
-                <div className="flex items-center justify-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                  <svg
-                    className="animate-spin h-5 w-5 text-gray-600"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  <span className="text-sm font-medium text-gray-700">Processing file...</span>
-                </div>
+              {columnError && (
+                <Alert variant="error" className="mt-3 whitespace-pre-wrap">
+                  {columnError}
+                </Alert>
               )}
+              <p className="mt-2 text-xs text-gray-500">
+                * Enter the exact column names as in your file&apos;s header row.
+              </p>
             </div>
 
-            {/* Dialog Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
-              <button
-                onClick={() => setShowUploadDialog(false)}
-                disabled={isUploading}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+              <h3 className="mb-2 flex items-center gap-2 font-medium text-yellow-900">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                Unenrolled Students
+              </h3>
+              <p className="text-sm text-yellow-800">
+                If a student ID is in the file but not enrolled in the course, you&apos;ll be
+                prompted to enroll them or skip their entry.
+              </p>
             </div>
           </div>
+
+          <div>
+            <label
+              htmlFor="file-upload"
+              className="flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:bg-gray-100"
+            >
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <svg className="mb-3 h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                <p className="mb-2 text-sm text-gray-600">
+                  <span className="font-semibold">Click to upload</span>
+                </p>
+                <p className="text-xs text-gray-500">CSV or Excel files (MAX. 5MB)</p>
+              </div>
+              <input
+                id="file-upload"
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={handleFileSelect}
+                disabled={isUploading}
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          {isUploading && (
+            <div className="flex items-center justify-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <svg className="h-5 w-5 animate-spin text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              <span className="text-sm font-medium text-gray-700">Processing file...</span>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 border-t border-gray-200 bg-gray-50 pt-4">
+            <Button type="button" variant="secondary" onClick={handleCloseDialog} disabled={isUploading}>
+              Cancel
+            </Button>
+          </div>
         </div>
-      )}
+      </Modal>
     </>
   );
 }

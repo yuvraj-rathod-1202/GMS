@@ -6,14 +6,12 @@ export type CourseFormValues = {
   name: string;
   semester: string;
   credits: number | '';
-  status: NonNullable<UpdateCourseRequest['status']> | 'active' | 'inactive';
+  status: NonNullable<UpdateCourseRequest['status']>;
 };
 
 export const courseStatusOptions = [
   { label: 'Ongoing', value: 'ongoing' },
   { label: 'Completed', value: 'completed' },
-  { label: 'Active', value: 'active' },
-  { label: 'Inactive', value: 'inactive' },
 ];
 
 export const createCourseFields: FormFieldConfig<CourseFormValues>[] = [

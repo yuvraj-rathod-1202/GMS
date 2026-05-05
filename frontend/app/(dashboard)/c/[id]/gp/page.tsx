@@ -365,12 +365,9 @@ function EmptyPolicyState({ onCreate }: { onCreate: () => void }) {
         different components (e.g., Quizzes, Midsem, Assignments) and choose how scores are
         aggregated.
       </p>
-      <button
-        onClick={onCreate}
-        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm"
-      >
+      <Button type="button" onClick={onCreate} className="px-6 py-3">
         Create Grading Policy
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,4 +1,9 @@
-import React, { useState, useRef } from 'react';
+'use client';
+
+import React, { useRef, useState } from 'react';
+import { BiInfoCircle } from 'react-icons/bi';
+import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 
 interface BulkEnrollDialogProps {
   isOpen: boolean;
@@ -10,16 +15,21 @@ export default function BulkEnrollDialog({ isOpen, onClose, onUpload }: BulkEnro
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (!isOpen) return null;
+  const handleClose = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    onClose();
+  };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
     try {
       await onUpload(file);
-      onClose();
+      handleClose();
     } catch (error) {
       console.error('Upload error:', error);
     } finally {
@@ -30,140 +40,91 @@ export default function BulkEnrollDialog({ isOpen, onClose, onUpload }: BulkEnro
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Dialog Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Bulk Enroll Students</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            disabled={isUploading}
+    <Modal
+      open
+      title="Bulk Enroll Students"
+      onClose={handleClose}
+      className="max-h-[90vh] max-w-2xl overflow-y-auto"
+    >
+      <div className="space-y-6">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <h3 className="mb-3 flex items-center gap-2 font-medium text-gray-900">
+            <BiInfoCircle className="text-gray-600" />
+            File Requirements
+          </h3>
+          <ul className="space-y-2 text-sm text-gray-700">
+            <li className="flex items-start gap-2">
+              <span className="mt-0.5 text-gray-400">•</span>
+              <span>
+                Upload a <strong>Student list</strong> file exported from the <strong>IMS</strong>.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-0.5 text-gray-400">•</span>
+              <span>File type should be .xlsx or .xls</span>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <label
+            htmlFor="file-upload-enroll"
+            className="flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:bg-gray-100"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              <svg className="mb-3 h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              <p className="mb-2 text-sm text-gray-600">
+                <span className="font-semibold">Click to upload</span>
+              </p>
+              <p className="text-xs text-gray-500">CSV or Excel files (MAX. 5MB)</p>
+            </div>
+            <input
+              id="file-upload-enroll"
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              onChange={handleFileSelect}
+              disabled={isUploading}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        {isUploading && (
+          <div className="flex items-center justify-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <svg
+              className="h-5 w-5 animate-spin text-gray-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-          </button>
-        </div>
-
-        {/* Dialog Content */}
-        <div className="p-6 space-y-6">
-          {/* Instructions Section */}
-          <div className="space-y-4">
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                File Requirements
-              </h3>
-              <ul className="space-y-2 text-sm text-gray-700">
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">•</span>
-                  <span>
-                    Upload a <strong>Student list</strong> File exported from the{' '}
-                    <strong>IMS</strong>.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">•</span>
-                  <span>File type should be .xlsx or .xls</span>
-                </li>
-              </ul>
-            </div>
+            <span className="text-sm font-medium text-gray-700">Processing file...</span>
           </div>
+        )}
 
-          {/* File Upload Area */}
-          <div>
-            <label
-              htmlFor="file-upload-enroll"
-              className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <svg
-                  className="w-12 h-12 mb-3 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
-                <p className="mb-2 text-sm text-gray-600">
-                  <span className="font-semibold">Click to upload</span>
-                </p>
-                <p className="text-xs text-gray-500">CSV or Excel files (MAX. 5MB)</p>
-              </div>
-              <input
-                id="file-upload-enroll"
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                onChange={handleFileSelect}
-                disabled={isUploading}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {isUploading && (
-            <div className="flex items-center justify-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <svg
-                className="animate-spin h-5 w-5 text-gray-600"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <span className="text-sm font-medium text-gray-700">Processing file...</span>
-            </div>
-          )}
-        </div>
-
-        {/* Dialog Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
-          <button
-            onClick={onClose}
-            disabled={isUploading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+        <div className="flex justify-end gap-3 border-t border-gray-200 bg-gray-50 pt-4">
+          <Button type="button" variant="secondary" onClick={handleClose} disabled={isUploading}>
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

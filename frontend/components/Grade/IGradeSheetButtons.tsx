@@ -1,5 +1,19 @@
 import React from 'react';
-import { BiSave, BiReset, BiCalculator, BiCloudUpload, BiSearch, BiCog } from 'react-icons/bi';
+import { BiCloudUpload, BiCalculator, BiReset, BiSave, BiSearch } from 'react-icons/bi';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+
+interface IGradeSheetButtonsProps {
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
+  onImportClick: () => void;
+  onRecalculate: () => void;
+  onSave: () => void;
+  onDiscard: () => void;
+  hasUnsavedChanges: boolean;
+  isSaving: boolean;
+  isRecalculating: boolean;
+}
 
 export const IGradeSheetButtons = ({
   searchTerm,
@@ -11,64 +25,60 @@ export const IGradeSheetButtons = ({
   hasUnsavedChanges,
   isSaving,
   isRecalculating,
-}: any) => {
+}: IGradeSheetButtonsProps) => {
   return (
-    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-4 flex flex-col md:flex-row gap-4 justify-between items-center">
+    <div className="mb-4 flex flex-col items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:flex-row">
       <div className="relative w-full md:w-96">
-        <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
-        <input
-          type="text"
+        <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400" />
+        <Input
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(event) => setSearchTerm(event.target.value)}
           placeholder="Search student name, ID or email..."
-          className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+          className="pl-10"
+          wrapperClassName="!space-y-0"
         />
       </div>
 
-      <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-        <button
-          onClick={onImportClick}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors shadow-sm"
-        >
+      <div className="flex w-full flex-wrap justify-end gap-2 md:w-auto">
+        <Button type="button" variant="secondary" onClick={onImportClick} className="flex items-center gap-2">
           <BiCloudUpload className="text-xl" />
           <span>Import CSV</span>
-        </button>
+        </Button>
 
-        <button
+        <Button
+          type="button"
+          variant="secondary"
           onClick={onRecalculate}
           disabled={isRecalculating}
           title="Recalculate total marks based on the current grading policy and assessment marks"
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors shadow-sm disabled:opacity-50"
+          className="flex items-center gap-2"
         >
           <BiCalculator className="text-xl" />
           <span>{isRecalculating ? 'Calculating...' : 'Recalculate'}</span>
-        </button>
+        </Button>
 
-        <div className="w-px h-10 bg-gray-300 mx-2 hidden md:block"></div>
+        <div className="hidden h-10 w-px bg-gray-300 md:block" />
 
-        <button
+        <Button
+          type="button"
+          variant="ghost"
           onClick={onDiscard}
           disabled={!hasUnsavedChanges}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-            hasUnsavedChanges ? 'text-red-600 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'
-          }`}
+          className={hasUnsavedChanges ? 'text-red-600 hover:bg-red-50' : 'text-gray-400'}
         >
           <BiReset className="text-xl" />
           Discard
-        </button>
+        </Button>
 
-        <button
+        <Button
+          type="button"
           onClick={onSave}
           disabled={!hasUnsavedChanges || isSaving}
-          className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium shadow-sm transition-all ${
-            hasUnsavedChanges
-              ? 'bg-black text-white hover:bg-gray-800 hover:shadow-md'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
+          className={`flex items-center gap-2 px-6 ${hasUnsavedChanges ? '' : 'bg-gray-100 text-gray-400 hover:bg-gray-100'}`}
         >
           <BiSave className="text-xl" />
           {isSaving ? 'Saving...' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </div>
   );
