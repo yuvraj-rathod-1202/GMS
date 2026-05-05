@@ -95,8 +95,8 @@ export default function RosterList({
     );
   };
 
-  const handleRemove = async (itemId: number) => {
-    await onRemove(itemId);
+  const handleRemove = async (itemId: string) => {
+    await onRemove(Number(itemId));
     setSelectedItem(null);
   };
 
@@ -178,7 +178,7 @@ export default function RosterList({
                   <div className="absolute right-0 z-30 mt-1 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
                     <button
                       type="button"
-                      onClick={() => handleRemove(item.index)}
+                      onClick={() => handleRemove(item.id)}
                       className="w-full px-4 py-2.5 text-left text-sm text-red-700 transition hover:bg-red-50"
                       disabled={isLoading}
                     >
