@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
     
@@ -16,5 +16,4 @@ class UpdateCourseStatusRequest(BaseModel):
     name: Optional[str] = None
     credits: Optional[int] = None
     
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra = "forbid")
