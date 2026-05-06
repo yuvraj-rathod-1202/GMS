@@ -6,13 +6,6 @@ print_yellow() { echo -e "\e[43;30m $1 \e[0m"; }
 
 print_blue "Starting deployment process..."
 
-# print_yellow "RabbitMQ Deployment"
-
-# cd rabbitmq
-
-# kubectl delete -f ./manifests || true
-# kubectl apply -f ./manifests
-
 print_yellow "Auth Service Deployment"
 
 cd auth_user
