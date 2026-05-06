@@ -16,6 +16,7 @@ MMS/
 ├── policy/             # Policy & Grading rules microservice
 ├── rabbitmq/           # RabbitMQ configurations & manifests
 ├── docs/               # Project documentation (You are here)
+├── scripts/            # Helper scripts
 ├── .github/            # CI/CD workflows
 ├── deploy.sh           # Main deployment script
 ├── deploy-k8s.sh       # Kubernetes specific deployment script

@@ -22,22 +22,15 @@ minikube start
 minikube tunnel # Required for LoadBalancer services
 ```
 
-### 2. Deploy Infrastructure
-Deploy MySQL and RabbitMQ first:
-```bash
-kubectl apply -f mysql/manifests/
-kubectl apply -f rabbitmq/manifests/
-```
-
-### 3. Deploy All Services
+### 2. Deploy All Services
 Use the provided deployment scripts:
 
 ```bash
 # To build and deploy everything
-./deploy.sh
+./scripts/initial_setup.sh
 ```
 
-### 4. Access the Application
+### 3. Access the Application
 
 Once the deployments are ready, you can access the system. The frontend and backend are consolidated under a single ingress for ease of access without host configuration.
 
