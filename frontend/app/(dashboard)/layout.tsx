@@ -10,11 +10,13 @@ export default function DashboardLayout({
 }>) {
   return (
     <ProtectedLayout>
-      <main className="flex flex-row">
+      <main className="flex flex-row h-screen overflow-hidden">
         <DashboardSidebar />
-        <div className="flex flex-col w-full">
+        <div className="flex-1 flex flex-col h-full overflow-y-auto bg-gray-50/30">
           <NavBar />
-          {children}
+          <div className="flex-1">
+            {children}
+          </div>
         </div>
       </main>
     </ProtectedLayout>

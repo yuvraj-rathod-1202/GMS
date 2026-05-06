@@ -5,10 +5,16 @@ from fastapi import HTTPException
 
 @pytest.mark.asyncio
 async def test_verify_token_success(mock_httpx_client):
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {"user_id": 123, "role": "admin"}
-    mock_httpx_client.post.return_value = mock_response
+    # Mock Auth service response
+    mock_post_resp = MagicMock()
+    mock_post_resp.status_code = 200
+    mock_post_resp.json.return_value = {"user_id": 123}
+    mock_httpx_client.post.return_value = mock_post_resp
+    
+    # Mock Course service verifyadmin response
+    mock_get_resp = MagicMock()
+    mock_get_resp.status_code = 200
+    mock_httpx_client.get.return_value = mock_get_resp
 
     result = await verify_token("Bearer valid-token")
     

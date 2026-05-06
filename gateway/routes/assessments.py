@@ -203,3 +203,44 @@ async def unpublish_assessment_marks(course_id: str, assessment_id: str, user_in
                 detail=f"Marks service unavailable: {str(e)}"
             )
 
+@router.get("/all", dependencies=[Depends(verify_token)])
+async def get_all_assessments(request: Request, limit: int = 50, offset: int = 0, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{MARKS_SERVICE_URL}/assessments/all",
+                params={"limit": limit, "offset": offset, "user_id": user_info.get("user_id", 0)}
+            )
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to fetch all assessments")
+                )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Marks service unavailable: {str(e)}"
+            )
+
+@router.delete("/{course_id}/{assessment_id}")
+async def delete_assessment(course_id: str, assessment_id: str, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.delete(
+                f"{MARKS_SERVICE_URL}/assessments/{course_id}/{assessment_id}",
+                params={"user_id": user_info.get("user_id", 0)},
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Error deleting assessment"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Marks service unavailable: {str(e)}"
+            )
+

@@ -111,14 +111,6 @@ export default function AnalyticsPanel() {
           color="bg-purple-500"
         />
       </div>
-
-      <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-sm text-blue-900">
-          <span className="font-medium">Note:</span> Analytics are aggregated from all courses in
-          the system. Data is computed periodically and may take a few minutes to reflect recent
-          changes.
-        </p>
-      </div>
     </div>
   );
 }

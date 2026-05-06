@@ -34,6 +34,7 @@ describe('GradingPolicyCard component', () => {
         onEdit={mockEdit}
         onDelete={mockDelete}
         SetDefault={mockSetDefault}
+        canManage={true}
       />
     );
 
@@ -54,6 +55,7 @@ describe('GradingPolicyCard component', () => {
         onEdit={mockEdit}
         onDelete={mockDelete}
         SetDefault={mockSetDefault}
+        canManage={true}
       />
     );
 
@@ -67,6 +69,7 @@ describe('GradingPolicyCard component', () => {
         onEdit={mockEdit}
         onDelete={mockDelete}
         SetDefault={mockSetDefault}
+        canManage={true}
       />
     );
 

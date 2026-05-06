@@ -2,28 +2,37 @@
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { useMemo } from 'react';
 
 export default function TANavbar() {
   const params = useParams();
   const pathname = usePathname();
   const courseId = params.id;
-  const { isFeatureEnabled } = useFeatureFlags(Number(courseId));
+  const { flags, isFeatureEnabled } = useFeatureFlags(Number(courseId));
+  
+  const navItems = useMemo(() => {
+    const items = [
+      { label: 'Overview', href: `/c/${courseId}` },
+      { label: 'Students', href: `/c/${courseId}/p` },
+      { label: 'Grades', href: `/c/${courseId}/g` },
+    ];
 
-  const navItems = [
-    { label: 'Overview', href: `/c/${courseId}` },
-    { label: 'Students', href: `/c/${courseId}/p` },
-    { label: 'Grades', href: `/c/${courseId}/g` },
-  ];
+    if (isFeatureEnabled('course.ta_analytics_visibility')) {
+      items.push({ label: 'Analytics', href: `/c/${courseId}/a` });
+    }
+    
+    if (isFeatureEnabled('course.ta_policy_management')) {
+      items.push({ label: 'Policies', href: `/c/${courseId}/gp` });
+    }
 
-  if (isFeatureEnabled('course.ta_analytics_visibility')) {
-    navItems.push({ label: 'Analytics', href: `/c/${courseId}/a` });
-  }
+    return items;
+  }, [courseId, flags, isFeatureEnabled]);
 
   const isActive = (href: string) => {
     if (href === `/c/${courseId}`) {
       return pathname === href;
     }
-    return pathname?.startsWith(href);
+    return pathname === href || pathname?.startsWith(`${href}/`);
   };
 
   return (

@@ -9,6 +9,11 @@ import {
 } from '@/lib/types/policy';
 
 export const PolicyApi = {
+  // Fetch assessment categories (system-wide)
+  FetchAssessmentCategories: async () => {
+    return handleRequest(apiClient.get('/courses/assessment-categories'));
+  },
+
   CreatePolicy: async (courseId: number, policyData: CreatePolicyRequest) => {
     return handleRequest(apiClient.post(`/courses/${courseId}/policy`, policyData));
   },

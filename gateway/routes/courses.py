@@ -13,6 +13,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 COURSES_SERVICE_URL = os.getenv("COURSES_SERVICE_URL", "http://localhost:8080")
 MARKS_SERVICE_URL = os.getenv("MARKS_SERVICE_URL", "http://localhost:6000")
+POLICY_SERVICE_URL = os.getenv("POLICY_SERVICE_URL", "http://localhost:7070")
 
 def _error_detail(response, default_msg: str) -> str:
     try:
@@ -23,14 +24,17 @@ def _error_detail(response, default_msg: str) -> str:
         return text or default_msg
 
 @router.get("/")
+@router.get("")
 @limiter.limit("100/minute")
-async def get_courses(request: Request, user_info: dict = Depends(verify_token)):
+async def get_courses(request: Request, limit: int = 50, offset: int = 0, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
                 f"{COURSES_SERVICE_URL}/all",
                 params={
                     "user_id": user_info.get("user_id", 0),
+                    "limit": limit,
+                    "offset": offset
                 }
             )
             if response.status_code != 200:
@@ -44,7 +48,31 @@ async def get_courses(request: Request, user_info: dict = Depends(verify_token))
                 status_code=503,
                 detail=f"Courses service unavailable: {str(e)}"
             )
-            
+
+@router.get("/enrollments/all")
+async def get_all_enrollments(limit: int = 50, offset: int = 0, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{COURSES_SERVICE_URL}/enrollments/all",
+                params={
+                    "user_id": user_info.get("user_id", 0),
+                    "limit": limit,
+                    "offset": offset
+                }
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Error fetching enrollments"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Courses service unavailable: {str(e)}"
+            )
+
 @router.post("/")
 @limiter.limit("100/minute")
 async def create_course(request: Request, course: AddCourseRequest, user_info: dict = Depends(verify_token)):
@@ -66,6 +94,23 @@ async def create_course(request: Request, course: AddCourseRequest, user_info: d
                 detail=f"Courses service unavailable: {str(e)}"
             )
             
+@router.get("/assessment-categories")
+async def get_assessment_categories():
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"{POLICY_SERVICE_URL}/assessment-categories")
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to retrieve assessment categories"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Policy Service: {str(e)}",
+            )
+
 @router.get("/{course_id}")
 async def get_course(course_id: str, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
@@ -390,4 +435,93 @@ async def get_all_marks(course_id: str, user_info: dict = Depends(verify_token))
             raise HTTPException(
                 status_code=503,
                 detail=f"Marks service unavailable: {str(e)}"
+            )
+
+@router.delete("/{course_id}")
+async def delete_course(course_id: str, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.delete(
+                f"{COURSES_SERVICE_URL}/id/{course_id}",
+                params={"user_id": user_info.get("user_id", 0)}
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Error deleting course"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Courses service unavailable: {str(e)}"
+            )
+
+@router.delete("/{course_id}/enroll")
+async def unenroll_student(course_id: str, student_id: int = Query(...), user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.delete(
+                f"{COURSES_SERVICE_URL}/{course_id}/enroll",
+                params={
+                    "user_id": user_info.get("user_id", 0),
+                    "student_id": student_id
+                }
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Error unenrolling student"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Courses service unavailable: {str(e)}"
+            )
+
+@router.delete("/{course_id}/tas")
+async def remove_ta(course_id: str, ta_id: int = Query(...), user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.delete(
+                f"{COURSES_SERVICE_URL}/{course_id}/tas",
+                params={
+                    "user_id": user_info.get("user_id", 0),
+                    "ta_id": ta_id
+                }
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Error removing TA"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Courses service unavailable: {str(e)}"
+            )
+
+@router.delete("/{course_id}/instructors")
+async def remove_instructor(course_id: str, instructor_id: int = Query(...), user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.delete(
+                f"{COURSES_SERVICE_URL}/{course_id}/instructors",
+                params={
+                    "user_id": user_info.get("user_id", 0),
+                    "instructor_id": instructor_id
+                }
+            )
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Error removing instructor"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Courses service unavailable: {str(e)}"
             )

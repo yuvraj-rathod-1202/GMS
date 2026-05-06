@@ -6,7 +6,7 @@ from services.courses import fetch_all_courses_from_db, add_course_to_db, fetch_
 router = APIRouter()
 
 @router.get("/all")
-def get_courses(user_id: int = Query(...)):
+def get_courses(limit: int = 50, offset: int = 0, user_id: int = Query(...)):
     verified = verifyAdmin(user_id)
     if not verified:
         raise HTTPException(
@@ -14,7 +14,7 @@ def get_courses(user_id: int = Query(...)):
             detail="Admin privileges required"
         )
         
-    course_list = fetch_all_courses_from_db()
+    course_list = fetch_all_courses_from_db(limit=limit, offset=offset)
         
     return {"courses": course_list}
 

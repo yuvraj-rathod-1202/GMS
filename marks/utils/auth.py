@@ -124,3 +124,20 @@ async def verifyRoleInCourseAndPublish(user_id: int, course_id: int, assessment_
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=f"Course service unavailable: {str(e)}"
             )
+
+async def verifyAdmin(user_id: int):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{COURSES_SERVICE_URL}/verifyadmin",
+                params={"user_id": user_id}
+            )
+            if response.status_code == 200:
+                return True
+            else:
+                return False
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Course service unavailable: {str(e)}"
+            )

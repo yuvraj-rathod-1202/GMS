@@ -34,3 +34,7 @@ class TotalScoreDBObj(BaseModel):
     final_grade: str | None
     computed_at: datetime
     updated_at: datetime
+
+class AssessmentCategoryDBObj(BaseModel):
+    id: int
+    type: str
