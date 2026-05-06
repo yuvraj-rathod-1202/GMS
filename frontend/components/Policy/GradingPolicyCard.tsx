@@ -24,11 +24,13 @@ export default function GradingPolicyCard({
   onEdit,
   onDelete,
   SetDefault,
+  canManage = false,
 }: {
   policy: PolicyDBObject;
   onEdit: () => void;
   onDelete: () => void;
   SetDefault: () => void;
+  canManage?: boolean;
 }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200">
@@ -44,26 +46,30 @@ export default function GradingPolicyCard({
               Total Weightage:{' '}
               <span className="font-medium text-gray-900">{policy.total_weightage}%</span>
             </p>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onEdit}
-              title="Edit Policy"
-              className="h-9 w-9 p-0 text-gray-600 hover:text-mms-indigo"
-            >
-              <FaPencil className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onDelete}
-              title="Delete Policy"
-              className="h-9 w-9 p-0 text-red-600 hover:text-red-800"
-            >
-              <MdDelete className="size-4" />
-            </Button>
+            {canManage && (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onEdit}
+                  title="Edit Policy"
+                  className="h-9 w-9 p-0 text-gray-600 hover:text-mms-indigo"
+                >
+                  <FaPencil className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onDelete}
+                  title="Delete Policy"
+                  className="h-9 w-9 p-0 text-red-600 hover:text-red-800"
+                >
+                  <MdDelete className="size-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -124,7 +130,7 @@ export default function GradingPolicyCard({
       <div className="rounded-b-lg border-t border-gray-100 bg-gray-50 px-4 py-3 sm:px-6">
         <div className="flex flex-col gap-2 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
           <span>Updated {new Date(policy.updated_at).toLocaleDateString()}</span>
-          {!policy.is_default && (
+          {canManage && !policy.is_default && (
             <Button
               type="button"
               variant="ghost"

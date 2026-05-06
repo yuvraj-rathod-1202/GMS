@@ -24,6 +24,7 @@ export interface TACourseData {
   totalMarks: TotalScoreDBObject[];
   marksChanges: Record<number, MarksChanges[]>;
   CourseRoles: CourseRoles | null;
+  policies: PolicyDBObject[];
 }
 
 export interface InstructorCourseData {

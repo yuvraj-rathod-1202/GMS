@@ -14,12 +14,11 @@ import {
   BiEditAlt
 } from 'react-icons/bi';
 import { AdminApi } from '@/lib/api/admin';
-import { FlagsApi } from '@/lib/api/flags';
 import Button from '@/components/ui/Button';
 import EntityModal from './components/EntityModal';
 import { Authapi } from '@/lib/api/auth';
 
-type EntityType = 'users' | 'courses' | 'flags' | 'assessments' | 'enrollments';
+type EntityType = 'users' | 'assessments' | 'enrollments';
 
 interface EntityConfig {
   id: EntityType;
@@ -28,8 +27,6 @@ interface EntityConfig {
 
 const ENTITIES: EntityConfig[] = [
   { id: 'users', label: 'Users' },
-  { id: 'courses', label: 'Courses' },
-  { id: 'flags', label: 'Feature Flags' },
   { id: 'assessments', label: 'Assessments' },
   { id: 'enrollments', label: 'Enrollments' },
 ];
@@ -63,20 +60,6 @@ export default function EntityManagementPage() {
             alert('Full user profile editing is coming soon. For now, users can change their own passwords in settings.');
           } else {
             await Authapi.signup({ ...formData, password: formData.password });
-          }
-          break;
-        case 'courses':
-          if (isEdit) {
-            await AdminApi.UpdateCourseStatus(selectedItem.id, { ...formData, user_id: 0 });
-          } else {
-            await AdminApi.CreateCourse({ ...formData, user_id: 0 });
-          }
-          break;
-        case 'flags':
-          if (isEdit) {
-            await FlagsApi.UpdateDefinition(selectedItem.id, formData);
-          } else {
-            await FlagsApi.CreateDefinition(formData);
           }
           break;
         case 'assessments':
@@ -116,17 +99,11 @@ export default function EntityManagementPage() {
         case 'users':
           result = await AdminApi.FetchAllUsers(LIMIT, currentOffset);
           break;
-        case 'courses':
-          result = await AdminApi.FetchAllCourses(LIMIT, currentOffset);
-          break;
         case 'enrollments':
           result = await AdminApi.FetchAllEnrollments(LIMIT, currentOffset);
           break;
         case 'assessments':
           result = await AdminApi.FetchAllAssessments(LIMIT, currentOffset);
-          break;
-        case 'flags':
-          result = await FlagsApi.ListDefinitions();
           break;
         default:
           result = [];
@@ -135,7 +112,6 @@ export default function EntityManagementPage() {
       const newItems = Array.isArray(result) ? result : 
         (result as any).data || 
         (result as any).users || 
-        (result as any).courses || 
         (result as any).enrollments || 
         (result as any).assessments || [];
       
@@ -145,8 +121,7 @@ export default function EntityManagementPage() {
         setData(prev => [...prev, ...newItems]);
       }
 
-      // Feature flags don't support pagination in the same way, so we disable hasMore for them
-      if (activeEntity === 'flags' || newItems.length < LIMIT) {
+      if (newItems.length < LIMIT) {
         setHasMore(false);
       } else {
         setHasMore(true);
@@ -176,14 +151,8 @@ export default function EntityManagementPage() {
     
     try {
       switch (activeEntity) {
-        case 'courses':
-          await AdminApi.DeleteCourse(item.id, 0);
-          break;
         case 'assessments':
           await AdminApi.DeleteAssessment(item.course_id, item.id);
-          break;
-        case 'flags':
-          await FlagsApi.DeleteDefinition(item.id);
           break;
         case 'enrollments':
           if (item.role === 'ta') {
@@ -219,7 +188,7 @@ export default function EntityManagementPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">System Entity Manager</h1>
-          <p className="text-sm text-gray-500">Full administrative control over all system data.</p>
+          <p className="text-sm text-gray-500">Full admin control over all system data.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button 
@@ -248,7 +217,7 @@ export default function EntityManagementPage() {
       />
 
       {/* Entity Selector Tabs */}
-      <div className="flex overflow-x-auto gap-2 p-1 bg-gray-100 rounded-xl w-fit">
+      <div className="flex items-center overflow-x-auto gap-2 p-1 bg-gray-100 rounded-xl max-w-full scrollbar-hide whitespace-nowrap">
         {ENTITIES.map((entity) => (
           <button
             key={entity.id}

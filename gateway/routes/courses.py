@@ -13,6 +13,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 COURSES_SERVICE_URL = os.getenv("COURSES_SERVICE_URL", "http://localhost:8080")
 MARKS_SERVICE_URL = os.getenv("MARKS_SERVICE_URL", "http://localhost:6000")
+POLICY_SERVICE_URL = os.getenv("POLICY_SERVICE_URL", "http://localhost:7070")
 
 def _error_detail(response, default_msg: str) -> str:
     try:
@@ -93,6 +94,23 @@ async def create_course(request: Request, course: AddCourseRequest, user_info: d
                 detail=f"Courses service unavailable: {str(e)}"
             )
             
+@router.get("/assessment-categories")
+async def get_assessment_categories():
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"{POLICY_SERVICE_URL}/assessment-categories")
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to retrieve assessment categories"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Policy Service: {str(e)}",
+            )
+
 @router.get("/{course_id}")
 async def get_course(course_id: str, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:

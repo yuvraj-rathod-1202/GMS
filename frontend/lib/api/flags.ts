@@ -26,6 +26,10 @@ export const FlagsApi = {
     return handleRequest(apiClient.post(`/course/${courseId}/flags/${flagName}/override`, data));
   },
 
+  CreateCourseFlag: async (courseId: string | number, data: any) => {
+    return handleRequest(apiClient.post(`/course/${courseId}/flags`, data));
+  },
+
   GetActiveFlags: async (courseId?: string | number | null) => {
     const url = courseId ? `/api/flags?course_id=${courseId}` : '/api/flags';
     return handleRequest(apiClient.get(url));

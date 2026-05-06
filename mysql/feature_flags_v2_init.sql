@@ -44,7 +44,6 @@ CREATE TABLE IF NOT EXISTS flag_audit_log (
 
 -- Seed definitions
 INSERT INTO feature_flag_definitions (name, description, type, scope_level, default_enabled) VALUES 
-('global.rate_limiting', 'Enable/Disable rate limiting on all API endpoints', 'boolean', 'global', TRUE),
 ('course.assessment_analytics', 'Allows students to view assessment-level analytics (mean, median, etc.)', 'boolean', 'course', FALSE),
 ('course.total_marks_visibility', 'Allows students to see their running total marks for the course', 'boolean', 'course', TRUE),
 ('course.ta_assessment_management', 'Grants TAs permission to create/edit/delete assessments', 'boolean', 'course', FALSE),

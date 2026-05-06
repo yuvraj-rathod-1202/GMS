@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
 import InstructorNavbar from '@/components/Course/InstructorNavbar';
+import TANavbar from '@/components/Course/TANavbar';
 import { useCourseManagement } from '@/hooks/useCourseManagement';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import GradingPolicyCard from '@/components/Policy/GradingPolicyCard';
@@ -19,6 +20,7 @@ import Link from 'next/link';
 import PolicyDialog, { PolicyFormData } from '@/components/Policy/PolicyDialog';
 import Button from '@/components/ui/Button';
 import { BiSpreadsheet } from 'react-icons/bi';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export default function GPView() {
   const params = useParams();
@@ -34,12 +36,17 @@ export default function GPView() {
   const [updatingPolicyComponentId, setUpdatingPolicyComponentId] = useState<boolean>(false);
 
   const { role, course, isLoading, hasAccess } = useRoleAccess({
-    allowedRoles: ['instructor'],
+    allowedRoles: ['instructor', 'ta'],
     courseId,
   });
 
+  const { isFeatureEnabled } = useFeatureFlags(courseId);
+  const canManagePolicy = role === 'instructor' || (role === 'ta' && isFeatureEnabled('course.ta_policy_management'));
+
   const currentCourse = useCourseDetailStore((s) => s.currentCourse);
   const instructorData = useCourseDetailStore((s) => s.instructorData);
+  const taData = useCourseDetailStore((s) => s.taData);
+  const currentData = role === 'instructor' ? instructorData : taData;
   const {
     loading: managementLoading,
     fetchAllPolicy,
@@ -295,13 +302,13 @@ export default function GPView() {
     }
   };
 
-  if (role !== 'instructor') {
+  if (!hasAccess) {
     return null;
   }
 
   return (
     <>
-      <InstructorNavbar />
+      {role === 'instructor' ? <InstructorNavbar /> : <TANavbar />}
       <div className="p-2 md:p-6 max-h-[calc(100vh-96px)] overflow-y-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
@@ -316,26 +323,29 @@ export default function GPView() {
                 <BiSpreadsheet className="text-lg" /> Master Gradebook
               </Button>
             </Link>
-            <Button type="button" onClick={handleCreatePolicy} className="flex items-center gap-2">
-              <FaPlus className="text-sm" /> Create Policy
-            </Button>
+            {canManagePolicy && (
+              <Button type="button" onClick={handleCreatePolicy} className="flex items-center gap-2">
+                <FaPlus className="text-sm" /> Create Policy
+              </Button>
+            )}
           </div>
         </div>
         {isLoadingPolicy ? (
           <div className="flex justify-center items-center h-40">
             <div className="text-gray-900 text-lg animate-pulse">Loading policies...</div>
           </div>
-        ) : !instructorData?.policies.length ? (
+        ) : !currentData?.policies?.length ? (
           <EmptyPolicyState onCreate={handleCreatePolicy} />
         ) : (
           <div className="grid gap-6">
-            {instructorData.policies.map((policy) => (
+            {currentData.policies.map((policy) => (
               <GradingPolicyCard
                 key={policy.id}
                 policy={policy}
                 onEdit={() => handleEditPolicy(policy)}
                 onDelete={() => handleDeletePolicy(policy.id)}
                 SetDefault={() => handleSetDefaultPolicy(policy.id)}
+                canManage={canManagePolicy}
               />
             ))}
           </div>
@@ -346,7 +356,7 @@ export default function GPView() {
         onClose={() => setShowPolicyDialog(false)}
         onSubmit={handleSubmitPolicy}
         policy={editingPolicy}
-        assessments={instructorData?.assessments || []}
+        assessments={currentData?.assessments || []}
         isLoading={creatingPolicy || updatingPolicyId || updatingPolicyComponentId}
       />
     </>

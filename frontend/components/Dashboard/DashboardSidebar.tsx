@@ -33,7 +33,7 @@ export default function DashboardSidebar() {
 
   return (
     <aside className="hidden md:flex w-1/6 h-screen max-h-screen border-r border-zinc-200 bg-white flex-col justify-between py-4">
-      <div className="space-y-4">
+      <div className="space-y-4 overflow-y-auto flex-1">
         <UserMenu />
         <div className="px-4 space-y-2">
           <Link

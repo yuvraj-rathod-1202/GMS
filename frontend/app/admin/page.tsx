@@ -112,12 +112,6 @@ export default function AdminPage() {
               Manage All Entities
             </button>
           </Link>
-          <Link href="/admin/flags">
-            <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-              <BiShieldQuarter className="text-xl" />
-              Global Flags
-            </button>
-          </Link>
         </div>
       </div>
 

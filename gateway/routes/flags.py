@@ -106,13 +106,13 @@ async def create_definition(data: dict, user_info: dict = Depends(verify_token))
     try:
         cursor = db.cursor()
         query = """
-            INSERT INTO feature_flag_definitions (name, description, type, scope_level, default_enabled, default_config)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO feature_flag_definitions (name, description, type, scope_level, default_enabled, default_config, course_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(query, (
             data['name'], data.get('description'), data.get('type', 'boolean'),
             data.get('scope_level', 'global'), data.get('default_enabled', False),
-            json.dumps(data.get('default_config', {}))
+            json.dumps(data.get('default_config', {})), data.get('course_id')
         ))
         db.commit()
         evaluator.refresh_definitions()
@@ -151,6 +151,9 @@ async def update_definition(flag_id: int, data: dict, user_info: dict = Depends(
         if 'default_config' in data:
             fields.append("default_config = %s")
             values.append(json.dumps(data['default_config']))
+        if 'course_id' in data:
+            fields.append("course_id = %s")
+            values.append(data['course_id'])
             
         if not fields:
             raise HTTPException(status_code=400, detail="No fields to update")
@@ -198,15 +201,46 @@ async def get_course_flags(course_id: str, user_info: dict = Depends(verify_toke
     try:
         cursor = db.cursor(MySQLdb.cursors.DictCursor)
         # Fetch all course-level flags and their overrides for this course
+        # Filter: scope_level must be 'course' AND (course_id is NULL OR matches this course)
         query = """
             SELECT d.id, d.name, d.description, d.default_enabled, d.default_config,
                    o.enabled as override_enabled, o.config as override_config
             FROM feature_flag_definitions d
             LEFT JOIN feature_flag_overrides o ON d.id = o.flag_id AND o.scope_id = %s
-            WHERE d.scope_level = 'course'
+            WHERE d.scope_level = 'course' AND (d.course_id IS NULL OR d.course_id = %s)
         """
-        cursor.execute(query, (course_id,))
+        cursor.execute(query, (course_id, course_id))
         return cursor.fetchall()
+    finally:
+        if db:
+            db.close()
+
+@router.post("/course/{course_id}/flags")
+async def create_course_definition(course_id: str, data: dict, user_info: dict = Depends(verify_token)):
+    await verify_course_instructor(course_id, user_info)
+    
+    db = get_db()
+    if not db:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+        
+    try:
+        cursor = db.cursor()
+        # Enforce course-specific prefix to avoid naming collisions with global flags if desired
+        # Or just use the provided name but ensure course_id is set
+        query = """
+            INSERT INTO feature_flag_definitions (name, description, type, scope_level, default_enabled, default_config, course_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            data['name'], data.get('description'), data.get('type', 'boolean'),
+            'course', data.get('enabled', False),
+            json.dumps(data.get('config', {})), course_id
+        ))
+        db.commit()
+        evaluator.refresh_definitions()
+        return {"status": "success", "id": cursor.lastrowid}
+    except MySQLdb.IntegrityError:
+        raise HTTPException(status_code=400, detail="Flag with this name already exists")
     finally:
         if db:
             db.close()

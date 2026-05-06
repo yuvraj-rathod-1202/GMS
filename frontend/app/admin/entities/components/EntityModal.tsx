@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { BiX } from 'react-icons/bi';
 import Button from '@/components/ui/Button';
+import { PolicyApi } from '@/lib/api/policy';
 
 interface EntityModalProps {
   isOpen: boolean;
@@ -15,6 +16,21 @@ interface EntityModalProps {
 export default function EntityModal({ isOpen, onClose, entityType, onSave, initialData }: EntityModalProps) {
   const [formData, setFormData] = useState<any>({});
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (entityType === 'assessments' && isOpen) {
+      PolicyApi.FetchAssessmentCategories()
+        .then((res: any) => {
+          const cats = res.categories || [];
+          setCategories(cats);
+          if (entityType === 'assessments' && !initialData && cats.length > 0 && !formData.assessment_type_id) {
+            setFormData((prev: any) => ({ ...prev, assessment_type_id: cats[0].id }));
+          }
+        })
+        .catch(err => console.error('Failed to fetch categories:', err));
+    }
+  }, [entityType, isOpen]);
 
   useEffect(() => {
     if (initialData) {
@@ -25,9 +41,15 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
       }
       setFormData(preparedData);
     } else {
-      setFormData({});
+      // Set defaults for new entities
+      const defaults: any = {};
+      if (entityType === 'assessments') {
+        defaults.is_marks_published = false;
+        defaults.assessment_date = new Date().toISOString().split('T')[0];
+      }
+      setFormData(defaults);
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, entityType]);
 
   if (!isOpen) return null;
 
@@ -40,9 +62,15 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
       await onSave(formData);
       onClose();
       setFormData({});
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to ${isEdit ? 'update' : 'add'} entity:`, error);
-      alert(`Failed to ${isEdit ? 'update' : 'add'} entity. Please check your input.`);
+      const errorMsg = error.response?.data?.detail;
+      const displayMsg = typeof errorMsg === 'string' 
+        ? errorMsg 
+        : (Array.isArray(errorMsg) 
+            ? errorMsg.map((e: any) => `${e.loc.join('.')}: ${e.msg}`).join('\n')
+            : 'Please check your input.');
+      alert(`Failed to ${isEdit ? 'update' : 'add'} entity:\n${displayMsg}`);
     } finally {
       setLoading(false);
     }
@@ -90,67 +118,6 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
             )}
           </>
         );
-      case 'courses':
-        return (
-          <>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Course Code (e.g. CS101)</label>
-              <input 
-                type="text" 
-                required
-                value={formData.course_code || ''}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, course_code: e.target.value})}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Course Name</label>
-              <input 
-                type="text" 
-                required
-                value={formData.name || ''}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, name: e.target.value})}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Semester</label>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="Spring 2026"
-                  value={formData.semester || ''}
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  onChange={e => setFormData({...formData, semester: e.target.value})}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Credits</label>
-                <input 
-                  type="number" 
-                  required
-                  value={formData.credits || ''}
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  onChange={e => setFormData({...formData, credits: parseInt(e.target.value)})}
-                />
-              </div>
-            </div>
-            {isEdit && (
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Status</label>
-                <select 
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  value={formData.status || 'ongoing'}
-                  onChange={e => setFormData({...formData, status: e.target.value})}
-                >
-                  <option value="ongoing">Ongoing</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </div>
-            )}
-          </>
-        );
       case 'assessments':
         return (
           <>
@@ -186,15 +153,18 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Type ID</label>
-                <input 
-                  type="number" 
+                <label className="text-xs font-bold text-gray-400 uppercase">Assessment Category</label>
+                <select 
                   required
-                  placeholder="1=Exam, 2=Quiz..."
                   value={formData.assessment_type_id || ''}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
                   onChange={e => setFormData({...formData, assessment_type_id: parseInt(e.target.value)})}
-                />
+                >
+                  <option value="">Select Category</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.type}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="space-y-1">
@@ -264,63 +234,6 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
               </select>
             </div>
             {/* No restriction message */}
-          </>
-        );
-      case 'flags':
-        return (
-          <>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Flag Name (snake_case)</label>
-              <input 
-                type="text" 
-                required
-                value={formData.name || ''}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, name: e.target.value})}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Description</label>
-              <textarea 
-                value={formData.description || ''}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, description: e.target.value})}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Type</label>
-                <select 
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  value={formData.type || 'boolean'}
-                  onChange={e => setFormData({...formData, type: e.target.value})}
-                >
-                  <option value="boolean">Boolean</option>
-                  <option value="string">String</option>
-                  <option value="json">JSON</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Scope Level</label>
-                <select 
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  value={formData.scope_level || 'global'}
-                  onChange={e => setFormData({...formData, scope_level: e.target.value})}
-                >
-                  <option value="global">Global</option>
-                  <option value="course">Course</option>
-                  <option value="user">User</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input 
-                type="checkbox"
-                checked={formData.default_enabled || false}
-                onChange={e => setFormData({...formData, default_enabled: e.target.checked})}
-              />
-              <label className="text-xs font-bold text-gray-400 uppercase">Default Enabled</label>
-            </div>
           </>
         );
       default:

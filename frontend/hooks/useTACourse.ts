@@ -44,6 +44,7 @@ export function useTACourse() {
           totalMarks: TaData?.totalMarks || [],
           marksChanges: TaData?.marksChanges || {},
           CourseRoles: { students: studentList },
+          policies: TaData?.policies || [],
         });
         setHasFetchedInSession('courseRoles', true);
         return {
@@ -165,6 +166,7 @@ export function useTACourse() {
           totalMarks: TaData?.totalMarks || [],
           marksChanges: TaData?.marksChanges || {},
           CourseRoles: TaData?.CourseRoles || null,
+          policies: TaData?.policies || [],
         });
         setHasFetchedInSession('marks_' + assessment_id, true);
         return marksData;
@@ -288,6 +290,7 @@ export function useTACourse() {
           totalMarks: TaData?.totalMarks ?? [],
           marksChanges: TaData?.marksChanges || {},
           CourseRoles: TaData?.CourseRoles || null,
+          policies: TaData?.policies || [],
         });
 
         setHasFetchedInSession('assessments', true);
@@ -385,6 +388,7 @@ export function useTACourse() {
           totalMarks: MarksList,
           marksChanges: TaData?.marksChanges || {},
           CourseRoles: TaData?.CourseRoles || null,
+          policies: TaData?.policies || [],
         });
         setHasFetchedInSession('totalScores', true);
         return MarksList;

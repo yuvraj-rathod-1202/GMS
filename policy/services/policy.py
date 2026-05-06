@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from fastapi import HTTPException, status
 from models.schema.policy import AssignPolicyRequest, CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest
 from utils.db import get_db
-from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj, TotalScoreDBObj
+from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj, TotalScoreDBObj, AssessmentCategoryDBObj
 import httpx
 from dotenv import load_dotenv
 
@@ -513,5 +513,25 @@ def fetch_total_scores_from_db(course_id: int, student_id: int | None = None):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while retrieving total scores" if IS_PRODUCTION else f"Database error: {str(e)}"
+        )
+
+def get_assessment_categories_from_db():
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        cursor.execute("SELECT id, type FROM assessment_category")
+        rows = cursor.fetchall()
+        return [AssessmentCategoryDBObj(id=row[0], type=row[1]) for row in rows]
+    except Exception as e:
+        logger.error(f"Database error in get_assessment_categories_from_db: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while retrieving assessment categories" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         

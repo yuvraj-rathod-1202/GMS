@@ -5,7 +5,9 @@ from unittest.mock import patch, MagicMock, AsyncMock
 async def test_create_policy_success(client, mock_db):
     mock_conn, mock_cursor = mock_db
     
-    with patch("routes.policy.verifyRoleInCourse", new_callable=AsyncMock) as mock_verify:
+    with patch("routes.policy.verifyAdmin", new_callable=AsyncMock) as mock_admin, \
+         patch("routes.policy.verifyRoleInCourse", new_callable=AsyncMock) as mock_verify:
+        mock_admin.return_value = False
         mock_verify.return_value = {"success": True, "role": "instructor"}
         
         # Mock get_policy_from_db to return None (first policy)
@@ -35,7 +37,9 @@ async def test_create_policy_success(client, mock_db):
 async def test_get_all_policy_success(client, mock_db):
     mock_conn, mock_cursor = mock_db
     
-    with patch("routes.policy.verifyRoleInCourse", new_callable=AsyncMock) as mock_verify:
+    with patch("routes.policy.verifyAdmin", new_callable=AsyncMock) as mock_admin, \
+         patch("routes.policy.verifyRoleInCourse", new_callable=AsyncMock) as mock_verify:
+        mock_admin.return_value = False
         mock_verify.return_value = {"success": True, "role": "instructor"}
         
         # Mock course_policy retrieval
@@ -58,7 +62,9 @@ async def test_get_all_policy_success(client, mock_db):
 async def test_update_policy_success(client, mock_db, mock_rabbitmq, mock_httpx_client):
     mock_conn, mock_cursor = mock_db
     
-    with patch("routes.policy.verifyRoleInCourse", new_callable=AsyncMock) as mock_verify:
+    with patch("routes.policy.verifyAdmin", new_callable=AsyncMock) as mock_admin, \
+         patch("routes.policy.verifyRoleInCourse", new_callable=AsyncMock) as mock_verify:
+        mock_admin.return_value = False
         mock_verify.return_value = {"success": True, "role": "instructor"}
         
         # Mock courses service response for students
@@ -85,7 +91,9 @@ async def test_update_policy_success(client, mock_db, mock_rabbitmq, mock_httpx_
 async def test_get_total_scores_success(client, mock_db):
     mock_conn, mock_cursor = mock_db
     
-    with patch("routes.policy.verifyInstructorOrTA", new_callable=AsyncMock) as mock_verify:
+    with patch("routes.policy.verifyAdmin", new_callable=AsyncMock) as mock_admin, \
+         patch("routes.policy.verifyInstructorOrTA", new_callable=AsyncMock) as mock_verify:
+        mock_admin.return_value = False
         mock_verify.return_value = True
         
         # Mock computed_totals retrieval

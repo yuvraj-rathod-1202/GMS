@@ -50,19 +50,20 @@ class FeatureFlagEvaluator:
 
         try:
             cursor = db.cursor()
-            cursor.execute("SELECT id, name, type, scope_level, default_enabled, default_config FROM feature_flag_definitions")
+            cursor.execute("SELECT id, name, type, scope_level, default_enabled, default_config, course_id FROM feature_flag_definitions")
             results = cursor.fetchall()
             
             new_definitions = {}
             for row in results:
-                fid, name, flag_type, scope_level, enabled, config_json = row
+                fid, name, flag_type, scope_level, enabled, config_json, course_id = row
                 config = json.loads(config_json) if config_json else {}
                 new_definitions[name] = {
                     "id": fid,
                     "type": flag_type,
                     "scope_level": scope_level,
                     "enabled": bool(enabled),
-                    "config": config
+                    "config": config,
+                    "course_id": course_id
                 }
             
             self.definitions = new_definitions
@@ -107,6 +108,10 @@ class FeatureFlagEvaluator:
         
         context = context or {}
         scope_id = context.get("course_id")
+        
+        # Check if flag is course-specific and matches
+        if definition.get("course_id") and str(definition["course_id"]) != str(scope_id):
+            return False
         
         # Determine status (Definition or Override)
         effective_status = {

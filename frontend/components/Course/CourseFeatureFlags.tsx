@@ -72,7 +72,7 @@ export const CourseFeatureFlags = ({ courseId }: { courseId: string }) => {
               <div className="flex-1 pr-8">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-bold text-gray-800 tracking-tight">
-                    {flag.name.split('.').pop()?.replace(/_/g, ' ')}
+                    {flag.name.includes('.') ? flag.name.split('.').pop()?.replace(/_/g, ' ') : flag.name.replace(/_/g, ' ')}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 leading-relaxed max-w-md">{flag.description}</p>
