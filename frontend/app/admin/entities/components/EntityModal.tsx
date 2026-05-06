@@ -82,8 +82,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
         return (
           <>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">User ID (Roll No/Staff ID)</label>
+              <label htmlFor="user-id" className="text-xs font-bold text-gray-400 uppercase">User ID (Roll No/Staff ID)</label>
               <input 
+                id="user-id"
                 type="number" 
                 required
                 disabled={isEdit}
@@ -93,8 +94,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Email</label>
+              <label htmlFor="email" className="text-xs font-bold text-gray-400 uppercase">Email</label>
               <input 
+                id="email"
                 type="email" 
                 required
                 value={formData.email || ''}
@@ -104,8 +106,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
             </div>
             {!isEdit && (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Password</label>
+                <label htmlFor="password" className="text-xs font-bold text-gray-400 uppercase">Password</label>
                 <input 
+                  id="password"
                   type="password" 
                   required
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
@@ -122,8 +125,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
         return (
           <>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Course ID (Database ID)</label>
+              <label htmlFor="course-id" className="text-xs font-bold text-gray-400 uppercase">Course ID (Database ID)</label>
               <input 
+                id="course-id"
                 type="number" 
                 required
                 value={formData.course_id || ''}
@@ -132,8 +136,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Assessment Name</label>
+              <label htmlFor="assessment-name" className="text-xs font-bold text-gray-400 uppercase">Assessment Name</label>
               <input 
+                id="assessment-name"
                 type="text" 
                 required
                 value={formData.name || ''}
@@ -143,8 +148,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Max Marks</label>
+                <label htmlFor="max-marks" className="text-xs font-bold text-gray-400 uppercase">Max Marks</label>
                 <input 
+                  id="max-marks"
                   type="number" 
                   required
                   value={formData.max_marks || ''}
@@ -153,8 +159,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Assessment Category</label>
+                <label htmlFor="category" className="text-xs font-bold text-gray-400 uppercase">Assessment Category</label>
                 <select 
+                  id="category"
                   required
                   value={formData.assessment_type_id || ''}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
@@ -168,8 +175,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Date</label>
+              <label htmlFor="date" className="text-xs font-bold text-gray-400 uppercase">Date</label>
               <input 
+                id="date"
                 type="date" 
                 required
                 value={formData.assessment_date || ''}
@@ -179,11 +187,12 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
             </div>
             <div className="flex items-center gap-2">
               <input 
+                id="published"
                 type="checkbox"
                 checked={formData.is_marks_published || false}
                 onChange={e => setFormData({...formData, is_marks_published: e.target.checked})}
               />
-              <label className="text-xs font-bold text-gray-400 uppercase">Published</label>
+              <label htmlFor="published" className="text-xs font-bold text-gray-400 uppercase">Published</label>
             </div>
           </>
         );
@@ -191,8 +200,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
         return (
           <>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Course ID (Database ID)</label>
+              <label htmlFor="enroll-course-id" className="text-xs font-bold text-gray-400 uppercase">Course ID (Database ID)</label>
               <input 
+                id="enroll-course-id"
                 type="number" 
                 required
                 value={formData.course_id || ''}
@@ -201,8 +211,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">User ID</label>
+              <label htmlFor="enroll-user-id" className="text-xs font-bold text-gray-400 uppercase">User ID</label>
               <input 
+                id="enroll-user-id"
                 type="number" 
                 required
                 value={formData.user_id || formData.student_id || ''}
@@ -211,8 +222,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Email (Optional)</label>
+              <label htmlFor="enroll-email" className="text-xs font-bold text-gray-400 uppercase">Email (Optional)</label>
               <input 
+                id="enroll-email"
                 type="email" 
                 value={formData.email || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
@@ -220,8 +232,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Role</label>
+              <label htmlFor="enroll-role" className="text-xs font-bold text-gray-400 uppercase">Role</label>
               <select 
+                id="enroll-role"
                 required
                 value={formData.role || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
