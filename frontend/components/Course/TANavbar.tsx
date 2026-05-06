@@ -46,7 +46,7 @@ export default function TANavbar() {
                 href={item.href}
                 className={`px-3 sm:px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
                   isActive(item.href)
-                    ? 'border-b-4 border-b-mms-blue'
+                    ? 'border-b-4 border-b-gms-blue'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >

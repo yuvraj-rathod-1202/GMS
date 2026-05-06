@@ -82,11 +82,11 @@ export const CourseFeatureFlags = ({ courseId }: { courseId: string }) => {
                 <button 
                   onClick={() => handleToggle(flag)}
                   disabled={saving === flag.name}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none ${isEnabled ? 'bg-mms-blue' : 'bg-gray-200'}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none ${isEnabled ? 'bg-gms-blue' : 'bg-gray-200'}`}
                 >
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-all ${isEnabled ? 'translate-x-6' : 'translate-x-1'} ${saving === flag.name ? 'scale-75 animate-pulse' : ''}`} />
                 </button>
-                <span className={`text-[10px] font-black uppercase tracking-tighter ${isEnabled ? 'text-mms-blue' : 'text-gray-400'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-tighter ${isEnabled ? 'text-gms-blue' : 'text-gray-400'}`}>
                   {isEnabled ? 'Enabled' : 'Disabled'}
                 </span>
               </div>

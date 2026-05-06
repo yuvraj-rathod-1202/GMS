@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide outlines the standards and practices for developing on the Marks Management System.
+This guide outlines the standards and practices for developing on the Grading Management System.
 
 ## Technology Stack
 

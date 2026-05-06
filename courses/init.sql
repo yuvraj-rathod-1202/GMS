@@ -1,8 +1,8 @@
-CREATE USER IF NOT EXISTS 'mms_user'@'%' IDENTIFIED BY 'MmsUserPass123';
+CREATE USER IF NOT EXISTS 'gms_user'@'%' IDENTIFIED BY 'GmsUserPass123';
 
 CREATE DATABASE IF NOT EXISTS courses;
 
-GRANT ALL PRIVILEGES ON courses.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON courses.* TO 'gms_user'@'%';
 
 USE courses;
 

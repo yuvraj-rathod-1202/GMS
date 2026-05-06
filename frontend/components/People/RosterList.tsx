@@ -90,9 +90,9 @@ export default function RosterList({
     }
 
     return sortConfig.direction === 'asc' ? (
-      <BiSortUp className="text-mms-blue" />
+      <BiSortUp className="text-gms-blue" />
     ) : (
-      <BiSortDown className="text-mms-blue" />
+      <BiSortDown className="text-gms-blue" />
     );
   };
 
@@ -110,7 +110,7 @@ export default function RosterList({
           placeholder={searchPlaceholder}
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
-          className="w-full rounded-xl border border-gray-300 py-3 pl-12 pr-12 text-sm outline-none transition focus:border-mms-blue focus:ring-2 focus:ring-mms-blue/20"
+          className="w-full rounded-xl border border-gray-300 py-3 pl-12 pr-12 text-sm outline-none transition focus:border-gms-blue focus:ring-2 focus:ring-gms-blue/20"
         />
         {searchQuery && (
           <button
@@ -132,7 +132,7 @@ export default function RosterList({
           <button
             type="button"
             onClick={() => handleSort('id')}
-            className="flex items-center gap-2 text-left transition hover:text-mms-blue"
+            className="flex items-center gap-2 text-left transition hover:text-gms-blue"
           >
             <span>Roll No</span>
             {getSortIcon('id')}
@@ -140,7 +140,7 @@ export default function RosterList({
           <button
             type="button"
             onClick={() => handleSort('email')}
-            className="flex items-center gap-2 text-left transition hover:text-mms-blue"
+            className="flex items-center gap-2 text-left transition hover:text-gms-blue"
           >
             <span>Email</span>
             {getSortIcon('email')}

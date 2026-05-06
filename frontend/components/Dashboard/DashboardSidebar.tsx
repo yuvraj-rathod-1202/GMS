@@ -38,8 +38,8 @@ export default function DashboardSidebar() {
         <div className="px-4 space-y-2">
           <Link
             href="/"
-            className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-900 hover:bg-mms-indigoLight rounded-xl text-sm font-medium transition-colors ${
-              pathname === '/' ? 'bg-mms-grayLight' : ''
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-900 hover:bg-gms-indigoLight rounded-xl text-sm font-medium transition-colors ${
+              pathname === '/' ? 'bg-gms-grayLight' : ''
             }`}
           >
             <AiOutlineHome className="size-5" />
@@ -48,8 +48,8 @@ export default function DashboardSidebar() {
 
           <Link
             href="/feedback"
-            className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-900 hover:bg-mms-indigoLight rounded-xl text-sm font-medium transition-colors ${
-              pathname === '/feedback' ? 'bg-mms-grayLight' : ''
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-900 hover:bg-gms-indigoLight rounded-xl text-sm font-medium transition-colors ${
+              pathname === '/feedback' ? 'bg-gms-grayLight' : ''
             }`}
           >
             <FaUserCheck className="size-5" />
@@ -61,7 +61,7 @@ export default function DashboardSidebar() {
               title="Teaching"
               expanded={teachOpen}
               onToggle={() => setTeachOpen((v) => !v)}
-              icon={<MdGroups className="size-5 text-mms-black" />}
+              icon={<MdGroups className="size-5 text-gms-black" />}
             />
             {teachOpen && (
               <div className="mt-2 space-y-1">
@@ -88,7 +88,7 @@ export default function DashboardSidebar() {
               title="Enrolled"
               expanded={enrolledOpen}
               onToggle={() => setEnrolledOpen((v) => !v)}
-              icon={<FaUserCheck className="size-5 text-mms-black" />}
+              icon={<FaUserCheck className="size-5 text-gms-black" />}
             />
             {enrolledOpen && (
               <div className="mt-2 space-y-1">

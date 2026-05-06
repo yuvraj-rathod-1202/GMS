@@ -243,7 +243,7 @@ export default function EntityManagementPage() {
               placeholder={`Search ${activeEntity}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-mms-blue/20 focus:border-mms-blue"
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gms-blue/20 focus:border-gms-blue"
             />
           </div>
         </div>
@@ -313,7 +313,7 @@ export default function EntityManagementPage() {
             <button
               onClick={handleLoadMore}
               disabled={loadingMore}
-              className="px-6 py-2 text-sm font-bold text-mms-blue hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+              className="px-6 py-2 text-sm font-bold text-gms-blue hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
             >
               {loadingMore ? 'Loading...' : `Load More ${activeEntity.slice(0, -1)}s`}
             </button>

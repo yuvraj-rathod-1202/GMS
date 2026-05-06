@@ -1,13 +1,13 @@
-# MMS - Marks Management System
+# GMS - Grading Management System
 
-Welcome to the MMS documentation! This system is a microservices-based Marks Management System designed to handle courses, marks, analytics, and policies with a modern frontend.
+Welcome to the GMS documentation! This system is a microservices-based Grading Management System designed to handle courses, marks, analytics, and policies with a modern frontend.
 
 ## Documentation Sections
 
 - [**System Architecture**](./architecture.md): Understand how the system is built, the technologies used, and how services communicate.
 - [**Setup Guide**](./setup.md): Instructions on how to set up the project locally and deploy it to a Kubernetes cluster.
 - [**Folder Structure**](./folder_structure.md): A detailed look at the project's organization and what each directory contains.
-- [**Development Guide**](./development.md): Coding standards, testing protocols, and best practices for developing on MMS.
+- [**Development Guide**](./development.md): Coding standards, testing protocols, and best practices for developing on GMS.
 - [**Contribution Guide**](./contribution.md): How to contribute to the project, branching strategies, and PR processes.
 
 ## Quick Start

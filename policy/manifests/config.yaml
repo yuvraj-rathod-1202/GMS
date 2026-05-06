@@ -4,7 +4,7 @@ metadata:
   name: policy-config
 data:
   DB_HOST: mysql
-  DB_USER: mms_user
+  DB_USER: gms_user
   DB_NAME: policy
   DB_PORT: "3306"
   MARKS_SERVICE_URL: "http://marks:6000"

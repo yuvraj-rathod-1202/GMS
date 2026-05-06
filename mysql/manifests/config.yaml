@@ -3,8 +3,8 @@ kind: ConfigMap
 metadata:
   name: mysql-config
 data:
-  MYSQL_DATABASE: "mms"
-  MYSQL_USER: "mms_user"
+  MYSQL_DATABASE: "gms"
+  MYSQL_USER: "gms_user"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -12,11 +12,11 @@ metadata:
   name: mysql-initdb
 data:
   init.sql: |
-    CREATE USER IF NOT EXISTS 'mms_user'@'%' IDENTIFIED BY 'MMS2026User';
+    CREATE USER IF NOT EXISTS 'gms_user'@'%' IDENTIFIED BY 'GMS2026User';
 
     CREATE DATABASE auth;
 
-    GRANT ALL PRIVILEGES ON auth.* TO 'mms_user'@'%';
+    GRANT ALL PRIVILEGES ON auth.* TO 'gms_user'@'%';
 
     USE auth;
 
@@ -32,7 +32,7 @@ data:
     CREATE INDEX idx_id ON users (id);
 
     CREATE DATABASE IF NOT EXISTS courses;
-    GRANT ALL PRIVILEGES ON courses.* TO 'mms_user'@'%';
+    GRANT ALL PRIVILEGES ON courses.* TO 'gms_user'@'%';
 
     USE courses;
 
@@ -89,7 +89,7 @@ data:
 
     CREATE DATABASE IF NOT EXISTS marks;
 
-    GRANT ALL PRIVILEGES ON marks.* TO 'mms_user'@'%';
+    GRANT ALL PRIVILEGES ON marks.* TO 'gms_user'@'%';
 
     USE marks;
 
@@ -142,7 +142,7 @@ data:
 
     CREATE DATABASE IF NOT EXISTS policy;
 
-    GRANT ALL PRIVILEGES ON policy.* TO 'mms_user'@'%';
+    GRANT ALL PRIVILEGES ON policy.* TO 'gms_user'@'%';
 
     USE policy;
 
@@ -224,7 +224,7 @@ data:
 
     CREATE DATABASE IF NOT EXISTS analytics;
 
-    GRANT ALL PRIVILEGES ON analytics.* TO 'mms_user'@'%';
+    GRANT ALL PRIVILEGES ON analytics.* TO 'gms_user'@'%';
 
     USE analytics;
 

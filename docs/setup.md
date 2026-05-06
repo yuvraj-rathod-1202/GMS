@@ -1,6 +1,6 @@
 # Setup Guide
 
-This guide will help you get the Marks Management System (MMS) up and running on your local machine.
+This guide will help you get the Grading Management System (GMS) up and running on your local machine.
 
 ## Prerequisites
 

@@ -1,11 +1,11 @@
 # Folder Structure
 
-The MMS project is organized as a monorepo containing multiple microservices, infrastructure configurations, and a frontend application.
+The GMS project is organized as a monorepo containing multiple microservices, infrastructure configurations, and a frontend application.
 
 ## Root Directory
 
 ```text
-MMS/
+GMS/
 ├── analytics/          # Analytics microservice
 ├── auth_user/          # Authentication & User microservice
 ├── courses/            # Courses management microservice

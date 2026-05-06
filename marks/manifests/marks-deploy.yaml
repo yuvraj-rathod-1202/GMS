@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: marks
-          image: yrrathod/mms_marks
+          image: yrrathod/gms_marks
           ports:
             - containerPort: 6000
           envFrom:
