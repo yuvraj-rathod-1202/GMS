@@ -48,8 +48,7 @@ async def verifyRoleInCourse(user_id: int, course_id: int):
                 params={"user_id": user_id, "course_id": course_id}
             )
             if response.status_code == 200:
-                data = response.json()
-                return data.get("role", None)
+                return response.json()
             elif response.status_code == 404:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,

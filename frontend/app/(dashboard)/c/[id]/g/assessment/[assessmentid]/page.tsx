@@ -682,11 +682,6 @@ export default function AssessmentPage() {
       {showUnenrolledDialog && (
         <UnenrolledStudentsDialog
           students={unenrolledStudents}
-          onEnrollAll={() =>
-            handleEnrollAndImport(
-              unenrolledStudents.map((s) => ({ student_id: s.student_id, email: s.email }))
-            )
-          }
           onSkipAll={handleSkipUnenrolled}
           onSelectiveEnroll={handleEnrollAndImport}
           onClose={() => setShowUnenrolledDialog(false)}

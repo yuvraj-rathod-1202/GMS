@@ -1,12 +1,17 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
 import TANavbar from '@/components/Course/TANavbar';
 import AssessmentCard from '@/components/Grade/Cards/AssessmentCard';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useCourseManagement } from '@/hooks/useCourseManagement';
 import OverviewCard from './Cards/OverviewCard';
+import AssessmentDialog, { AssessmentFormData } from './Dialogs/AssessmentDialog';
+import { MarksApi } from '@/lib/api/marks';
+import { AssessmentDBObject } from '@/lib/types/assessments';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export default function TAGradePage() {
   const params = useParams();
@@ -56,6 +61,16 @@ export default function TAGradePage() {
 
   const isLoadingData = managementLoading || isFetchingData;
 
+  // Feature flags for TA management (course-scoped)
+  const { isFeatureEnabled } = useFeatureFlags(courseId);
+  const canEditAssessment = isFeatureEnabled('course.ta_assessment_management');
+  const canCreateAssessment = canEditAssessment;
+  const canViewAnalytics = isFeatureEnabled('course.ta_analytics_visibility');
+
+  const [showAssessmentDialog, setShowAssessmentDialog] = useState(false);
+  const [editingAssessment, setEditingAssessment] = useState<AssessmentDBObject | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleOnEnterMarks = (assessmentId: number) => {
     router.push(`/c/${courseId}/g/assessment/${assessmentId}`);
   };
@@ -71,6 +86,40 @@ export default function TAGradePage() {
     }
   };
 
+  const handleCreateAssessment = () => {
+    setEditingAssessment(null);
+    setShowAssessmentDialog(true);
+  };
+
+  const handleEditAssessment = (assessment: AssessmentDBObject) => {
+    setEditingAssessment(assessment);
+    setShowAssessmentDialog(true);
+  };
+
+  const handleSubmitAssessment = async (data: AssessmentFormData) => {
+    setIsSubmitting(true);
+    try {
+      const assessmentData = {
+        ...data,
+        assessment_date: new Date(data.assessment_date),
+      };
+
+      if (editingAssessment) {
+        await MarksApi.UpdateAssessment(courseId, editingAssessment.id, assessmentData);
+      } else {
+        await MarksApi.CreateAssessment(courseId, assessmentData);
+      }
+
+      await fetchAllAssessments(courseId, true);
+      setShowAssessmentDialog(false);
+    } catch (error: any) {
+      console.error('Error submitting assessment:', error);
+      alert('Failed to save assessment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div>
       <TANavbar />
@@ -82,9 +131,32 @@ export default function TAGradePage() {
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grades</h1>
               <p className="text-gray-500 mt-1">View assessments and manage student marks.</p>
             </div>
+            <div className="flex gap-3">
+              {canViewAnalytics && (
+                <Link href={`/c/${courseId}/a`}>
+                  <button
+                    title="View Detailed Analytics"
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                  >
+                    View Analytics
+                  </button>
+                </Link>
+              )}
+              {canCreateAssessment && (
+                <button
+                  onClick={handleCreateAssessment}
+                  title="Create Assessment"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 font-medium transition-colors shadow-sm"
+                >
+                  + Create Assessment
+                </button>
+              )}
+            </div>
           </div>
 
-          <OverviewCard currentCourse={currentCourse} assessments={taData?.assessments || null} />
+          {canViewAnalytics && (
+            <OverviewCard currentCourse={currentCourse} assessments={taData?.assessments || null} />
+          )}
 
           {/* Assessments Section */}
           <div>
@@ -107,12 +179,14 @@ export default function TAGradePage() {
                   <AssessmentCard
                     key={assessment.id}
                     isInstructor={false}
+                    canManage={canEditAssessment}
                     onClick={() => handleOnEnterMarks(assessment.id)}
                     assessment={assessment}
                     onPublishToggle={() => handlePublishToggle()}
                     onEnterMarks={() => {
                       handleOnEnterMarks(assessment.id);
                     }}
+                    onEdit={() => handleEditAssessment(assessment)}
                   />
                 ))}
               </div>
@@ -120,6 +194,17 @@ export default function TAGradePage() {
           </div>
         </div>
       </div>
+
+      {/* Assessment Dialog for TA create/edit (if allowed) */}
+      {canEditAssessment && (
+        <AssessmentDialog
+          isOpen={showAssessmentDialog}
+          onClose={() => setShowAssessmentDialog(false)}
+          onSubmit={handleSubmitAssessment}
+          assessment={editingAssessment}
+          isLoading={isSubmitting}
+        />
+      )}
     </div>
   );
 }

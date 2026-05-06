@@ -13,6 +13,7 @@ export default function InstructorNavbar() {
     { label: 'Assessments', href: `/c/${courseId}/g` },
     { label: 'Policies', href: `/c/${courseId}/gp` },
     { label: 'Analytics', href: `/c/${courseId}/a` },
+    { label: 'Settings', href: `/c/${courseId}/settings` },
   ];
 
   const isActive = (href: string) => {

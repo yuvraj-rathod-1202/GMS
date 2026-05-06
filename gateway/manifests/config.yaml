@@ -3,6 +3,10 @@ kind: ConfigMap
 metadata:
   name: gateway-config
 data:
+  DB_HOST: mysql
+  DB_USER: mms_user
+  DB_NAME: courses
+  DB_PORT: "3306"
   AUTH_SERVICE_URL: "http://auth:5000"
   COURSES_SERVICE_URL: "http://courses:8080"
   MARKS_SERVICE_URL: "http://marks:6000"
