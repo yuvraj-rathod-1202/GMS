@@ -50,8 +50,8 @@ async def log_requests(request: Request, call_next):
 origins = [
     "http://localhost",
     "http://localhost:3000",
-    "http://mms.com",
-    "https://mms.com",
+    "http://gms.com",
+    "https://gms.com",
 ]
 
 app.add_middleware(

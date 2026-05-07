@@ -107,7 +107,7 @@ export default function AdminPage() {
         </div>
         <div className="flex gap-2">
           <Link href="/admin/entities">
-            <button className="flex items-center gap-2 px-4 py-2 bg-mms-blue text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium">
+            <button className="flex items-center gap-2 px-4 py-2 bg-gms-blue text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium">
               <BiSpreadsheet className="text-xl" />
               Manage All Entities
             </button>
@@ -121,7 +121,7 @@ export default function AdminPage() {
           onClick={() => setActiveTab('overview')}
           className={`px-4 py-3 font-medium text-sm transition-colors ${
             activeTab === 'overview'
-              ? 'text-mms-blue border-b-2 border-mms-blue'
+              ? 'text-gms-blue border-b-2 border-gms-blue'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -131,7 +131,7 @@ export default function AdminPage() {
           onClick={() => setActiveTab('courses')}
           className={`px-4 py-3 font-medium text-sm transition-colors ${
             activeTab === 'courses'
-              ? 'text-mms-blue border-b-2 border-mms-blue'
+              ? 'text-gms-blue border-b-2 border-gms-blue'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >

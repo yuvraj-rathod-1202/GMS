@@ -1,8 +1,8 @@
-CREATE USER IF NOT EXISTS 'mms_user'@'%' IDENTIFIED BY 'MmsUserPass123';
+CREATE USER IF NOT EXISTS 'gms_user'@'%' IDENTIFIED BY 'GmsUserPass123';
 
 CREATE DATABASE IF NOT EXISTS policy;
 
-GRANT ALL PRIVILEGES ON policy.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON policy.* TO 'gms_user'@'%';
 
 USE policy;
 

@@ -43,7 +43,7 @@ export default function LoginPage() {
         <div className="mt-4">
           <button
             onClick={() => router.push('/feedback')}
-            className="text-sm text-mms-blue hover:text-mms-indigo underline transition-colors"
+            className="text-sm text-gms-blue hover:text-gms-indigo underline transition-colors"
           >
             Report a Bug
           </button>

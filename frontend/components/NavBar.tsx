@@ -99,7 +99,7 @@ export default function NavBar() {
 
   return (
     <div className="w-full relative z-9999">
-      <nav className="bg-white h-12 gap-4 border-b-2 border-mms-grayLight flex text-sm items-center px-6 justify-between relative z-9999">
+      <nav className="bg-white h-12 gap-4 border-b-2 border-gms-grayLight flex text-sm items-center px-6 justify-between relative z-9999">
         <div className="flex gap-4 items-center">
           <Link href="/">
             <p>Dashboard</p>
@@ -109,7 +109,7 @@ export default function NavBar() {
             <>
               <p>/</p>
               <Link href="/admin">
-                <p className="text-mms-blue font-medium">Admin</p>
+                <p className="text-gms-blue font-medium">Admin</p>
               </Link>
             </>
           )}
@@ -135,7 +135,7 @@ export default function NavBar() {
         <div className="hidden md:flex gap-4 items-center">
           {isAdmin && (
             <Link href="/admin">
-              <button className="px-3 py-1.5 text-sm text-mms-blue font-medium hover:bg-blue-50 rounded-md transition-colors flex items-center gap-2">
+              <button className="px-3 py-1.5 text-sm text-gms-blue font-medium hover:bg-blue-50 rounded-md transition-colors flex items-center gap-2">
                 <FaShieldAlt className="size-4" />
                 Admin
               </button>
@@ -160,7 +160,7 @@ export default function NavBar() {
                     router.push('/admin');
                     setMenuOpen(false);
                   }}
-                  className="w-full text-left px-4 py-2.5 text-sm text-mms-blue flex gap-2 items-center first:rounded-t-lg transition font-medium border-b border-gray-100"
+                  className="w-full text-left px-4 py-2.5 text-sm text-gms-blue flex gap-2 items-center first:rounded-t-lg transition font-medium border-b border-gray-100"
                 >
                   <FaShieldAlt className="size-4" />
                   Admin Dashboard

@@ -4,7 +4,7 @@ metadata:
   name: marks-config
 data:
   DB_HOST: mysql
-  DB_USER: mms_user
+  DB_USER: gms_user
   DB_NAME: marks
   DB_PORT: "3306"
   COURSES_SERVICE_URL: "http://courses:8080"

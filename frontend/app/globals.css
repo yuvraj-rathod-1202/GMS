@@ -11,14 +11,14 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-mms-grayLight: #f3f4f6;
-  --color-mms-blue: #92bfff;
-  --color-mms-indigoLight: #edeefc;
-  --color-mms-tealLight: #96e2d6;
-  --color-mms-indigo: #9f9ff8;
-  --color-mms-greenLight: #94e9b8;
-  --color-mms-black: #000000;
-  --color-mms-white: #ffffff;
+  --color-gms-grayLight: #f3f4f6;
+  --color-gms-blue: #92bfff;
+  --color-gms-indigoLight: #edeefc;
+  --color-gms-tealLight: #96e2d6;
+  --color-gms-indigo: #9f9ff8;
+  --color-gms-greenLight: #94e9b8;
+  --color-gms-black: #000000;
+  --color-gms-white: #ffffff;
 }
 
 /* Force light theme regardless of device theme */

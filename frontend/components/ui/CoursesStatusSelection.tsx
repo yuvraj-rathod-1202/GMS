@@ -16,7 +16,7 @@ export default function CoursesStatusSelection({
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="min-w-35 flex items-center justify-between gap-2 px-3 py-1.5 text-sm bg-white text-mms-black rounded-md hover:border-mms-gray"
+        className="min-w-35 flex items-center justify-between gap-2 px-3 py-1.5 text-sm bg-white text-gms-black rounded-md hover:border-gms-gray"
       >
         {statusFilter === 'ongoing' ? 'ongoing' : 'completed'}
         <FaChevronDown size={12} className={`transition ${open ? 'rotate-180' : ''}`} />
@@ -31,7 +31,7 @@ export default function CoursesStatusSelection({
                 setStatusFilter(v as 'ongoing' | 'completed');
                 setOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-mms-grayLight/40`}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-gms-grayLight/40`}
             >
               {v === 'ongoing' ? 'ongoing' : 'completed'}
             </button>

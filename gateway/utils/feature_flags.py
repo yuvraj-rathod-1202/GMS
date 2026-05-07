@@ -29,8 +29,8 @@ class FeatureFlagEvaluator:
         self.ttl = int(os.getenv("FEATURE_FLAGS_TTL", 30))
         self.db_config = {
             "host": os.getenv("DB_HOST", "localhost"),
-            "user": os.getenv("DB_USER", "mms_user"),
-            "password": os.getenv("DB_PASSWORD", "MMS2026User"),
+            "user": os.getenv("DB_USER", "gms_user"),
+            "password": os.getenv("DB_PASSWORD", "GMS2026User"),
             "db": "feature_flags",
             "port": int(os.getenv("DB_PORT", 3306))
         }

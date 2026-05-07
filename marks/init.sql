@@ -1,8 +1,8 @@
-CREATE USER IF NOT EXISTS 'mms_user'@'%' IDENTIFIED BY 'MmsUserPass123';
+CREATE USER IF NOT EXISTS 'gms_user'@'%' IDENTIFIED BY 'GmsUserPass123';
 
 CREATE DATABASE IF NOT EXISTS marks;
 
-GRANT ALL PRIVILEGES ON marks.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON marks.* TO 'gms_user'@'%';
 
 USE marks;
 

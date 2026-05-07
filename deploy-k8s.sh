@@ -8,10 +8,10 @@ set -e
 ENVIRONMENT=${1:-production}
 IMAGE_TAG=$(git rev-parse --short HEAD)
 REGISTRY="ghcr.io"
-IMAGE_PREFIX="yuvraj-rathod-1202/mms"
+IMAGE_PREFIX="yuvraj-rathod-1202/gms"
 
 echo "=========================================="
-echo "Deploying MMS to Kubernetes"
+echo "Deploying GMS to Kubernetes"
 echo "Environment: $ENVIRONMENT"
 echo "Image Tag: $IMAGE_TAG"
 echo "=========================================="

@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: yrrathod/mms_frontend
+          image: yrrathod/gms_frontend
           ports:
             - containerPort: 3000
           envFrom:

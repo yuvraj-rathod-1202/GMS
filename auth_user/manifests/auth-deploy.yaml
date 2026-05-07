@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: yrrathod/mms_auth
+          image: yrrathod/gms_auth
           ports:
             - containerPort: 5000
           envFrom:
