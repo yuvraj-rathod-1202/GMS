@@ -50,14 +50,42 @@ update_manifests() {
     echo "✓ Manifests updated"
 }
 
+# Function to build backup container image
+build_backup_image() {
+    echo ""
+    echo "Building backup container image..."
+    
+    if [ -f "mysql/backup.Dockerfile" ]; then
+        docker build -t ${REGISTRY}/${IMAGE_PREFIX}-mysql-backup:${IMAGE_TAG} \
+                     -f mysql/backup.Dockerfile \
+                     mysql/ 2>&1 | tail -20
+        
+        if [ $? -eq 0 ]; then
+            echo "- Tagging as latest..."
+            docker tag ${REGISTRY}/${IMAGE_PREFIX}-mysql-backup:${IMAGE_TAG} \
+                      ${REGISTRY}/${IMAGE_PREFIX}-mysql-backup:latest
+            
+            echo "- Pushing to registry..."
+            docker push ${REGISTRY}/${IMAGE_PREFIX}-mysql-backup:${IMAGE_TAG}
+            docker push ${REGISTRY}/${IMAGE_PREFIX}-mysql-backup:latest
+            
+            echo "✓ Backup image built and pushed"
+        else
+            echo "Warning: Failed to build backup image"
+        fi
+    fi
+}
+
 # Function to deploy infrastructure
 deploy_infrastructure() {
     echo ""
     echo "Deploying infrastructure..."
     
-    # Deploy MySQL
+    # Deploy MySQL (with backup PVC)
     if [ -d "mysql/manifests" ]; then
-        echo "- Deploying MySQL..."
+        echo "- Deploying MySQL and backup storage..."
+        kubectl apply -f mysql/manifests/backup-pvc.yaml
+        sleep 2
         kubectl apply -f mysql/manifests/
         sleep 5
     fi
@@ -70,6 +98,24 @@ deploy_infrastructure() {
     fi
     
     echo "✓ Infrastructure deployed"
+}
+
+# Function to deploy backup automation
+deploy_backup_automation() {
+    echo ""
+    echo "Deploying backup automation..."
+    
+    if [ -d "mysql/manifests" ]; then
+        echo "- Deploying backup RBAC..."
+        kubectl apply -f mysql/manifests/backup-rbac.yaml
+        sleep 2
+        
+        echo "- Deploying backup CronJob..."
+        kubectl apply -f mysql/manifests/backup-cronjob.yaml
+        sleep 2
+        
+        echo "✓ Backup automation deployed"
+    fi
 }
 
 # Function to deploy backend services
@@ -153,7 +199,9 @@ main() {
     check_kubectl
     check_cluster
     update_manifests
+    build_backup_image
     deploy_infrastructure
+    deploy_backup_automation
     deploy_backend
     deploy_frontend
     wait_for_deployments
