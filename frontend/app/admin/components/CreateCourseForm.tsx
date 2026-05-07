@@ -59,7 +59,9 @@ export default function CreateCourseForm({ userId, onClose, onSuccess }: CreateC
       onSuccess();
       onClose();
     } catch (error: unknown) {
-      console.error('Error creating course:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error creating course:', error);
+      }
       setError(error instanceof Error ? error.message : 'Failed to create course');
     } finally {
       setLoading(false);

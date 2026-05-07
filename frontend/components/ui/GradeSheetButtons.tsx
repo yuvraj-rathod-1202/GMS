@@ -104,7 +104,9 @@ export default function GradeSheetButtons({
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Upload error';
       setColumnError(message);
-      console.error('Upload error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Upload error:', error);
+      }
     } finally {
       setIsUploading(false);
     }

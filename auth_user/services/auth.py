@@ -247,3 +247,19 @@ def get_all_users(limit: int = 50, offset: int = 0):
         return {"users": users}
     except Exception as e:
         _handle_service_error("Fetch users", e, "Failed to fetch users")
+
+def get_users_by_ids(user_ids: list[int]):
+    db = _get_db_or_raise()
+    try:
+        if not user_ids:
+            return {'users': []}
+        cur = db.cursor()
+        placeholders = ','.join(['%s'] * len(user_ids))
+        cur.execute(
+            f'SELECT id, email, last_login, created_at FROM users WHERE id IN ({placeholders})',
+            tuple(user_ids)
+        )
+        rows = cur.fetchall()
+        return {'users': [{'id': r[0], 'email': r[1], 'last_login': r[2], 'created_at': r[3]} for r in rows]}
+    except Exception as e:
+        _handle_service_error('Fetch users by IDs', e, 'Failed to fetch users')

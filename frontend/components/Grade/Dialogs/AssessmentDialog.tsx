@@ -132,7 +132,9 @@ function AssessmentDialogForm({
       await onSubmit(formData);
       onClose();
     } catch (error) {
-      console.error('Error submitting assessment:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error submitting assessment:', error);
+      }
     }
   };
 

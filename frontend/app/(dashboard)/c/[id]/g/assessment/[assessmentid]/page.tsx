@@ -356,8 +356,10 @@ export default function AssessmentPage() {
       // Refresh data
       await getmarksofassessment(courseId, assessmentId, true);
     } catch (error) {
-      console.error('Failed to save marks:', error);
-      // alert("Failed to save marks. Please try again.");
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Failed to save marks:', error);
+      }
+      alert("Failed to save marks. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -526,7 +528,9 @@ export default function AssessmentPage() {
         await importMarks(enrolled);
       }
     } catch (error) {
-      console.error('Bulk upload error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Bulk upload error:', error);
+      }
       alert('Failed to process file. Please check the format and try again.');
     }
   };
@@ -547,7 +551,9 @@ export default function AssessmentPage() {
         `Successfully imported marks for ${marksData.length} student${marksData.length > 1 ? 's' : ''}. Click "Save Marks" to apply changes.`
       );
     } catch (error) {
-      console.error('Import marks error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Import marks error:', error);
+      }
       alert('Failed to import marks. Please try again.');
     }
   };
@@ -569,7 +575,9 @@ export default function AssessmentPage() {
 
       await fetchCourseRoles(courseId);
     } catch (error) {
-      console.error('Enrollment error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Enrollment error:', error);
+      }
       alert('Failed to enroll students. Please try again.');
     } finally {
       setIsProcessingEnrollment(false);

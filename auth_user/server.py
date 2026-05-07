@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from models.schema import FeedbackRequest, SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, BulkEnrollStudentRequest, InstructorResetPasswordRequest
 from utils.security import verify_jwt_token
 from utils.auth import verifyInstructorOrTa
-from services.auth import login_user, signup_user, bulk_signup_users, change_user_password, forgot_user_password, submit_user_feedback, instructor_reset_user_password, get_all_users
+from services.auth import login_user, signup_user, bulk_signup_users, change_user_password, forgot_user_password, submit_user_feedback, instructor_reset_user_password, get_all_users, get_users_by_ids
 
 load_dotenv()
 
@@ -89,3 +89,6 @@ async def instructor_reset_password(data: InstructorResetPasswordRequest):
 @app.get("/users")
 def get_users(limit: int = 50, offset: int = 0):
     return get_all_users(limit, offset)
+@app.post('/users/batch')
+def get_batch_users(user_ids: list[int]):
+    return get_users_by_ids(user_ids)

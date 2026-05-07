@@ -5,6 +5,7 @@ from routes.courses import router as courses_router
 from routes.roles import router as roles_router
 from routes.users import router as users_router
 from routes.verify import router as verify_router
+from routes.admin_routes import router as admin_router
 
 # Configure logging
 logging.basicConfig(
@@ -38,3 +39,4 @@ app.include_router(courses_router)
 app.include_router(roles_router)
 app.include_router(users_router)
 app.include_router(verify_router)
+app.include_router(admin_router)

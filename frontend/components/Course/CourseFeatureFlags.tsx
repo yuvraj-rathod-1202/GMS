@@ -22,7 +22,9 @@ export const CourseFeatureFlags = ({ courseId }: { courseId: string }) => {
       const data = await FlagsApi.GetCourseFlags(courseId);
       setFlags(data as CourseFlag[]);
     } catch (err) {
-      console.error('Failed to fetch course flags', err);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Failed to fetch course flags', err);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -41,7 +43,9 @@ export const CourseFeatureFlags = ({ courseId }: { courseId: string }) => {
       await FlagsApi.SetCourseOverride(courseId, flag.name, { enabled: nextEnabled });
       setFlags(flags.map(f => f.name === flag.name ? { ...f, override_enabled: nextEnabled } : f));
     } catch (err) {
-      console.error('Failed to save override', err);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Failed to save override', err);
+      }
     } finally {
       setSaving(null);
     }

@@ -112,7 +112,9 @@ export default function InstructorGradePage() {
       await fetchAllAssessments(courseId, true);
       setShowAssessmentDialog(false);
     } catch (error: any) {
-      console.error('Error submitting assessment:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error submitting assessment:', error);
+      }
       alert('Failed to save assessment');
     } finally {
       setIsSubmitting(false);

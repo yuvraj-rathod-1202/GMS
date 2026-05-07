@@ -30,7 +30,9 @@ export function useAdminAccess(redirectTo?: string) {
           }
         }
       } catch (err: any) {
-        console.error('Admin verification error:', err);
+        if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+          console.error('Admin verification error:', err);
+        }
         setError(err?.message || 'Failed to verify admin status');
         setIsAdmin(false);
         // Redirect on error
