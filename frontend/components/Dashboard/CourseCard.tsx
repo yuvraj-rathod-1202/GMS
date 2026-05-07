@@ -10,7 +10,7 @@ type Props = {
 export default function CourseCard({ course }: Props) {
   return (
     <Link href={`/c/${course.id}`}>
-      <div className="bg-mms-indigoLight rounded-xl p-4 hover:shadow-md transition-shadow">
+      <div className="bg-gms-indigoLight rounded-xl p-4 hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-600 font-mono">{course.course_code}</p>

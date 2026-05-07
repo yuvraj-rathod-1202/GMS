@@ -54,7 +54,7 @@ export default function GradingPolicyCard({
                   size="sm"
                   onClick={onEdit}
                   title="Edit Policy"
-                  className="h-9 w-9 p-0 text-gray-600 hover:text-mms-indigo"
+                  className="h-9 w-9 p-0 text-gray-600 hover:text-gms-indigo"
                 >
                   <FaPencil className="size-4" />
                 </Button>
@@ -136,7 +136,7 @@ export default function GradingPolicyCard({
               variant="ghost"
               size="sm"
               onClick={SetDefault}
-              className="px-0 text-xs text-mms-blue hover:bg-transparent hover:underline"
+              className="px-0 text-xs text-gms-blue hover:bg-transparent hover:underline"
             >
               set as default
             </Button>

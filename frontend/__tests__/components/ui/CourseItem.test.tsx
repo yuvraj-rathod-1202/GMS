@@ -16,6 +16,6 @@ describe('CourseItem component', () => {
   it('applies highlight class when Highlight is true', () => {
     const { container } = render(<CourseItem name="Computer Science" id={101} Highlight={true} />);
     const div = container.querySelector('div');
-    expect(div).toHaveClass('bg-mms-grayLight');
+    expect(div).toHaveClass('bg-gms-grayLight');
   });
 });

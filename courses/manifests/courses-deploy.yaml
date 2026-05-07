@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: courses
-          image: yrrathod/mms_courses
+          image: yrrathod/gms_courses
           ports:
             - containerPort: 8080
           envFrom:

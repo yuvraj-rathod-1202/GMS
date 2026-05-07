@@ -40,7 +40,7 @@ def run_backend_test(service_name):
     return result.returncode == 0
 
 def main():
-    parser = argparse.ArgumentParser(description="Run unit tests for MMS")
+    parser = argparse.ArgumentParser(description="Run unit tests for GMS")
     parser.add_argument("target", nargs="?", default="all", help="Target to test: 'all', 'frontend', or a service name")
     
     args = parser.parse_args()

@@ -32,7 +32,7 @@ export default function Textarea({
       <textarea
         id={textareaId}
         required={required}
-        className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none transition focus:border-mms-blue focus:ring-2 focus:ring-mms-blue/20 disabled:bg-gray-50 disabled:text-gray-500 ${className}`}
+        className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none transition focus:border-gms-blue focus:ring-2 focus:ring-gms-blue/20 disabled:bg-gray-50 disabled:text-gray-500 ${className}`}
         {...props}
       />
       {helperText && !error && <p className="text-xs text-gray-500">{helperText}</p>}

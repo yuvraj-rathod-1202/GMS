@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS feature_flags;
 
-GRANT ALL PRIVILEGES ON feature_flags.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON feature_flags.* TO 'gms_user'@'%';
 
 USE feature_flags;
 

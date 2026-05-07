@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: analytics
-          image: yrrathod/mms_analytics
+          image: yrrathod/gms_analytics
           ports:
             - containerPort: 7000
           envFrom:

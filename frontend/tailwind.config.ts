@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        mms: {
+        gms: {
           grayLight: '#f3f4f6',
           blue: '#92BFFF',
           indigoLight: '#EDEEFC',

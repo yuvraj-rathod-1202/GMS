@@ -1,8 +1,8 @@
-CREATE USER 'mms_user'@'%' IDENTIFIED BY 'MmsUserPass123';
+CREATE USER 'gms_user'@'%' IDENTIFIED BY 'GmsUserPass123';
 
 CREATE DATABASE auth;
 
-GRANT ALL PRIVILEGES ON auth.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON auth.* TO 'gms_user'@'%';
 
 USE auth;
 
