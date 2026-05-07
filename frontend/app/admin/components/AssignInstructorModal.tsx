@@ -71,7 +71,9 @@ export default function AssignInstructorModal({
         onClose();
       }, 1200);
     } catch (error: unknown) {
-      console.error('Error assigning instructor:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error assigning instructor:', error);
+      }
       setError(error instanceof Error ? error.message : 'Failed to assign instructor');
     } finally {
       setLoading(false);

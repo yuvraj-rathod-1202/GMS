@@ -16,7 +16,9 @@ export default function AnalyticsPanel() {
       const data = await AdminApi.FetchSystemAnalytics();
       setAnalytics(data);
     } catch (err: any) {
-      console.error('Error fetching analytics:', err);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error fetching analytics:', err);
+      }
       setError(err?.message || 'Failed to fetch analytics');
     } finally {
       setLoading(false);

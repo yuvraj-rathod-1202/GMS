@@ -28,7 +28,11 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
             setFormData((prev: any) => ({ ...prev, assessment_type_id: cats[0].id }));
           }
         })
-        .catch(err => console.error('Failed to fetch categories:', err));
+        .catch(err => {
+          if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+            console.error('Failed to fetch categories:', err);
+          }
+        });
     }
   }, [entityType, isOpen]);
 
@@ -63,7 +67,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
       onClose();
       setFormData({});
     } catch (error: any) {
-      console.error(`Failed to ${isEdit ? 'update' : 'add'} entity:`, error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error(`Failed to ${isEdit ? 'update' : 'add'} entity:`, error);
+      }
       const errorMsg = error.response?.data?.detail;
       const displayMsg = typeof errorMsg === 'string' 
         ? errorMsg 
@@ -247,6 +253,27 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
               </select>
             </div>
             {/* No restriction message */}
+          </>
+        );
+      case 'admins':
+        return (
+          <>
+            <div className="space-y-1">
+              <label htmlFor="admin-user-id" className="text-xs font-bold text-gray-400 uppercase">User ID to Promote</label>
+              <input 
+                id="admin-user-id"
+                type="number" 
+                required
+                disabled={isEdit}
+                value={formData.id || ''}
+                placeholder="Enter User ID (Roll No/Staff ID)"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm disabled:opacity-50"
+                onChange={e => setFormData({...formData, id: parseInt(e.target.value)})}
+              />
+            </div>
+            {!isEdit && (
+              <p className="text-[10px] text-gray-500 italic">Promoting a user to Admin grants them full system access. Please verify the User ID carefully.</p>
+            )}
           </>
         );
       default:

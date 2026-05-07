@@ -41,7 +41,9 @@ export default function NavBar() {
       try {
         const response = await CoursesApi.VerifyAdmin();
         setIsAdmin((response as any).isAdmin || false);
-        console.log('Admin status:', (response as any).isAdmin);
+        if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+          console.log('Admin status:', (response as any).isAdmin);
+        }
       } catch (err) {
         setIsAdmin(false);
       } finally {

@@ -125,4 +125,19 @@ export const AdminApi = {
   async UpdateEntity(entity: string, id: number | string, data: any) {
     return handleRequest(apiClient.put(`/admin/entities/${entity}/${id}`, data));
   },
+  
+  // Make a user an admin
+  async MakeAdmin(userId: number) {
+    return handleRequest(apiClient.post(`/admin/${userId}`));
+  },
+
+  // Remove admin status from a user
+  async RemoveAdmin(userId: number) {
+    return handleRequest(apiClient.delete(`/admin/${userId}`));
+  },
+
+  // Fetch all admin user IDs
+  async FetchAllAdmins() {
+    return handleRequest(apiClient.get('/admin/all'));
+  },
 };

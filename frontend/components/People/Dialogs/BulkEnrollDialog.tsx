@@ -31,7 +31,9 @@ export default function BulkEnrollDialog({ isOpen, onClose, onUpload }: BulkEnro
       await onUpload(file);
       handleClose();
     } catch (error) {
-      console.error('Upload error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Upload error:', error);
+      }
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {

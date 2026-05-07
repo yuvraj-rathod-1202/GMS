@@ -462,7 +462,9 @@ export default function GradeSheetView() {
 
         // Total will be recalculated automatically via useEffect
       } catch (error) {
-        console.error('Failed to update policy:', error);
+        if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+          console.error('Failed to update policy:', error);
+        }
         alert('Failed to update policy. Please try again.');
       } finally {
         setIsUpdatingPolicy(null);
@@ -767,7 +769,9 @@ export default function GradeSheetView() {
           'Total marks recalculated successfully!. Try refreshing the page after some time to see the updated totals.'
         );
       } catch (error) {
-        console.error('Failed to recalculate total marks:', error);
+        if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+          console.error('Failed to recalculate total marks:', error);
+        }
         alert('Failed to recalculate total marks. Please try again.');
       } finally {
         setIsRecalculating(false);
@@ -809,7 +813,9 @@ export default function GradeSheetView() {
         await importMarks(assessmentId, enrolled);
       }
     } catch (error) {
-      console.error('Bulk upload error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Bulk upload error:', error);
+      }
       alert('Failed to process file. Please check the format and try again.');
     }
   };
@@ -831,7 +837,9 @@ export default function GradeSheetView() {
         `Successfully imported marks for ${marksData.length} student${marksData.length > 1 ? 's' : ''}. Click "Save Marks" to apply changes.`
       );
     } catch (error) {
-      console.error('Import marks error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Import marks error:', error);
+      }
       alert('Failed to import marks. Please try again.');
     }
   };
@@ -853,7 +861,9 @@ export default function GradeSheetView() {
 
       await fetchCourseRoles(courseId, true, true);
     } catch (error) {
-      console.error('Enrollment error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Enrollment error:', error);
+      }
       alert('Failed to enroll students. Please try again.');
     } finally {
       setIsProcessingEnrollment(false);

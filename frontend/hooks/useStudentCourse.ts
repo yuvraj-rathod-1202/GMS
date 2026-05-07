@@ -46,7 +46,9 @@ export function useStudentCourse() {
             const totalData = await PolicyApi.GetTotalByStudentId(courseId, user.id);
             totalMarks = (totalData as any)?.totals?.[0] || (totalData as any)?.totals;
           } catch (e) {
-            console.error('Failed to fetch total marks:', e);
+            if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+              console.error('Failed to fetch total marks:', e);
+            }
           }
         }
 

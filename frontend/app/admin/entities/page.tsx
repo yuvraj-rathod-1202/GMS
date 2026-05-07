@@ -18,7 +18,7 @@ import Button from '@/components/ui/Button';
 import EntityModal from './components/EntityModal';
 import { Authapi } from '@/lib/api/auth';
 
-type EntityType = 'users' | 'assessments' | 'enrollments';
+type EntityType = 'users' | 'admins' | 'assessments' | 'enrollments';
 
 interface EntityConfig {
   id: EntityType;
@@ -27,6 +27,7 @@ interface EntityConfig {
 
 const ENTITIES: EntityConfig[] = [
   { id: 'users', label: 'Users' },
+  { id: 'admins', label: 'Admins' },
   { id: 'assessments', label: 'Assessments' },
   { id: 'enrollments', label: 'Enrollments' },
 ];
@@ -77,9 +78,14 @@ export default function EntityManagementPage() {
             await AdminApi.CreateEnrollment(formData.course_id, formData.student_id, formData.role, formData.email);
           }
           break;
+        case 'admins':
+          if (isEdit) {
+            alert('Admin details cannot be edited. Please delete and recreate if needed.');
+          } else {
+            await AdminApi.MakeAdmin(formData.id);
+          }
+          break;
         default:
-          alert('Action for this entity is not implemented yet.');
-          return;
       }
       fetchData(0, true);
       setSelectedItem(null);
@@ -99,6 +105,9 @@ export default function EntityManagementPage() {
         case 'users':
           result = await AdminApi.FetchAllUsers(LIMIT, currentOffset);
           break;
+        case 'admins':
+          result = await AdminApi.FetchAllAdmins();
+          break;
         case 'enrollments':
           result = await AdminApi.FetchAllEnrollments(LIMIT, currentOffset);
           break;
@@ -112,6 +121,7 @@ export default function EntityManagementPage() {
       const newItems = Array.isArray(result) ? result : 
         (result as any).data || 
         (result as any).users || 
+        (result as any).admins || 
         (result as any).enrollments || 
         (result as any).assessments || [];
       
@@ -127,7 +137,9 @@ export default function EntityManagementPage() {
         setHasMore(true);
       }
     } catch (error) {
-      console.error(`Failed to fetch ${activeEntity}:`, error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error(`Failed to fetch ${activeEntity}:`, error);
+      }
       setHasMore(false);
     } finally {
       setLoading(false);
@@ -163,6 +175,9 @@ export default function EntityManagementPage() {
             await AdminApi.UnenrollStudent(item.course_id, item.user_id || item.student_id);
           }
           break;
+        case 'admins':
+          await AdminApi.RemoveAdmin(item.id);
+          break;
         case 'users':
           alert('User deletion is restricted for data integrity. Please deactivate user instead (coming soon).');
           return;
@@ -172,7 +187,9 @@ export default function EntityManagementPage() {
       }
       fetchData(0, true);
     } catch (error) {
-      console.error('Delete failed:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+          console.error('Delete failed:', error);
+      }
       alert('Failed to delete record. It might have dependent data.');
     }
   };
@@ -181,7 +198,9 @@ export default function EntityManagementPage() {
     JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const columns = data.length > 0 ? Object.keys(data[0]) : [];
+  const columns = data.length > 0 
+    ? Object.keys(data[0]).filter(col => activeEntity !== 'users' || col !== 'is_admin') 
+    : [];
 
   return (
     <div className="space-y-6">

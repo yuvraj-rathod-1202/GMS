@@ -14,6 +14,7 @@ from routes.policy import router as policy_router
 from routes.analytics import router as analytics_router
 from routes.verify import router as verify_router
 from routes.flags import router as flags_router
+from routes.admin import router as admin_router
 
 # Configure logging
 logging.basicConfig(
@@ -73,3 +74,4 @@ app.include_router(policy_router, prefix="/courses")
 app.include_router(analytics_router, prefix="/courses")
 app.include_router(verify_router, prefix="/verify")
 app.include_router(flags_router)
+app.include_router(admin_router, prefix="/admin")
