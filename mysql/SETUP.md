@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-This guide walks you through deploying the complete MySQL backup and recovery system for MMS.
+This guide walks you through deploying the complete MySQL backup and recovery system for GMS.
 
 ### Prerequisites
 
@@ -24,7 +24,7 @@ This guide walks you through deploying the complete MySQL backup and recovery sy
 
 # 2. Create Service Account
 #    APIs & Services → Credentials → Create Service Account
-#    Name: "MMS Backup"
+#    Name: "GMS Backup"
 #    Click Create
 
 # 3. Generate JSON Key
@@ -96,7 +96,7 @@ kubectl get secret mysql-secret -o yaml
 ```bash
 # 1. Set registry variables
 REGISTRY="ghcr.io"
-IMAGE_PREFIX="yuvraj-rathod-1202/mms"
+IMAGE_PREFIX="yuvraj-rathod-1202/gms"
 IMAGE_TAG=$(git rev-parse --short HEAD)
 
 # 2. Build backup container
@@ -188,7 +188,7 @@ rclone lsf -R gdrive:FOLDER_ID | grep backup-
 
 # 3. Verify in Google Drive web UI
 #    Open https://drive.google.com
-#    Navigate to MMS-Backups folder
+#    Navigate to GMS-Backups folder
 #    Confirm backup file is present
 ```
 
@@ -199,7 +199,7 @@ rclone lsf -R gdrive:FOLDER_ID | grep backup-
 ```bash
 # 1. Set environment for testing
 export MYSQL_HOST="mysql"
-export MYSQL_ROOT_PASSWORD="MMS2026Root"
+export MYSQL_ROOT_PASSWORD="GMS2026Root"
 export GOOGLE_DRIVE_FOLDER_ID="your-folder-id"
 export BACKUP_DIR="/backup"
 
@@ -295,7 +295,7 @@ Create a secure backup of credentials:
 # DO NOT commit to Git
 
 cat > /secure/location/backup-credentials.txt <<EOF
-MMS Backup System Credentials
+GMS Backup System Credentials
 Generated: $(date)
 
 Google Drive Folder ID: FOLDER_ID
@@ -467,7 +467,7 @@ kubectl logs -f cronjob/mysql-backup --tail=100
 
 ---
 
-**Deployment Complete!** Your MMS database backup system is now operational.
+**Deployment Complete!** Your GMS database backup system is now operational.
 
 For questions or issues, refer to `BACKUP.md` and `MONITORING.md` documentation.
 

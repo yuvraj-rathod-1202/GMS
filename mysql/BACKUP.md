@@ -1,8 +1,8 @@
-# MMS MySQL Backup Operations Guide
+# GMS MySQL Backup Operations Guide
 
 ## Overview
 
-This document describes the backup and restore procedures for the MMS MySQL database infrastructure. Backups are performed **4 times daily** (every 6 hours) and stored in two locations for redundancy:
+This document describes the backup and restore procedures for the GMS MySQL database infrastructure. Backups are performed **4 times daily** (every 6 hours) and stored in two locations for redundancy:
 
 - **Local Storage**: 15 GiB persistent volume claim (fast recovery)
 - **Google Drive**: 15 GiB cloud storage (disaster recovery)
