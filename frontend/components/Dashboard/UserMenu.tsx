@@ -22,10 +22,12 @@ export default function UserMenu() {
     router.push('/login');
   };
 
+  /*
   const handleChangePassword = () => {
     router.push('/change-password');
     setUserMenuOpen(false);
   };
+  */
 
   const handleInstructorResetPassword = () => {
     router.push('/instructor/reset-password');
@@ -53,12 +55,12 @@ export default function UserMenu() {
 
       {userMenuOpen && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg z-50">
-          <button
+          {/* <button
             onClick={handleChangePassword}
             className="w-full text-left px-4 py-2.5 text-sm text-gray-900 hover:bg-gms-indigoLight flex gap-2 items-center first:rounded-t-lg transition"
           >
             <RiLockPasswordLine className="size-4" /> Change Password
-          </button>
+          </button> */}
           {isInstructorOrTa && (
             <button
               onClick={handleInstructorResetPassword}
