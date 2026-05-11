@@ -298,7 +298,7 @@ Send backup alerts to Slack:
 
 **Example Slack Message**:
 ```
-MMS Database Backup Alert
+GMS Database Backup Alert
 Severity: error
 Timestamp: 2026-05-06 14:30:15
 

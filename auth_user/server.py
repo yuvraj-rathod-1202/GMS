@@ -1,11 +1,15 @@
 import os, logging, time
 from fastapi import FastAPI, Depends, HTTPException, Request
+from pydantic import BaseModel
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from models.schema import FeedbackRequest, SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, BulkEnrollStudentRequest, InstructorResetPasswordRequest
 from utils.security import verify_jwt_token
 from utils.auth import verifyInstructorOrTa
-from services.auth import login_user, signup_user, bulk_signup_users, change_user_password, forgot_user_password, submit_user_feedback, instructor_reset_user_password, get_all_users, get_users_by_ids
+from services.auth import login_user, signup_user, bulk_signup_users, change_user_password, forgot_user_password, submit_user_feedback, instructor_reset_user_password, get_all_users, get_users_by_ids, google_login_user
+
+class GoogleLoginRequest(BaseModel):
+    token: str
 
 load_dotenv()
 
@@ -42,17 +46,21 @@ async def log_requests(request: Request, call_next):
 basic_auth = HTTPBasic()
 bearer_auth = HTTPBearer()
     
-@app.post("/login")
-def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
-    return login_user(credentials.username, credentials.password)
+# @app.post("/login")
+# def login(credentials: HTTPBasicCredentials = Depends(basic_auth)):
+#     return login_user(credentials.username, credentials.password)
+
+@app.post("/google-login")
+def google_login(data: GoogleLoginRequest):
+    return google_login_user(data.token)
 
 @app.post("/verify-token")
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
     return verify_jwt_token(credentials)
         
-@app.post("/signup")
-def signup(user: SignUpUser, credentials: HTTPBasicCredentials = Depends(basic_auth)):
-    return signup_user(user, credentials.password)
+# @app.post("/signup")
+# def signup(user: SignUpUser, credentials: HTTPBasicCredentials = Depends(basic_auth)):
+#     return signup_user(user, credentials.password)
         
 @app.post("/signup/bulk")
 def bulk_signup(data: BulkEnrollStudentRequest):
@@ -63,10 +71,10 @@ def logout(credentials: HTTPAuthorizationCredentials = Depends(bearer_auth)):
     # token blacklisting can be implemented here
     return {"text": "Logged out successfully"}
 
-@app.put("/change-password")
-def change_password(data: ChangePasswordRequest):
-    # macth old password with current password in db
-    return change_user_password(data)
+# @app.put("/change-password")
+# def change_password(data: ChangePasswordRequest):
+#     # macth old password with current password in db
+#     return change_user_password(data)
 
 @app.post("/forgot-password")
 def forgot_password(data: ForgotPasswordRequest):
@@ -76,15 +84,15 @@ def forgot_password(data: ForgotPasswordRequest):
 def submit_feedback(feedback: FeedbackRequest):
     return submit_user_feedback(feedback, feedback.user_id)
 
-@app.post("/instructor/reset-password")
-async def instructor_reset_password(data: InstructorResetPasswordRequest):
-    verified = await verifyInstructorOrTa(data.user_id)
-    if not verified:
-        raise HTTPException(
-            status_code=403,
-            detail="Instructor or TA privileges required"
-        )
-    return instructor_reset_user_password(data.target_user_id, data.new_password)
+# @app.post("/instructor/reset-password")
+# async def instructor_reset_password(data: InstructorResetPasswordRequest):
+#     verified = await verifyInstructorOrTa(data.user_id)
+#     if not verified:
+#         raise HTTPException(
+#             status_code=403,
+#             detail="Instructor or TA privileges required"
+#         )
+#     return instructor_reset_user_password(data.target_user_id, data.new_password)
 
 @app.get("/users")
 def get_users(limit: int = 50, offset: int = 0):

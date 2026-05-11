@@ -80,11 +80,11 @@ export default function NavBar() {
     router.push('/login');
   };
 
-  const handleChangePassword = () => {
+  /*const handleChangePassword = () => {
     router.push('/change-password');
     setMenuOpen(false);
   };
-
+*/
   const handleFeedback = () => {
     router.push('/feedback');
     setMenuOpen(false);
@@ -168,7 +168,7 @@ export default function NavBar() {
                   Admin Dashboard
                 </button>
               )}
-              <button
+              {/* <button
                 onClick={handleChangePassword}
                 className={`w-full text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center transition ${
                   !isAdmin ? 'first:rounded-t-lg' : ''
@@ -176,7 +176,7 @@ export default function NavBar() {
               >
                 <RiLockPasswordLine className="size-4" />
                 Change Password
-              </button>
+              </button> */}
               {isInstructorOrTa && (
                 <button
                   onClick={handleInstructorResetPassword}

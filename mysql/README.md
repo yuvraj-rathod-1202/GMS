@@ -1,6 +1,6 @@
-# MMS MySQL Backup & Recovery System
+# GMS MySQL Backup & Recovery System
 
-Complete backup solution for MMS databases with 4x daily automated backups, multi-location storage, and comprehensive recovery tools.
+Complete backup solution for GMS databases with 4x daily automated backups, multi-location storage, and comprehensive recovery tools.
 
 ## 📋 Quick Overview
 

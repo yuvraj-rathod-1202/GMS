@@ -57,14 +57,14 @@ spec:
       
       containers:
       - name: mysql-backup
-        image: yrrathod/mms_backup
+        image: yrrathod/gms_backup
         imagePullPolicy: Always
         
         env:
         - name: MYSQL_HOST
           value: "mysql"
         - name: MYSQL_USER
-          value: "mms_user"
+          value: "gms_user"
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:

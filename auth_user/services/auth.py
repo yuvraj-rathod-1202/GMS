@@ -1,4 +1,6 @@
-import os, logging, datetime, bcrypt
+import os, logging, datetime, bcrypt, random
+from google.oauth2 import id_token
+from google.auth.transport import requests
 from fastapi import HTTPException, status
 from models.schema import User, BulkEnrollStudentRequest, ChangePasswordRequest, ForgotPasswordRequest, FeedbackRequest
 from utils.security import create_jwt_token, verify_password
@@ -40,6 +42,71 @@ def _handle_service_error(action: str, exc: Exception, public_message: str):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail=public_message if IS_PRODUCTION else f"{action} error: {str(exc)}",
     )
+
+def _generate_unique_id(cursor) -> int:
+    while True:
+        new_id = random.randint(1000000, 9999999)
+        cursor.execute("SELECT id FROM email_id_map WHERE id = %s", (new_id,))
+        if not cursor.fetchone():
+            return new_id
+
+def google_login_user(token: str):
+    db = _get_db_or_raise()
+    try:
+        # Verify the ID token
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
+        
+        email = idinfo['email']
+        if not email.endswith("@iitgn.ac.in"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only @iitgn.ac.in emails are allowed"
+            )
+        
+        google_id = idinfo['sub']
+        cur = db.cursor()
+        
+        # 1. Map email to ID
+        cur.execute("SELECT id FROM email_id_map WHERE email = %s", (email,))
+        row = cur.fetchone()
+        if row:
+            user_id = row[0]
+        else:
+            # Generate new 7-digit unique ID
+            user_id = _generate_unique_id(cur)
+            cur.execute("INSERT INTO email_id_map (email, id) VALUES (%s, %s)", (email, user_id))
+            db.commit()
+            
+        # 2. Check/Create user in users table
+        cur.execute("SELECT id, email FROM users WHERE id = %s", (user_id,))
+        row = cur.fetchone()
+        
+        if row:
+            # Update google_id if not set or different
+            cur.execute("UPDATE users SET google_id = %s, last_login = %s WHERE id = %s", (google_id, _utcnow(), user_id))
+        else:
+            # Create new user
+            cur.execute(
+                "INSERT INTO users (id, email, google_id, last_login, created_at) VALUES (%s, %s, %s, %s, %s)",
+                (user_id, email, google_id, _utcnow(), _utcnow())
+            )
+        db.commit()
+        
+        # 3. Issue JWT
+        jwt_token = create_jwt_token(
+            User(id=user_id, email=email),
+            os.getenv("JWT_SECRET_KEY") or "default",
+        )
+        
+        return {"token": jwt_token, "user": {"id": user_id, "email": email, "last_login": _utcnow()}}
+        
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google token"
+        )
+    except Exception as e:
+        _handle_service_error("Google Login", e, "An error occurred during Google login")
 
 def login_user(username: str, password: str):
     db = _get_db_or_raise()
@@ -122,6 +189,12 @@ def bulk_signup_users(data: BulkEnrollStudentRequest):
             cursor.executemany(
                 "INSERT IGNORE INTO users (id, email, password_hash, last_login, created_at) VALUES (%s, %s, %s, %s, %s)",
                 user_data
+            )
+            # Update email_id_map
+            email_id_data = [(user.email, user.id) for user in data.users]
+            cursor.executemany(
+                "INSERT IGNORE INTO email_id_map (email, id) VALUES (%s, %s)",
+                email_id_data
             )
             db.commit()
             return {"message": f"Created {len(user_data)} new users, {len(existing_ids)} already existed"}

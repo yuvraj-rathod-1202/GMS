@@ -171,7 +171,7 @@ send_webhook_alert() {
   "attachments": [
     {
       "color": "$color",
-      "title": "MMS Database Backup Alert",
+      "title": "GMS Database Backup Alert",
       "text": "$message",
       "fields": [
         {
@@ -470,7 +470,7 @@ generate_report
 if [ "$BACKUP_STATUS" != "OK" ] && [ ${#ALERT_MESSAGES[@]} -gt 0 ]; then
     local alert_msg=$(printf '%s\n' "${ALERT_MESSAGES[@]}" | head -5 | paste -sd ',' -)
     send_webhook_alert "$alert_msg" "error"
-    send_email_alert "Backup monitoring issues:\n$alert_msg" "MMS Database Backup Alert"
+    send_email_alert "Backup monitoring issues:\n$alert_msg" "GMS Database Backup Alert"
 fi
 
 # Exit with appropriate code

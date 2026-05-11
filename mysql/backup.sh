@@ -4,7 +4,7 @@
 # Performs full database backup, uploads to Google Drive, and maintains 15GiB capacity limit
 # Environment variables required:
 #   - MYSQL_HOST: MySQL server hostname (default: mysql)
-#   - MYSQL_USER: MySQL username (default: mms_user)
+#   - MYSQL_USER: MySQL username (default: gms_user)
 #   - MYSQL_PASSWORD: MySQL password (from Kubernetes secret)
 #   - GOOGLE_DRIVE_FOLDER_ID: Google Drive folder ID for backup storage
 #   - RCLONE_CONFIG_GDRIVE_*: rclone Google Drive configuration
@@ -13,7 +13,7 @@ set -e
 
 # Configuration
 MYSQL_HOST="${MYSQL_HOST:-mysql}"
-MYSQL_USER="${MYSQL_USER:-mms_user}"
+MYSQL_USER="${MYSQL_USER:-gms_user}"
 MYSQL_PASSWORD="${MYSQL_PASSWORD}"
 BACKUP_DIR="${BACKUP_DIR:-/backup}"
 GOOGLE_DRIVE_FOLDER_ID="${GOOGLE_DRIVE_FOLDER_ID}"

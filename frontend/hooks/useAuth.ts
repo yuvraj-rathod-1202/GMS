@@ -45,8 +45,38 @@ export function useAuth() {
     }
   }
 
+  async function googleLogin(token: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await Authapi.googleLogin(token);
+      const user = (data as any).user ?? null;
+      const jwtToken = (data as any).token ?? null;
+      if (!jwtToken) throw new Error('Invalid login response');
+      setAuth(user, jwtToken);
+      const lastLogin = new Date().toISOString();
+      try {
+        localStorage.setItem('lastLogin', lastLogin);
+      } catch {}
+      try {
+        await fetch('/api/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: jwtToken, lastLogin }),
+        });
+      } catch {}
+      return { user, token: jwtToken };
+    } catch (err: any) {
+      setError(err?.message || 'Google Login failed');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     login,
+    googleLogin,
     logout: async () => {
       try {
         await fetch('/api/session', { method: 'DELETE' });
