@@ -300,14 +300,21 @@ def instructor_reset_user_password(target_user_id: int, new_password: str):
     except Exception as e:
         _handle_service_error("Instructor reset password", e, "Failed to reset password")
 
-def get_all_users(limit: int = 50, offset: int = 0):
+def get_all_users(limit: int = 50, offset: int = 0, search: str = None):
     db = _get_db_or_raise()
     try:
         cur = db.cursor()
-        cur.execute(
-            "SELECT id, email, last_login, created_at FROM users LIMIT %s OFFSET %s",
-            (limit, offset)
-        )
+        if search:
+            search_query = f"%{search}%"
+            cur.execute(
+                "SELECT id, email, last_login, created_at FROM users WHERE id LIKE %s OR email LIKE %s LIMIT %s OFFSET %s",
+                (search_query, search_query, limit, offset)
+            )
+        else:
+            cur.execute(
+                "SELECT id, email, last_login, created_at FROM users LIMIT %s OFFSET %s",
+                (limit, offset)
+            )
         rows = cur.fetchall()
         users = []
         for row in rows:
@@ -336,3 +343,25 @@ def get_users_by_ids(user_ids: list[int]):
         return {'users': [{'id': r[0], 'email': r[1], 'last_login': r[2], 'created_at': r[3]} for r in rows]}
     except Exception as e:
         _handle_service_error('Fetch users by IDs', e, 'Failed to fetch users')
+
+def delete_user(user_id: int):
+    db = _get_db_or_raise()
+    try:
+        cur = db.cursor()
+        
+        # 1. Get user email to delete from email_id_map
+        cur.execute("SELECT email FROM users WHERE id = %s", (user_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # 2. Delete from users
+        cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        
+        db.commit()
+        return {"text": f"User {user_id} and associated data deleted successfully"}
+    except Exception as e:
+        _handle_service_error("Delete user", e, "Failed to delete user")
