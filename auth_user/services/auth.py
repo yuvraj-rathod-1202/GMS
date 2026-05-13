@@ -54,7 +54,8 @@ def google_login_user(token: str):
     db = _get_db_or_raise()
     try:
         # Verify the ID token
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), os.getenv("GOOGLE_CLIENT_ID"), clock_skew_in_seconds=60)
+
         
         email = idinfo['email']
         if not email.endswith("@iitgn.ac.in"):
@@ -100,10 +101,10 @@ def google_login_user(token: str):
         
         return {"token": jwt_token, "user": {"id": user_id, "email": email, "last_login": _utcnow()}}
         
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Google token"
+            detail=f"Invalid Google token: {str(e)}"
         )
     except Exception as e:
         _handle_service_error("Google Login", e, "An error occurred during Google login")
