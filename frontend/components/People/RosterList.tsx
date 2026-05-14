@@ -176,6 +176,18 @@ export default function RosterList({
           )}
         </div>
       </div>
+
+      {/* Footer with Total Count */}
+      <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl flex justify-between items-center shrink-0">
+        <span className="text-sm text-gray-600 font-medium">
+          Total {label}s: <span className="text-gray-900">{items.length}</span>
+        </span>
+        {searchQuery && (
+          <span className="text-xs text-gray-500 italic">
+            Showing {filteredItems.length} matching result{filteredItems.length !== 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

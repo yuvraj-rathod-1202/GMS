@@ -7,12 +7,14 @@ import Checkbox from '@/components/ui/Checkbox';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import Select from '@/components/ui/Select';
+import Switch from '@/components/ui/Switch';
 import { AssessmentDBObject } from '@/lib/types/assessments';
 
 interface AssessmentDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: AssessmentFormData) => Promise<void>;
+  onDelete?: () => Promise<void>;
   assessment?: AssessmentDBObject | null;
   isLoading: boolean;
 }
@@ -40,6 +42,7 @@ export default function AssessmentDialog({
   isOpen,
   onClose,
   onSubmit,
+  onDelete,
   assessment,
   isLoading,
 }: AssessmentDialogProps) {
@@ -49,7 +52,7 @@ export default function AssessmentDialog({
     <Modal
       open
       title={assessment ? 'Edit Assessment' : 'Create Assessment'}
-      description="Create or update an assessment definition for this course."
+      description="Update the detail for this assessment."
       onClose={onClose}
       className="max-w-2xl max-h-[90vh] overflow-y-auto"
     >
@@ -59,6 +62,7 @@ export default function AssessmentDialog({
         isLoading={isLoading}
         onClose={onClose}
         onSubmit={onSubmit}
+        onDelete={onDelete}
       />
     </Modal>
   );
@@ -69,6 +73,7 @@ interface AssessmentDialogFormProps {
   isLoading: boolean;
   onClose: () => void;
   onSubmit: (data: AssessmentFormData) => Promise<void>;
+  onDelete?: () => Promise<void>;
 }
 
 function createInitialFormData(assessment?: AssessmentDBObject | null): AssessmentFormData {
@@ -96,6 +101,7 @@ function AssessmentDialogForm({
   isLoading,
   onClose,
   onSubmit,
+  onDelete,
 }: AssessmentDialogFormProps) {
   const [formData, setFormData] = useState<AssessmentFormData>(() =>
     createInitialFormData(assessment)
@@ -170,50 +176,66 @@ function AssessmentDialogForm({
         disabled={isLoading}
       />
 
-      <Input
-        label="Maximum Marks"
-        required
-        type="number"
-        value={formData.max_marks}
-        onChange={(event) => handleChange('max_marks', Number(event.target.value))}
-        min={0}
-        step={0.01}
-        error={errors.max_marks}
-        disabled={isLoading}
-      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <Input
+          label="Maximum Marks"
+          required
+          type="number"
+          value={formData.max_marks}
+          onChange={(event) => handleChange('max_marks', Number(event.target.value))}
+          min={0}
+          step={0.01}
+          error={errors.max_marks}
+          disabled={isLoading}
+        />
 
-      <Input
-        label="Assessment Date"
-        required
-        type="date"
-        value={formData.assessment_date}
-        onChange={(event) => handleChange('assessment_date', event.target.value)}
-        error={errors.assessment_date}
-        disabled={isLoading}
-      />
+        <Input
+          label="Assessment Date"
+          required
+          type="date"
+          value={formData.assessment_date}
+          onChange={(event) => handleChange('assessment_date', event.target.value)}
+          error={errors.assessment_date}
+          disabled={isLoading}
+        />
+      </div>
 
-      <Checkbox
+      <Switch
         label="Publish marks immediately"
         helperText="Students will be able to view their marks for this assessment"
         checked={formData.is_marks_published}
-        onChange={(event) => handleChange('is_marks_published', event.target.checked)}
+        onChange={(checked) => handleChange('is_marks_published', checked)}
         disabled={isLoading}
         id="is_marks_published"
       />
 
-      <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
-        <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading
-            ? assessment
-              ? 'Updating...'
-              : 'Creating...'
-            : assessment
-              ? 'Update Assessment'
-              : 'Create Assessment'}
-        </Button>
+      <div className="flex items-center justify-between border-t border-gray-200 pt-4">
+        <div>
+          {assessment && onDelete && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={onDelete}
+              disabled={isLoading}
+            >
+              Delete Assessment
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading
+              ? assessment
+                ? 'Updating...'
+                : 'Creating...'
+              : assessment
+                ? 'Update Assessment'
+                : 'Create Assessment'}
+          </Button>
+        </div>
       </div>
     </form>
   );

@@ -60,17 +60,17 @@ export default function PeopleSectionShell({
       </div>
 
       {/* Consolidated Toolbar */}
-      <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-2 rounded-2xl border border-gray-200 shadow-sm shrink-0 overflow-hidden">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 bg-white p-2 rounded-2xl border border-gray-200 shadow-sm shrink-0 overflow-hidden">
         {/* Tabs and Search Container */}
-        <div className="flex items-center gap-4 w-full md:w-auto flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1 min-w-0">
           {/* Tabs inside toolbar */}
           {tabs && onTabChange && (
-            <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0">
+            <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0 overflow-x-auto scrollbar-hide">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => onTabChange(tab.id)}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
+                  className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
@@ -84,7 +84,7 @@ export default function PeopleSectionShell({
 
           {/* Search Input */}
           {onSearchChange && (
-            <div className="relative flex-1 min-w-[150px]">
+            <div className="relative flex-1 min-w-0">
               <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
               <input
                 type="text"
