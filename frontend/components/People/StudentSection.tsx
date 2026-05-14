@@ -35,7 +35,7 @@ export function StudentSection({
                 label: 'Unenroll All',
                 onClick: onUnenrollAll,
                 variant: 'secondary' as const,
-                icon: <BiTrash />,
+                icon: <BiTrash className='text-red-500' />,
                 disabled: isLoading,
               },
             ]

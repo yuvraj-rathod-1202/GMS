@@ -17,11 +17,11 @@ export default function TANavbar() {
       { label: 'Grades', href: `/c/${courseId}/g` },
     ];
 
-    if (isFeatureEnabled('course.ta_analytics_visibility')) {
+    if (flags['course.ta_analytics_visibility'] || isFeatureEnabled('course.ta_analytics_visibility')) {
       items.push({ label: 'Analytics', href: `/c/${courseId}/a` });
     }
     
-    if (isFeatureEnabled('course.ta_policy_management')) {
+    if (flags['course.ta_policy_management'] || isFeatureEnabled('course.ta_policy_management')) {
       items.push({ label: 'Policies', href: `/c/${courseId}/gp` });
     }
 

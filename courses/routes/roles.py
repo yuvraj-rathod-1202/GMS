@@ -75,10 +75,10 @@ async def unenroll_student(course_id: int, user_id: int = Query(...), student_id
         
     unenrolled_id = await enroll_student_in_course_in_db(course_id, student_id, enroll=False)
     
-    if not unenrolled_id:
+    if unenrolled_id is None:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to unenroll student"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student enrollment not found"
         )
         
     return {"unenrolled_id": unenrolled_id}
@@ -95,10 +95,10 @@ async def assign_ta(course_id: int, data: EnrollTaRequest):
         
     assigned_id = await enroll_student_in_course_in_db(course_id, data.ta_id, data.email, assign_ta=True)
     
-    if not assigned_id:
+    if assigned_id is None:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to assign TA"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User is already a TA for this course"
         )
         
     return {"assigned_id": assigned_id}
@@ -115,10 +115,10 @@ async def remove_ta(course_id: int, user_id: int = Query(...), ta_id: int = Quer
         
     removed_id = await enroll_student_in_course_in_db(course_id, ta_id, enroll=False, assign_ta=True)
     
-    if not removed_id:
+    if removed_id is None:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to remove TA"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="TA enrollment not found"
         )
         
     return {"removed_id": removed_id}
@@ -135,10 +135,10 @@ async def assign_instructor(course_id: int, data: EnrollInstructorRequest):
         
     assigned_id = await enroll_student_in_course_in_db(course_id, data.instructor_id, data.email, assign_instructor=True)
     
-    if not assigned_id:
+    if assigned_id is None:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to assign instructor"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User is already an instructor for this course"
         )
         
     return {"assigned_id": assigned_id}
@@ -155,10 +155,10 @@ async def remove_instructor(course_id: int, user_id: int = Query(...), instructo
         
     removed_id = await enroll_student_in_course_in_db(course_id, instructor_id, enroll=False, assign_instructor=True)
     
-    if not removed_id:
+    if removed_id is None:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to remove instructor"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Instructor assignment not found"
         )
         
     return {"removed_id": removed_id}

@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS courses_role (
     role VARCHAR(20) NOT NULL,
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_course_user_role (course_id, user_id, role)
+    UNIQUE KEY unique_course_user (course_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS id_email_map (
