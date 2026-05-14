@@ -4,7 +4,7 @@ import InstructorNavbar from '../Course/InstructorNavbar';
 import AddTADialog from './Dialogs/AddTADialog';
 import BulkEnrollDialog from './Dialogs/BulkEnrollDialog';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
-import { StatCard } from './Cards/StateCard';
+// import { StatCard } from './Cards/StateCard';
 import { StudentSection } from './StudentSection';
 import { TASection } from './TASection';
 
@@ -44,6 +44,7 @@ export function InstructorPeopleView({
 }) {
   const instructorData = useCourseDetailStore((s) => s.instructorData);
   const [activeTab, setActiveTab] = useState<'students' | 'tas'>('students');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const students = useMemo(() => {
     return (instructorData?.CourseRoles?.students || [])
@@ -65,51 +66,21 @@ export function InstructorPeopleView({
       }));
   }, [instructorData]);
 
+  const tabs = [
+    { id: 'students', label: 'Students' },
+    { id: 'tas', label: 'Teaching Assistants' },
+  ];
+
   return (
-    <div>
+    <div className="h-[calc(100vh-48px)] flex flex-col overflow-hidden">
       <InstructorNavbar />
-      <div className="h-[calc(100vh-96px)] overflow-y-auto w-full md:max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard
-            label="Total Students"
-            count={students.length}
-            isActive={activeTab === 'students'}
-            onClick={() => setActiveTab('students')}
-          />
-          <StatCard
-            label="Teaching Assistants"
-            count={tas.length}
-            isActive={activeTab === 'tas'}
-            onClick={() => setActiveTab('tas')}
-          />
-        </div>
+      <div className="flex-1 flex flex-col min-h-0 w-full md:max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8 overflow-hidden">
+        {/* <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 shrink-0">
+          <StatCard label="Total Students" count={students.length} />
+          <StatCard label="Teaching Assistants" count={tas.length} />
+        </div> */}
 
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab('students')}
-              className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'students'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Students
-            </button>
-            <button
-              onClick={() => setActiveTab('tas')}
-              className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'tas'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Teaching Assistants
-            </button>
-          </nav>
-        </div>
-
-        <div>
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {activeTab === 'students' ? (
             <StudentSection
               students={students}
@@ -118,6 +89,11 @@ export function InstructorPeopleView({
               onRemoveStudent={handleRemoveStudent}
               onUnenrollAll={handleUnenrollAllStudents}
               isLoading={managementLoading}
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
             />
           ) : (
             <TASection
@@ -125,6 +101,11 @@ export function InstructorPeopleView({
               onAdd={() => setShowAddDialog(true)}
               onRemoveTA={handleRemoveTA}
               isLoading={managementLoading}
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
             />
           )}
         </div>
