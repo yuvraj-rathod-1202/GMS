@@ -151,10 +151,6 @@ export default function InstructorGradePage() {
         <div className="space-y-6 md:space-y-8">
           {/* Page Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grades & Assessments</h1>
-              <p className="text-gray-500 mt-1">Create assessments and manage student results.</p>
-            </div>
             <div className="flex items-center gap-3">
               <Link href={`/c/${courseId}/gb`}>
                 <Button
@@ -167,6 +163,16 @@ export default function InstructorGradePage() {
                   View Master Gradebook
                 </Button>
               </Link>
+              <Link href={`/c/${courseId}/a`}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  title="View Detailed Analytics"
+                  className="flex items-center gap-2"
+                >
+                  View Analytics
+                </Button>
+                </Link>
               <Button
                 variant="primary"
                 size="sm"

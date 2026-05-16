@@ -426,3 +426,36 @@ def get_all_assessment_marks_from_db(course_id: int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while retrieving all assessment marks" if IS_PRODUCTION else f"Failed to retrieve all assessment marks from the database : {e}"
         )
+
+def delete_student_course_data_from_db(course_id: int, student_id: int):
+    """Delete all marks for a student across all assessments in a course (used on unenrollment)."""
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+
+    try:
+        cursor = db.cursor()
+
+        # Delete marks from all assessments belonging to this course
+        query = """
+            DELETE m FROM marks m
+            JOIN assessments a ON m.assessment_id = a.id
+            WHERE a.course_id = %s AND m.student_id = %s
+        """
+        cursor.execute(query, (course_id, student_id))
+        deleted_count = cursor.rowcount
+
+        db.commit()
+        logger.info(f"Deleted {deleted_count} marks for student {student_id} in course {course_id}")
+        return deleted_count
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting student course data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while deleting student data" if IS_PRODUCTION else f"Failed to delete student course data: {e}"
+        )

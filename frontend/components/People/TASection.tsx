@@ -26,8 +26,6 @@ export function TASection({
 
   return (
     <PeopleSectionShell
-      title="Manage TAs"
-      description="Grant teaching assistant privileges to users."
       hasItems={hasTAs}
       itemsLabel="TA roster"
       emptyTitle="No TAs assigned"

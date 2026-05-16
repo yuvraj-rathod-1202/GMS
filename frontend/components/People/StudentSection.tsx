@@ -31,8 +31,6 @@ export function StudentSection({
 
   return (
     <PeopleSectionShell
-      title="Manage Students"
-      description="View and manage enrolled students."
       hasItems={hasStudents}
       itemsLabel="student roster"
       emptyTitle="No students yet"

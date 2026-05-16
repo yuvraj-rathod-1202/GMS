@@ -12,8 +12,6 @@ export type PeopleAction = {
 };
 
 interface PeopleSectionShellProps {
-  title: string;
-  description: string;
   hasItems: boolean;
   itemsLabel: string;
   emptyTitle: string;
@@ -33,8 +31,6 @@ interface PeopleSectionShellProps {
 }
 
 export default function PeopleSectionShell({
-  title,
-  description,
   hasItems,
   itemsLabel,
   emptyTitle,
@@ -53,11 +49,6 @@ export default function PeopleSectionShell({
 }: PeopleSectionShellProps) {
   return (
     <div className="flex-1 flex flex-col min-h-0 space-y-6 overflow-hidden">
-      {/* Page Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-        <p className="text-sm text-gray-500">{description}</p>
-      </div>
 
       {/* Consolidated Toolbar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 bg-white p-2 rounded-2xl border border-gray-200 shadow-sm shrink-0 overflow-hidden">

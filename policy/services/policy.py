@@ -535,3 +535,40 @@ def get_assessment_categories_from_db():
             detail="An error occurred while retrieving assessment categories" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
+def delete_student_course_data_from_db(course_id: int, student_id: int):
+    """Delete policy assignment and computed totals for a student in a course (used on unenrollment)."""
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+
+    try:
+        cursor = db.cursor()
+
+        # Delete student's policy assignment for this course
+        cursor.execute(
+            "DELETE FROM student_course_policy WHERE course_id = %s AND student_id = %s",
+            (course_id, student_id)
+        )
+        policy_deleted = cursor.rowcount
+
+        # Delete student's computed totals for this course
+        cursor.execute(
+            "DELETE FROM computed_totals WHERE course_id = %s AND student_id = %s",
+            (course_id, student_id)
+        )
+        totals_deleted = cursor.rowcount
+
+        db.commit()
+        logger.info(f"Deleted student {student_id} data from course {course_id}: {policy_deleted} policy assignments, {totals_deleted} computed totals")
+        return {"policy_deleted": policy_deleted, "totals_deleted": totals_deleted}
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting student course data from policy DB: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while deleting student data" if IS_PRODUCTION else f"Failed to delete student course data: {e}"
+        )
