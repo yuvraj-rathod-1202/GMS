@@ -28,7 +28,6 @@ export default function CourseOverview({ course }: CourseOverviewProps) {
               <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1">
                 {course.name}
               </h1>
-              <p className="text-xs sm:text-sm text-gray-600">Course Overview</p>
             </div>
           </div>
         </div>

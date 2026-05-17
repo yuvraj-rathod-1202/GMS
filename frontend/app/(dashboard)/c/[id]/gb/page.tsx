@@ -24,6 +24,7 @@ import {
   BiSearch,
   BiCloudUpload,
   BiCalculator,
+  BiChart,
 } from 'react-icons/bi';
 import { exportGradeBookToExcel } from '@/components/Grade/ExportGradeBook';
 import calculateTotalMarks, { calculateTotalMarksOptimized } from '@/services/totalCalculation';
@@ -928,6 +929,16 @@ export default function GradeSheetView() {
     router.push(`/c/${courseId}/gp`);
   };
 
+  const handleGoAnalytics = () => {
+    if (
+      changedCellsSet.size > 0 &&
+      !confirm('Any unsaved changes will be lost. Are you sure you want to go to analytics page?')
+    ) {
+      return;
+    }
+    router.push(`/c/${courseId}/a`);
+  };
+
   const getSortIcon = (key: string) => {
     if (!sortConfig || sortConfig.key !== key) {
       return <BiSortAlt2 className="text-gray-400" />;
@@ -1199,6 +1210,16 @@ export default function GradeSheetView() {
               className="flex items-center gap-1.5 h-8 text-xs px-2.5"
             >
               <BiSliderAlt className="text-base" /> Policy
+            </Button>
+          )}
+          {role === 'instructor' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleGoAnalytics()}
+              className="flex items-center gap-1.5 h-8 text-xs px-2.5"
+            >
+              <BiChart className="text-base" /> Analytics
             </Button>
           )}
         </div>
