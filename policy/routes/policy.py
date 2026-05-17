@@ -341,11 +341,8 @@ async def recalculate_policy(course_id: int, user_id: int):
                 raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
             raise e
     
-    if role == "instructor":
+    if role == "instructor" or role == "ta":
         pass
-    elif role == "ta":
-        if not is_feature_enabled("course.ta_policy_management", {"course_id": course_id, "user_id": user_id, "role": role}):
-            raise HTTPException(status_code=403, detail="TA policy management is disabled")
     else:
         raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
         

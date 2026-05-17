@@ -139,7 +139,6 @@ export default function PolicyDialog({
     <Modal
       open
       title={policy ? 'Edit Policy' : 'Create Grading Policy'}
-      description="Hover over any field for more information."
       onClose={onClose}
       className="max-h-[90vh] max-w-5xl overflow-y-auto"
     >
@@ -347,8 +346,7 @@ function PolicyDialogForm({
           onChange={(event) => handleChange('policy_name', event.target.value)}
           placeholder="e.g., Regular Grading, Audit Grading"
           error={errors.policy_name}
-          disabled={isLoading}
-          helperText="Give this policy a unique name to distinguish it from others."
+          disabled={isLoading} 
         />
 
         <Input
@@ -360,76 +358,63 @@ function PolicyDialogForm({
           min={0}
           error={errors.total_weightage}
           disabled={isLoading}
-          helperText="The target sum for all components combined."
         />
       </div>
 
-      <div
-        className="rounded-xl border border-gray-200 bg-gray-50 p-4"
-        title="Visualizes the distribution of marks. Ensure the bar is full (100%) but not overflowing (Red)."
-      >
-        <div className="mb-2 flex justify-between text-sm font-medium">
-          <span>Weightage Allocation</span>
-          <span
-            className={
-              isOverweight ? 'text-red-600' : isUnderweight ? 'text-orange-600' : 'text-green-600'
-            }
-          >
-            {currentTotal}% / {formData.total_weightage}%
-          </span>
-        </div>
-        <div className="flex h-3 w-full overflow-hidden rounded-full bg-gray-200">
-          {formData.components.map((component, index) => (
-            <div
-              key={`${component.assessment_category_id}-${index}`}
-              style={{
-                width: `${Math.min((component.weightage / formData.total_weightage) * 100, 100)}%`,
-              }}
-              className={`${['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500'][index % 4]}`}
-            />
-          ))}
-          {isOverweight && <div className="flex-1 animate-pulse bg-red-500" />}
-        </div>
 
-        <div className="mt-2 space-y-2 text-xs font-semibold text-gray-500">
-          <div className="text-blue-500">
-            {isUnderweight && 'You still have percentage points to assign.'}
-          </div>
-          <div className="text-red-500">
-            {isOverweight && 'Total exceeds 100%. Please reduce component weightages.'}
-          </div>
-          <div className="text-green-500">
-            {!isUnderweight && !isOverweight && 'Total weightage allocated correctly.'}
-          </div>
-          <div className="grid grid-cols-2 gap-x-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {formData.components.map((component, index) => (
-              <div key={`${component.assessment_category_id}-${index}`}>
-                <p className="flex justify-start gap-2">
-                  <span>{getAssessmentTypeLabel(component.assessment_category_id)}</span>
-                  <span>{component.weightage}%</span>
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      <div>
-        <div className="mb-4 flex items-center justify-between">
-          <h3
-            className="text-lg font-bold text-gray-900"
-            title="Define the distinct categories (buckets) that make up the final grade, such as Quizzes, Labs, or Exams."
+        <div className="sticky top-0 z-20 -mx-6 bg-white px-6 py-2 mb-4 border-b border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <h3
+              className="text-lg font-bold text-gray-900"
+              title="Define the distinct categories (buckets) that make up the final grade, such as Quizzes, Labs, or Exams."
+            >
+              Grading Components
+            </h3>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setAddComponentLabel(true)}
+              className="px-3 py-1.5 text-sm font-bold text-blue-600 hover:bg-blue-50"
+            >
+              + Add Component
+            </Button>
+          </div>
+
+          <div
+            className="rounded-xl border border-gray-200 bg-gray-50 p-3"
+            title="Visualizes the distribution of marks. Ensure the bar is full (100%) but not overflowing (Red)."
           >
-            Grading Components
-          </h3>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setAddComponentLabel(true)}
-            className="px-3 py-1.5 text-sm font-bold text-blue-600 hover:bg-blue-50"
-          >
-            + Add Component
-          </Button>
+            <div className="mb-1.5 flex justify-between text-xs font-medium">
+              <span>Weightage Allocation</span>
+              <span
+                className={
+                  isOverweight ? 'text-red-600' : isUnderweight ? 'text-orange-600' : 'text-green-600'
+                }
+              >
+                {currentTotal}% / {formData.total_weightage}% {!isUnderweight && !isOverweight ? '✓' : ''}
+              </span>
+            </div>
+            <div className="flex h-2.5 w-full gap-1">
+              {formData.components.map((component, index) => (
+                <div
+                  key={`${component.assessment_category_id}-${index}`}
+                  style={{
+                    width: `${Math.min((component.weightage / formData.total_weightage) * 100, 100)}%`,
+                  }}
+                  className={`rounded-full ${['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500'][index % 4]}`}
+                />
+              ))}
+              {isOverweight && <div className="flex-1 rounded-full animate-pulse bg-red-500" />}
+              {isUnderweight && <div className="flex-1 rounded-full bg-gray-200" />}
+            </div>
+
+            <div className="mt-1.5 flex gap-4 text-[10px] font-semibold text-gray-500 overflow-x-auto pb-1">
+              {isUnderweight && <div className="text-orange-500 whitespace-nowrap">Missing: {formData.total_weightage - currentTotal}%</div>}
+              {isOverweight && <div className="text-red-500 whitespace-nowrap">Exceeds: {currentTotal - formData.total_weightage}%</div>}
+              {!isUnderweight && !isOverweight && <div className="text-green-500 whitespace-nowrap">Allocation Balanced ✓</div>}
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -473,7 +458,28 @@ function PolicyDialogForm({
                   placeholder="0"
                   disabled={isLoading}
                   error={errors[`components_weightage_${index}`]}
+                  className="text-xs h-8"
+                  labelClassName="text-[10px]"
                 />
+                {component.rules.rule_type === 'BEST_N' && (
+                  <Input
+                    label="Best N to consider"
+                    type="number"
+                    value={component.rules.rule_params.n || 0}
+                    onChange={(event) =>
+                      updateComponent(
+                        component.assessment_category_id,
+                        'rules_n_value',
+                        event.target.value
+                      )
+                    }
+                    min={0}
+                    placeholder="e.g., 3"
+                    disabled={isLoading}
+                    className="text-xs h-8"
+                    labelClassName="text-[10px]"
+                  />
+                )}
               </div>
 
               <div className="mb-4">
@@ -517,24 +523,6 @@ function PolicyDialogForm({
                     <BiInfoCircle /> All assessments in this category will be assigned equal
                     weightage each.
                   </p>
-                )}
-
-                {component.rules.rule_type === 'BEST_N' && (
-                  <Input
-                    label="N (Best N to consider)"
-                    type="number"
-                    value={component.rules.rule_params.n || 0}
-                    onChange={(event) =>
-                      updateComponent(
-                        component.assessment_category_id,
-                        'rules_n_value',
-                        event.target.value
-                      )
-                    }
-                    min={0}
-                    placeholder="e.g., 3"
-                    disabled={isLoading}
-                  />
                 )}
 
                 {component.rules.rule_type === 'CUSTOM' && (
@@ -631,9 +619,8 @@ function PolicyDialogForm({
             </div>
           ))}
         </div>
-      </div>
 
-      <div className="flex justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 rounded-b-2xl">
+      <div className="sticky bottom-0 z-20 -mx-6 flex justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 rounded-b-2xl">
         <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
           Cancel
         </Button>

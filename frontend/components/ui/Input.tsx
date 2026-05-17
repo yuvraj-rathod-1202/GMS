@@ -7,6 +7,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   error?: string | null;
   helperText?: string;
   wrapperClassName?: string;
+  labelClassName?: string;
 }
 
 export default function Input({
@@ -14,6 +15,7 @@ export default function Input({
   error,
   helperText,
   wrapperClassName = '',
+  labelClassName = '',
   className = '',
   id,
   required,
@@ -24,7 +26,10 @@ export default function Input({
   return (
     <div className={`space-y-1.5 ${wrapperClassName}`}>
       {label && (
-        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor={inputId}
+          className={`block text-sm font-medium text-gray-700 ${labelClassName}`}
+        >
           {label}
           {required ? ' *' : ''}
         </label>
