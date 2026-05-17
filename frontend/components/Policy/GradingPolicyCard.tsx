@@ -101,7 +101,7 @@ export default function GradingPolicyCard({
               })()}
             </div>
 
-            <div className="space-y-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
               {policy.components.map((component, index) => (
                 <div key={component.id} className={`p-3 rounded-md bg-gray-50 border border-gray-100 border-l-4 ${['border-l-blue-500', 'border-l-purple-500', 'border-l-green-500', 'border-l-orange-500'][index % 4]}`}>
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">

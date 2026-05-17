@@ -56,12 +56,12 @@ export default function PeopleSectionShell({
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1 min-w-0">
           {/* Tabs inside toolbar */}
           {tabs && onTabChange && (
-            <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0 overflow-x-auto scrollbar-hide">
+            <div className="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200 shrink-0 overflow-x-auto scrollbar-hide">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => onTabChange(tab.id)}
-                  className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
+                  className={`flex-1 sm:flex-none px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
@@ -76,13 +76,13 @@ export default function PeopleSectionShell({
           {/* Search Input */}
           {onSearchChange && (
             <div className="relative flex-1 min-w-0">
-              <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+              <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base" />
               <input
                 type="text"
                 placeholder={searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full bg-gray-50 border-none rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-gms-blue/20 outline-none transition-all"
+                className="w-full bg-gray-50 border-none rounded-lg py-1.5 pl-9 pr-4 text-xs focus:ring-2 focus:ring-gms-blue/20 outline-none transition-all"
               />
             </div>
           )}

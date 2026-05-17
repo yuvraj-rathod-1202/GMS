@@ -446,13 +446,9 @@ function OverviewCard({
   value: string | number | null;
 }) {
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
-      </div>
-      <div>
-        <h3 className="text-2xl font-bold text-gray-900">{value || '-'}</h3>
-      </div>
+    <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+      <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">{label}</p>
+      <h3 className="text-xl font-bold text-gray-900 leading-none">{value || '-'}</h3>
     </div>
   );
 }
