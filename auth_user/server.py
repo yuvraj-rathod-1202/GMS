@@ -1,12 +1,12 @@
 import os, logging, time
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request, Query
 from pydantic import BaseModel
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from models.schema import FeedbackRequest, SignUpUser, ChangePasswordRequest, ForgotPasswordRequest, BulkEnrollStudentRequest, InstructorResetPasswordRequest
 from utils.security import verify_jwt_token
-from utils.auth import verifyInstructorOrTa
-from services.auth import login_user, signup_user, bulk_signup_users, change_user_password, forgot_user_password, submit_user_feedback, instructor_reset_user_password, get_all_users, get_users_by_ids, google_login_user
+from utils.auth import verifyAdmin
+from services.auth import login_user, signup_user, bulk_signup_users, change_user_password, forgot_user_password, submit_user_feedback, instructor_reset_user_password, get_all_users, get_users_by_ids, google_login_user, delete_user
 
 class GoogleLoginRequest(BaseModel):
     token: str
@@ -95,8 +95,18 @@ def submit_feedback(feedback: FeedbackRequest):
 #     return instructor_reset_user_password(data.target_user_id, data.new_password)
 
 @app.get("/users")
-def get_users(limit: int = 50, offset: int = 0):
-    return get_all_users(limit, offset)
+def get_users(limit: int = 50, offset: int = 0, search: str = None):
+    return get_all_users(limit, offset, search)
 @app.post('/users/batch')
 def get_batch_users(user_ids: list[int]):
     return get_users_by_ids(user_ids)
+    
+@app.delete("/users/{user_id}")
+async def remove_user(user_id: int, admin_id: int = Query(...)):
+    verified = await verifyAdmin(admin_id)
+    if not verified:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin privileges required"
+        )
+    return delete_user(user_id)

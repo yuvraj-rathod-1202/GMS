@@ -26,16 +26,19 @@ def _error_detail(response, default_msg: str) -> str:
 @router.get("/")
 @router.get("")
 @limiter.limit("100/minute")
-async def get_courses(request: Request, limit: int = 50, offset: int = 0, user_info: dict = Depends(verify_token)):
+async def get_courses(request: Request, limit: int = 50, offset: int = 0, search: str = None, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
+            params = {
+                "user_id": user_info.get("user_id", 0),
+                "limit": limit,
+                "offset": offset
+            }
+            if search:
+                params["search"] = search
             response = await client.get(
                 f"{COURSES_SERVICE_URL}/all",
-                params={
-                    "user_id": user_info.get("user_id", 0),
-                    "limit": limit,
-                    "offset": offset
-                }
+                params=params
             )
             if response.status_code != 200:
                 raise HTTPException(

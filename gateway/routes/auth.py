@@ -143,12 +143,15 @@ async def submit_feedback(request: Request, data: FeedbackRequest):
             )
 
 @router.get("/users", dependencies=[Depends(verify_token)])
-async def get_all_users(request: Request, limit: int = 50, offset: int = 0, user_info: dict = Depends(verify_token)):
+async def get_all_users(request: Request, limit: int = 50, offset: int = 0, search: str = None, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
+            params = {"limit": limit, "offset": offset}
+            if search:
+                params["search"] = search
             response = await client.get(
                 f"{AUTH_SERVICE_URL}/users",
-                params={"limit": limit, "offset": offset}
+                params=params
             )
             if response.status_code == 200:
                 return response.json()
@@ -156,6 +159,27 @@ async def get_all_users(request: Request, limit: int = 50, offset: int = 0, user
                 raise HTTPException(
                     status_code=response.status_code,
                     detail=_error_detail(response, "Failed to fetch users")
+                )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Auth service unavailable: {str(e)}"
+            )
+
+@router.delete("/users/{user_id}", dependencies=[Depends(verify_token)])
+async def delete_user(user_id: int, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.delete(
+                f"{AUTH_SERVICE_URL}/users/{user_id}",
+                params={"admin_id": user_info.get("user_id", "")}
+            )
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to delete user")
                 )
         except httpx.RequestError as e:
             raise HTTPException(

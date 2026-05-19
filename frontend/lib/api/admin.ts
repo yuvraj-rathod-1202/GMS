@@ -35,8 +35,10 @@ export const AdminApi = {
   },
 
   // Fetch all courses (admin view)
-  async FetchAllCourses(limit = 50, offset = 0) {
-    return handleRequest(apiClient.get(`/courses/?limit=${limit}&offset=${offset}`));
+  async FetchAllCourses(limit = 50, offset = 0, search = '') {
+    let url = `/courses/?limit=${limit}&offset=${offset}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    return handleRequest(apiClient.get(url));
   },
 
   // Fetch system-wide analytics
@@ -67,8 +69,10 @@ export const AdminApi = {
   // --- Entity Management (Admin) ---
 
   // Fetch all users across the system
-  async FetchAllUsers(limit = 50, offset = 0) {
-    return handleRequest(apiClient.get(`/auth/users?limit=${limit}&offset=${offset}`));
+  async FetchAllUsers(limit = 50, offset = 0, search = '') {
+    let url = `/auth/users?limit=${limit}&offset=${offset}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    return handleRequest(apiClient.get(url));
   },
 
   // Fetch all enrollments
@@ -139,5 +143,10 @@ export const AdminApi = {
   // Fetch all admin user IDs
   async FetchAllAdmins() {
     return handleRequest(apiClient.get('/admin/all'));
+  },
+  
+  // Delete a user
+  async DeleteUser(userId: number) {
+    return handleRequest(apiClient.delete(`/auth/users/${userId}`));
   },
 };
