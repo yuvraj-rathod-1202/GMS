@@ -45,3 +45,7 @@ class StuentPolicyMapping(BaseModel):
 class AssignPolicyRequest(BaseModel):
     assigned_by_id: int
     mapping: List[StuentPolicyMapping]
+
+class CreateCategoryRequest(BaseModel):
+    type: str = Field(..., max_length=50)
+    user_id: int

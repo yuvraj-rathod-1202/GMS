@@ -1,5 +1,5 @@
 import { InstructorCourseData } from '@/lib/store/courseDetail';
-import { getAssessmentTypeLabel } from '@/lib/utils/assessmentlabel';
+import { getAssessmentTypeLabel, AssessmentCategory } from '@/lib/utils/assessmentlabel';
 import ExcelJS from 'exceljs';
 
 function getColLetter(colIndex: number): string {
@@ -14,7 +14,8 @@ function getColLetter(colIndex: number): string {
 
 export const exportGradeBookToExcel = async (
   instructorData: InstructorCourseData,
-  courseCode: string
+  courseCode: string,
+  categories?: AssessmentCategory[]
 ) => {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'GradeBook Exporter';
@@ -41,7 +42,7 @@ export const exportGradeBookToExcel = async (
   const categoryTotalColMap = new Map<number, string>();
 
   assessmentCategories.forEach((categoryId) => {
-    const categoryLabel = getAssessmentTypeLabel(categoryId);
+    const categoryLabel = getAssessmentTypeLabel(categoryId, categories);
 
     const categoryAssessments = instructorData.assessments
       .filter((a) => a.assessment_type_id === categoryId)
@@ -157,7 +158,7 @@ export const exportGradeBookToExcel = async (
     'RollNo',
     'Email Id',
     'Applied Policy',
-    ...assessmentCategories.map((catId) => getAssessmentTypeLabel(catId)),
+    ...assessmentCategories.map((catId) => getAssessmentTypeLabel(catId, categories)),
     'Total Score',
   ];
   mainSheet.addRow(columns);
@@ -179,7 +180,7 @@ export const exportGradeBookToExcel = async (
     ];
 
     assessmentCategories.forEach((categoryId) => {
-      const targetSheetName = getAssessmentTypeLabel(categoryId);
+      const targetSheetName = getAssessmentTypeLabel(categoryId, categories);
       const targetColumn = categoryTotalColMap.get(categoryId);
 
       const refFormula = `'${targetSheetName}'!${targetColumn}${rowIndex}`;

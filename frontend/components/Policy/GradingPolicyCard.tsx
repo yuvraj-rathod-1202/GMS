@@ -4,20 +4,7 @@ import { MdDelete } from 'react-icons/md';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { PolicyDBObject } from '@/lib/types/policy';
-
-const getAssessmentTypeLabel = (typeId: number): string => {
-  const types: { [key: number]: string } = {
-    1: 'Quiz',
-    2: 'Assignment',
-    3: 'Midsem',
-    4: 'EndSem',
-    5: 'Project',
-    6: 'Attendance',
-    7: 'Lab',
-    8: 'Other',
-  };
-  return types[typeId] || `Type ${typeId}`;
-};
+import { getAssessmentTypeLabel, AssessmentCategory } from '@/lib/utils/assessmentlabel';
 
 export default function GradingPolicyCard({
   policy,
@@ -25,12 +12,14 @@ export default function GradingPolicyCard({
   onDelete,
   SetDefault,
   canManage = false,
+  categories,
 }: {
   policy: PolicyDBObject;
   onEdit: () => void;
   onDelete: () => void;
   SetDefault: () => void;
   canManage?: boolean;
+  categories?: AssessmentCategory[];
 }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200">
@@ -89,7 +78,7 @@ export default function GradingPolicyCard({
                     width: `${Math.min((component.weightage / policy.total_weightage) * 100, 100)}%`,
                   }}
                   className={`rounded-full ${['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500'][index % 4]}`}
-                  title={`${getAssessmentTypeLabel(component.assessment_category_id)}: ${component.weightage}%`}
+                  title={`${getAssessmentTypeLabel(component.assessment_category_id, categories)}: ${component.weightage}%`}
                 />
               ))}
               {(() => {
@@ -113,7 +102,7 @@ export default function GradingPolicyCard({
                         {index + 1}
                       </span>
                       <span className="text-sm font-medium text-gray-700">
-                        {getAssessmentTypeLabel(component.assessment_category_id)}
+                        {getAssessmentTypeLabel(component.assessment_category_id, categories)}
                       </span>
                     </div>
                     <Badge variant="default" className="ml-8 sm:ml-0">

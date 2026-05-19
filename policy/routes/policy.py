@@ -1,16 +1,40 @@
 from fastapi import APIRouter, HTTPException, status
-from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest, AssignPolicyRequest
+from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest, AssignPolicyRequest, CreateCategoryRequest
 from utils.auth import verifyRoleInCourse, verifyInstructorOrTA, verifyAdmin
 from utils.feature_flags import is_feature_enabled
-from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db, initialize_total_recalculation, fetch_total_scores_from_db, add_policy_component_to_db, set_policy_as_default_in_db, assign_policy_to_student_in_db, get_student_policy_mapping_from_db, get_assessment_categories_from_db, delete_student_course_data_from_db
+from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db, initialize_total_recalculation, fetch_total_scores_from_db, add_policy_component_to_db, set_policy_as_default_in_db, assign_policy_to_student_in_db, get_student_policy_mapping_from_db, get_assessment_categories_from_db, delete_student_course_data_from_db, add_assessment_category_to_db
 
 
 router = APIRouter()
 
 @router.get("/assessment-categories")
-async def get_assessment_categories():
-    categories = get_assessment_categories_from_db()
+async def get_assessment_categories(course_id: int | None = None):
+    categories = get_assessment_categories_from_db(course_id)
     return {"categories": categories}
+
+@router.post("/courses/{course_id}/assessment-categories")
+async def create_assessment_category(course_id: int, data: CreateCategoryRequest):
+    if await verifyAdmin(data.user_id):
+        role = "instructor"
+    else:
+        try:
+            verified_data = await verifyRoleInCourse(data.user_id, course_id)
+            role = verified_data.get("role")
+        except HTTPException as e:
+            if e.status_code == 403:
+                raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
+            raise e
+            
+    if role == "instructor":
+        pass
+    elif role == "ta":
+        if not is_feature_enabled("course.ta_policy_management", {"course_id": course_id, "user_id": data.user_id, "role": role}):
+            raise HTTPException(status_code=403, detail="TA category management is disabled")
+    else:
+        raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
+        
+    category_id = add_assessment_category_to_db(course_id, data.type)
+    return {"id": category_id, "type": data.type}
 
 @router.post("/courses/{course_id}/policy")
 async def create_policy(course_id: int, data: CreatePolicyRequest):

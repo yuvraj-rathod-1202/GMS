@@ -21,6 +21,7 @@ import PolicyDialog, { PolicyFormData } from '@/components/Policy/PolicyDialog';
 import Button from '@/components/ui/Button';
 import { BiSpreadsheet } from 'react-icons/bi';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { useAssessmentCategories } from '@/hooks/useAssessmentCategories';
 
 export default function GPView() {
   const params = useParams();
@@ -41,6 +42,7 @@ export default function GPView() {
   });
 
   const { isFeatureEnabled } = useFeatureFlags(courseId);
+  const { categories, createCategory } = useAssessmentCategories(courseId);
   const canManagePolicy =
     role === 'instructor' || (role === 'ta' && isFeatureEnabled('course.ta_policy_management'));
 
@@ -345,6 +347,7 @@ export default function GPView() {
                 onDelete={() => handleDeletePolicy(policy.id)}
                 SetDefault={() => handleSetDefaultPolicy(policy.id)}
                 canManage={canManagePolicy}
+                categories={categories}
               />
             ))}
           </div>
@@ -357,6 +360,8 @@ export default function GPView() {
         policy={editingPolicy}
         assessments={currentData?.assessments || []}
         isLoading={creatingPolicy || updatingPolicyId || updatingPolicyComponentId}
+        categories={categories}
+        onAddCategory={createCategory}
       />
     </>
   );

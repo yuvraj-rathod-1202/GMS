@@ -14,10 +14,12 @@ import { AssessmentDBObject } from '@/lib/types/assessments';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import Button from '../ui/Button';
 import { BiPlus, BiSpreadsheet } from 'react-icons/bi';
+import { useAssessmentCategories } from '@/hooks/useAssessmentCategories';
 
 export default function TAGradePage() {
   const params = useParams();
   const courseId = Number(params.id);
+  const { categories, createCategory } = useAssessmentCategories(courseId);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
@@ -221,6 +223,7 @@ export default function TAGradePage() {
                     assessment={assessment}
                     onPublishToggle={() => handlePublishToggle()}
                     onEdit={() => handleEditAssessment(assessment)}
+                    categories={categories}
                   />
                 ))}
               </div>
@@ -238,6 +241,8 @@ export default function TAGradePage() {
           onDelete={handleDeleteAssessment}
           assessment={editingAssessment}
           isLoading={isSubmitting}
+          categories={categories}
+          onAddCategory={createCategory}
         />
       )}
     </div>

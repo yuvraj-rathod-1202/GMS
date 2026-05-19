@@ -13,11 +13,13 @@ import UnenrolledStudentsDialog from '@/components/ui/UnenrolledStudentsDialog';
 import * as XLSX from 'xlsx';
 import { getAssessmentTypeLabel } from '@/lib/utils/assessmentlabel';
 import { BiSortAlt2, BiSortUp, BiSortDown, BiSliderAlt } from 'react-icons/bi';
+import { useAssessmentCategories } from '@/hooks/useAssessmentCategories';
 
 export default function AssessmentPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = Number(params.id);
+  const { categories } = useAssessmentCategories(courseId);
   const assessmentId = Number(params.assessmentid);
   const [isFetchingMarks, setIsFetchingMarks] = useState(false);
   const [isFetchingRoles, setIsFetchingRoles] = useState(false);
@@ -666,7 +668,7 @@ export default function AssessmentPage() {
         handleBackClick={handleBackClick}
         currentAssessment={currentAssessment}
         isLoadingData={isLoadingData}
-        getAssessmentTypeLabel={getAssessmentTypeLabel}
+        getAssessmentTypeLabel={(typeId) => getAssessmentTypeLabel(typeId, categories)}
         formattedDate={formattedDate}
       />
       <GradeSheetButtons

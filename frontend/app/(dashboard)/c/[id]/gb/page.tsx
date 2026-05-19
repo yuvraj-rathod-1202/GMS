@@ -28,11 +28,13 @@ import {
 } from 'react-icons/bi';
 import { exportGradeBookToExcel } from '@/components/Grade/ExportGradeBook';
 import calculateTotalMarks, { calculateTotalMarksOptimized } from '@/services/totalCalculation';
+import { useAssessmentCategories } from '@/hooks/useAssessmentCategories';
 
 export default function GradeSheetView() {
   const params = useParams();
   const router = useRouter();
   const courseId = Number(params.id);
+  const { categories } = useAssessmentCategories(courseId);
   const [assessmentId, setAssessmentId] = useState<number>(Number(params.assessmentId));
   const [isFetchingMarks, setIsFetchingMarks] = useState(false);
   const [isFetchingRoles, setIsFetchingRoles] = useState(false);
@@ -897,7 +899,7 @@ export default function GradeSheetView() {
       return;
     }
     setIsExportingSheet(true);
-    await exportGradeBookToExcel(instructorData, courseCode);
+    await exportGradeBookToExcel(instructorData, courseCode, categories);
     setIsExportingSheet(false);
   };
 

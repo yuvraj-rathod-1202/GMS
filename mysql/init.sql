@@ -165,7 +165,9 @@ CREATE TABLE IF NOT EXISTS course_policy (
 
 CREATE TABLE IF NOT EXISTS assessment_category (
     id int AUTO_INCREMENT PRIMARY KEY,
-    type VARCHAR(50) NOT NULL UNIQUE
+    type VARCHAR(50) NOT NULL,
+    course_id INT DEFAULT NULL,
+    UNIQUE KEY unique_type_course (type, course_id)
 );
 
 CREATE TABLE IF NOT EXISTS grading_components (

@@ -110,3 +110,6 @@ class FeedbackRequest(BaseModel):
 class InstructorResetPasswordRequest(BaseModel):
     target_user_id: int
     new_password: str
+
+class CreateCategoryRequest(BaseModel):
+    type: str = Field(..., max_length=50)

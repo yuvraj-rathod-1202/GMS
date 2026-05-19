@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from utils.auth import verify_token
-from models.schema import AddCourseRequest, UpdateCourseStatusRequest, EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest, CreateAssessmentRequest
+from models.schema import AddCourseRequest, UpdateCourseStatusRequest, EnrollStudentRequest, EnrollTaRequest, EnrollInstructorRequest, CreateAssessmentRequest, CreateCategoryRequest
 
 load_dotenv()
 
@@ -98,14 +98,41 @@ async def create_course(request: Request, course: AddCourseRequest, user_info: d
             )
             
 @router.get("/assessment-categories")
-async def get_assessment_categories():
+async def get_assessment_categories(course_id: int | None = Query(None)):
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(f"{POLICY_SERVICE_URL}/assessment-categories")
+            params = {}
+            if course_id is not None:
+                params["course_id"] = course_id
+            response = await client.get(f"{POLICY_SERVICE_URL}/assessment-categories", params=params)
             if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
                     detail=_error_detail(response, "Failed to retrieve assessment categories"),
+                )
+            return response.json()
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Policy Service: {str(e)}",
+            )
+
+@router.post("/{course_id}/assessment-categories")
+async def create_assessment_category(course_id: int, data: CreateCategoryRequest, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            payload = {
+                "type": data.type,
+                "user_id": user_info.get("user_id", 0)
+            }
+            response = await client.post(
+                f"{POLICY_SERVICE_URL}/courses/{course_id}/assessment-categories",
+                json=payload
+            )
+            if response.status_code not in (200, 201):
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to create assessment category"),
                 )
             return response.json()
         except httpx.RequestError as e:

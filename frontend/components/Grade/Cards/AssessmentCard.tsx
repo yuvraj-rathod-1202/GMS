@@ -6,7 +6,7 @@ import { AssessmentDBObject } from '@/lib/types/assessments';
 import { useTACourse } from '@/hooks/useTACourse';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
-import { getAssessmentTypeLabel } from '@/lib/utils/assessmentlabel';
+import { getAssessmentTypeLabel, AssessmentCategory } from '@/lib/utils/assessmentlabel';
 import { formatDate, handlePublishToggle } from '@/services/grades';
 
 interface AssessmentCardProps {
@@ -17,6 +17,7 @@ interface AssessmentCardProps {
   onEnterMarks?: () => void;
   onEdit?: () => void;
   canManage?: boolean;
+  categories?: AssessmentCategory[];
 }
 
 export default function AssessmentCard({
@@ -27,6 +28,7 @@ export default function AssessmentCard({
   onEnterMarks,
   onEdit,
   canManage,
+  categories,
 }: AssessmentCardProps) {
   const [isPublishing, setIsPublishing] = useState(false);
   const { PublishMarks, UnpublishMarks } = useTACourse();
@@ -47,8 +49,8 @@ export default function AssessmentCard({
         </div>
 
         <div className="mb-4 text-sm text-gray-500">
-          <span>{getAssessmentTypeLabel(assessment.assessment_type_id)}</span> • Created on{' '}
-          {formattedDate}
+          <span>{getAssessmentTypeLabel(assessment.assessment_type_id, categories)}</span> • Created
+          on {formattedDate}
         </div>
 
         <div

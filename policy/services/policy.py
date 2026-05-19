@@ -515,7 +515,7 @@ def fetch_total_scores_from_db(course_id: int, student_id: int | None = None):
             detail="An error occurred while retrieving total scores" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
 
-def get_assessment_categories_from_db():
+def get_assessment_categories_from_db(course_id: int | None = None):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -525,7 +525,13 @@ def get_assessment_categories_from_db():
         
     try:
         cursor = db.cursor()
-        cursor.execute("SELECT id, type FROM assessment_category")
+        if course_id is not None:
+            cursor.execute(
+                "SELECT id, type FROM assessment_category WHERE course_id IS NULL OR course_id = %s",
+                (course_id,)
+            )
+        else:
+            cursor.execute("SELECT id, type FROM assessment_category WHERE course_id IS NULL")
         rows = cursor.fetchall()
         return [AssessmentCategoryDBObj(id=row[0], type=row[1]) for row in rows]
     except Exception as e:
@@ -533,6 +539,43 @@ def get_assessment_categories_from_db():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while retrieving assessment categories" if IS_PRODUCTION else f"Database error: {str(e)}"
+        )
+
+def add_assessment_category_to_db(course_id: int, category_name: str) -> int:
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        # Check if same category already exists globally or for this course
+        cursor.execute(
+            "SELECT id FROM assessment_category WHERE BINARY type = %s AND (course_id IS NULL OR course_id = %s)",
+            (category_name, course_id)
+        )
+        if cursor.fetchone():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Assessment category already exists"
+            )
+            
+        cursor.execute(
+            "INSERT INTO assessment_category (type, course_id) VALUES (%s, %s)",
+            (category_name, course_id)
+        )
+        db.commit()
+        return cursor.lastrowid
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Database error in add_assessment_category_to_db: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while adding assessment category" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
         
 def delete_student_course_data_from_db(course_id: int, student_id: int):

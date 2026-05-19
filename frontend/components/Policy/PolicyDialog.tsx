@@ -23,6 +23,11 @@ export type CategoryId = keyof typeof ASSESSMENT_CATEGORIES;
 
 export const CATEGORY_IDS = Object.keys(ASSESSMENT_CATEGORIES).map(Number) as CategoryId[];
 
+export interface AssessmentCategory {
+  id: number;
+  type: string;
+}
+
 interface PolicyDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -30,6 +35,8 @@ interface PolicyDialogProps {
   policy?: PolicyDBObject | null;
   assessments: AssessmentDBObject[];
   isLoading: boolean;
+  categories: AssessmentCategory[];
+  onAddCategory?: (type: string) => Promise<any>;
 }
 
 export interface PolicyRuleFormData {
@@ -121,10 +128,6 @@ const createInitialFormData = (policy?: PolicyDBObject | null): PolicyFormData =
   };
 };
 
-const getAssessmentTypeLabel = (typeId: number): string => {
-  return ASSESSMENT_CATEGORIES[typeId as CategoryId] || 'Unknown';
-};
-
 export default function PolicyDialog({
   isOpen,
   onClose,
@@ -132,6 +135,8 @@ export default function PolicyDialog({
   policy,
   assessments,
   isLoading,
+  categories,
+  onAddCategory,
 }: PolicyDialogProps) {
   if (!isOpen) return null;
 
@@ -149,6 +154,8 @@ export default function PolicyDialog({
         isLoading={isLoading}
         onClose={onClose}
         onSubmit={onSubmit}
+        categories={categories}
+        onAddCategory={onAddCategory}
       />
     </Modal>
   );
@@ -160,13 +167,29 @@ function PolicyDialogForm({
   isLoading,
   onClose,
   onSubmit,
+  categories,
+  onAddCategory,
 }: {
   policy?: PolicyDBObject | null;
   assessments: AssessmentDBObject[];
   isLoading: boolean;
   onClose: () => void;
   onSubmit: (data: PolicyFormData) => Promise<void>;
+  categories: AssessmentCategory[];
+  onAddCategory?: (type: string) => Promise<any>;
 }) {
+  const categoryMap = React.useMemo(() => {
+    const map: Record<number, string> = {};
+    categories.forEach((cat) => {
+      map[cat.id] = cat.type;
+    });
+    return map;
+  }, [categories]);
+
+  const getAssessmentTypeLabel = (typeId: number): string => {
+    return categoryMap[typeId] || `Type ${typeId}`;
+  };
+
   const [formData, setFormData] = useState<PolicyFormData>(() => createInitialFormData(policy));
   const [addComponentLabel, setAddComponentLabel] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -190,7 +213,7 @@ function PolicyDialogForm({
     const usedCategoryIds = formData.components.map(
       (component) => component.assessment_category_id
     );
-    return CATEGORY_IDS.filter((id) => !usedCategoryIds.includes(id));
+    return categories.filter((c) => !usedCategoryIds.includes(c.id));
   };
 
   const removeComponent = (categoryId: number) => {
@@ -647,22 +670,43 @@ function PolicyDialogForm({
             </div>
 
             <div className="p-6">
-              {getAvailableCategories().length > 0 ? (
-                <div className="space-y-2">
-                  {getAvailableCategories().map((categoryId) => (
+              {getAvailableCategories().length > 0 || onAddCategory ? (
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                  {getAvailableCategories().map((cat) => (
                     <Button
-                      key={categoryId}
+                      key={cat.id}
                       type="button"
                       variant="secondary"
-                      onClick={() => addComponent(categoryId)}
+                      onClick={() => addComponent(cat.id)}
                       className="h-auto w-full justify-between rounded-lg px-4 py-3 text-left"
                     >
-                      <span className="font-medium text-gray-900">
-                        {ASSESSMENT_CATEGORIES[categoryId as CategoryId]}
-                      </span>
+                      <span className="font-medium text-gray-900">{cat.type}</span>
                       <span className="text-sm text-gray-500">Add →</span>
                     </Button>
                   ))}
+                  {onAddCategory && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={async () => {
+                        const name = prompt('Enter the name of the new assessment category:');
+                        if (name && name.trim()) {
+                          try {
+                            const newCategory = await onAddCategory(name.trim());
+                            if (newCategory && newCategory.id) {
+                              addComponent(newCategory.id);
+                            }
+                          } catch (err) {
+                            alert('Failed to create assessment category');
+                          }
+                        }
+                      }}
+                      className="h-auto w-full justify-between rounded-lg px-4 py-3 text-left border-dashed border-2 hover:border-solid bg-gray-50 hover:bg-gray-100"
+                    >
+                      <span className="font-medium text-blue-600">+ Add New Category...</span>
+                      <span className="text-sm text-blue-500">Create →</span>
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="py-8 text-center">
@@ -684,7 +728,11 @@ function PolicyDialogForm({
   );
 }
 
-export function getAssessmentTypeName(typeId: number): string {
+export function getAssessmentTypeName(typeId: number, categories?: AssessmentCategory[]): string {
+  if (categories && categories.length > 0) {
+    const found = categories.find((c) => c.id === typeId);
+    if (found) return found.type;
+  }
   const type = ASSESSMENT_CATEGORIES[typeId as CategoryId];
   return type || `Type ${typeId}`;
 }

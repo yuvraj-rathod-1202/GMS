@@ -14,10 +14,12 @@ import { BiSpreadsheet } from 'react-icons/bi';
 import OverviewCard from './Cards/OverviewCard';
 import AssessmentCard from './Cards/AssessmentCard';
 import Button from '../ui/Button';
+import { useAssessmentCategories } from '@/hooks/useAssessmentCategories';
 
 export default function InstructorGradePage() {
   const params = useParams();
   const courseId = Number(params.id);
+  const { categories, createCategory } = useAssessmentCategories(courseId);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const [showAssessmentDialog, setShowAssessmentDialog] = useState(false);
   const [editingAssessment, setEditingAssessment] = useState<AssessmentDBObject | null>(null);
@@ -224,6 +226,7 @@ export default function InstructorGradePage() {
                     onPublishToggle={handlePublishToggle}
                     onEdit={() => handleEditAssessment(assessment)}
                     onEnterMarks={() => handleOnEnterMarks()}
+                    categories={categories}
                   />
                 ))}
               </div>
@@ -240,6 +243,8 @@ export default function InstructorGradePage() {
         onDelete={handleDeleteAssessment}
         assessment={editingAssessment}
         isLoading={isSubmitting}
+        categories={categories}
+        onAddCategory={createCategory}
       />
     </div>
   );
