@@ -13,8 +13,8 @@ export default function CourseCard({ course }: Props) {
       <div className="bg-gms-indigoLight rounded-xl p-4 hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-gray-600 font-mono">{course.course_code}</p>
-            <h3 className="font-semibold text-xl text-gray-900 mt-1 truncate" title={course.name}>
+            <p className="text-xs text-gray-500 font-mono mb-0.5">{course.course_code}</p>
+            <h3 className="font-bold text-lg text-gray-900 truncate" title={course.name}>
               {course.name}
             </h3>
           </div>

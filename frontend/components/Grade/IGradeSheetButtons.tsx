@@ -13,6 +13,7 @@ interface IGradeSheetButtonsProps {
   hasUnsavedChanges: boolean;
   isSaving: boolean;
   isRecalculating: boolean;
+  changedCount?: number;
 }
 
 export const IGradeSheetButtons = ({
@@ -25,6 +26,7 @@ export const IGradeSheetButtons = ({
   hasUnsavedChanges,
   isSaving,
   isRecalculating,
+  changedCount = 0,
 }: IGradeSheetButtonsProps) => {
   return (
     <div className="mb-4 flex flex-col items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:flex-row">
@@ -60,29 +62,6 @@ export const IGradeSheetButtons = ({
         >
           <BiCalculator className="text-xl" />
           <span>{isRecalculating ? 'Calculating...' : 'Recalculate'}</span>
-        </Button>
-
-        <div className="hidden h-10 w-px bg-gray-300 md:block" />
-
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onDiscard}
-          disabled={!hasUnsavedChanges}
-          className={hasUnsavedChanges ? 'text-red-600 hover:bg-red-50' : 'text-gray-400'}
-        >
-          <BiReset className="text-xl" />
-          Discard
-        </Button>
-
-        <Button
-          type="button"
-          onClick={onSave}
-          disabled={!hasUnsavedChanges || isSaving}
-          className={`flex items-center gap-2 px-6 ${hasUnsavedChanges ? '' : 'bg-gray-100 text-gray-400 hover:bg-gray-100'}`}
-        >
-          <BiSave className="text-xl" />
-          {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
     </div>

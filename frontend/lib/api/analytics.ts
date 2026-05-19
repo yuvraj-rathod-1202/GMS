@@ -6,6 +6,10 @@ export const AnalyticsApi = {
     return handleRequest(apiClient.get(`/courses/${courseId}/analytics/overview`));
   },
 
+  GetCourseFrequencies: async (courseId: number) => {
+    return handleRequest(apiClient.get(`/courses/${courseId}/analytics/frequencies`));
+  },
+
   GetAssessmentAnalytics: async (courseId: number, assessmentId: number) => {
     return handleRequest(
       apiClient.get(`/courses/${courseId}/assessments/${assessmentId}/analytics`)

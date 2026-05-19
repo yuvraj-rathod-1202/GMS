@@ -1,43 +1,33 @@
 import React from 'react';
-import { FaChevronDown } from 'react-icons/fa';
 
 export default function CoursesStatusSelection({
-  setOpen,
-  open,
   statusFilter,
   setStatusFilter,
 }: {
-  setOpen: (open: boolean) => void;
-  open: boolean;
-  statusFilter: 'ongoing' | 'completed';
-  setStatusFilter: (status: 'ongoing' | 'completed') => void;
+  statusFilter: 'ongoing' | 'completed' | 'all';
+  setStatusFilter: (status: 'ongoing' | 'completed' | 'all') => void;
 }) {
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="min-w-35 flex items-center justify-between gap-2 px-3 py-1.5 text-sm bg-white text-gms-black rounded-md hover:border-gms-gray"
-      >
-        {statusFilter === 'ongoing' ? 'ongoing' : 'completed'}
-        <FaChevronDown size={12} className={`transition ${open ? 'rotate-180' : ''}`} />
-      </button>
+  const options = [
+    { id: 'all', label: 'All' },
+    { id: 'ongoing', label: 'Ongoing' },
+    { id: 'completed', label: 'Completed' },
+  ];
 
-      {open && (
-        <div className="absolute right-0 mt-1 w-full bg-white rounded-md shadow-lg z-20">
-          {['ongoing', 'completed'].map((v) => (
-            <button
-              key={v}
-              onClick={() => {
-                setStatusFilter(v as 'ongoing' | 'completed');
-                setOpen(false);
-              }}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-gms-grayLight/40`}
-            >
-              {v === 'ongoing' ? 'ongoing' : 'completed'}
-            </button>
-          ))}
-        </div>
-      )}
+  return (
+    <div className="flex bg-gray-100/50 p-1 rounded-xl border border-gray-200">
+      {options.map((option) => (
+        <button
+          key={option.id}
+          onClick={() => setStatusFilter(option.id as any)}
+          className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
+            statusFilter === option.id
+              ? 'bg-white text-gms-black shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+          }`}
+        >
+          {option.label}
+        </button>
+      ))}
     </div>
   );
 }

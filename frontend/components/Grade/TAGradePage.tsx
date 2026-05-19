@@ -12,6 +12,8 @@ import AssessmentDialog, { AssessmentFormData } from './Dialogs/AssessmentDialog
 import { MarksApi } from '@/lib/api/marks';
 import { AssessmentDBObject } from '@/lib/types/assessments';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import Button from '../ui/Button';
+import { BiPlus, BiSpreadsheet } from 'react-icons/bi';
 
 export default function TAGradePage() {
   const params = useParams();
@@ -96,6 +98,30 @@ export default function TAGradePage() {
     setShowAssessmentDialog(true);
   };
 
+  const handleDeleteAssessment = async () => {
+    if (!editingAssessment) return;
+
+    if (
+      !confirm('Are you sure you want to delete this assessment? This action cannot be undone.')
+    ) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await MarksApi.DeleteAssessment(courseId, editingAssessment.id);
+      await fetchAllAssessments(courseId, true);
+      setShowAssessmentDialog(false);
+    } catch (error) {
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error deleting assessment:', error);
+      }
+      alert('Failed to delete assessment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmitAssessment = async (data: AssessmentFormData) => {
     setIsSubmitting(true);
     try {
@@ -129,29 +155,41 @@ export default function TAGradePage() {
         <div className="space-y-6 md:space-y-8">
           {/* Page Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grades</h1>
-              <p className="text-gray-500 mt-1">View assessments and manage student marks.</p>
-            </div>
-            <div className="flex gap-3">
+            <div className="flex items-center gap-3">
+              <Link href={`/c/${courseId}/gb`}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  title="View Master Gradebook"
+                  className="flex items-center gap-2"
+                >
+                  <BiSpreadsheet className="text-lg" />
+                  View Master Gradebook
+                </Button>
+              </Link>
               {canViewAnalytics && (
                 <Link href={`/c/${courseId}/a`}>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     title="View Detailed Analytics"
-                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                    className="flex items-center gap-2"
                   >
                     View Analytics
-                  </button>
+                  </Button>
                 </Link>
               )}
               {canCreateAssessment && (
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={handleCreateAssessment}
                   title="Create Assessment"
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 font-medium transition-colors shadow-sm"
+                  className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
                 >
-                  + Create Assessment
-                </button>
+                  <BiPlus className="text-lg" />
+                  Create Assessment
+                </Button>
               )}
             </div>
           </div>
@@ -162,8 +200,6 @@ export default function TAGradePage() {
 
           {/* Assessments Section */}
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Assigned Assessments</h2>
-
             {isLoadingData ? (
               <div className="p-12 text-center text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
                 Loading assessments...
@@ -182,12 +218,8 @@ export default function TAGradePage() {
                     key={assessment.id}
                     isInstructor={false}
                     canManage={canEditAssessment}
-                    onClick={() => handleOnEnterMarks(assessment.id)}
                     assessment={assessment}
                     onPublishToggle={() => handlePublishToggle()}
-                    onEnterMarks={() => {
-                      handleOnEnterMarks(assessment.id);
-                    }}
                     onEdit={() => handleEditAssessment(assessment)}
                   />
                 ))}
@@ -203,6 +235,7 @@ export default function TAGradePage() {
           isOpen={showAssessmentDialog}
           onClose={() => setShowAssessmentDialog(false)}
           onSubmit={handleSubmitAssessment}
+          onDelete={handleDeleteAssessment}
           assessment={editingAssessment}
           isLoading={isSubmitting}
         />

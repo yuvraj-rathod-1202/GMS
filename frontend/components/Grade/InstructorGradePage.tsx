@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { BiSpreadsheet } from 'react-icons/bi';
 import OverviewCard from './Cards/OverviewCard';
 import AssessmentCard from './Cards/AssessmentCard';
+import Button from '../ui/Button';
 
 export default function InstructorGradePage() {
   const params = useParams();
@@ -92,6 +93,30 @@ export default function InstructorGradePage() {
     setShowAssessmentDialog(true);
   };
 
+  const handleDeleteAssessment = async () => {
+    if (!editingAssessment) return;
+
+    if (
+      !confirm('Are you sure you want to delete this assessment? This action cannot be undone.')
+    ) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await MarksApi.DeleteAssessment(courseId, editingAssessment.id);
+      await fetchAllAssessments(courseId, true);
+      setShowAssessmentDialog(false);
+    } catch (error) {
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error deleting assessment:', error);
+      }
+      alert('Failed to delete assessment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmitAssessment = async (data: AssessmentFormData) => {
     setIsSubmitting(true);
     try {
@@ -128,26 +153,37 @@ export default function InstructorGradePage() {
         <div className="space-y-6 md:space-y-8">
           {/* Page Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grades & Assessments</h1>
-              <p className="text-gray-500 mt-1">Create assessments and manage student results.</p>
-            </div>
-            <div className="flex gap-3">
+            <div className="flex items-center gap-3">
               <Link href={`/c/${courseId}/gb`}>
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   title="View Master Gradebook"
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                  className="flex items-center gap-2"
                 >
-                  <BiSpreadsheet /> View Master Gradebook
-                </button>
+                  <BiSpreadsheet className="text-lg" />
+                  View Master Gradebook
+                </Button>
               </Link>
-              <button
+              <Link href={`/c/${courseId}/a`}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  title="View Detailed Analytics"
+                  className="flex items-center gap-2"
+                >
+                  View Analytics
+                </Button>
+              </Link>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleCreateAssessment}
                 title="Create Assessment"
-                className="flex items-center gap-2 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 font-medium transition-colors shadow-sm"
+                className="bg-black hover:bg-gray-800 text-white"
               >
                 + Create Assessment
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -158,8 +194,6 @@ export default function InstructorGradePage() {
 
           {/* Assessments Section */}
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Active Assessments</h2>
-
             {isLoadingData ? (
               <div className="p-12 text-center text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
                 Loading...
@@ -183,7 +217,9 @@ export default function InstructorGradePage() {
                   <AssessmentCard
                     key={assessment.id}
                     isInstructor={true}
-                    onClick={() => handleEditAssessment(assessment)}
+                    onClick={() => {
+                      router.push(`/c/${courseId}/gb`);
+                    }}
                     assessment={assessment}
                     onPublishToggle={handlePublishToggle}
                     onEdit={() => handleEditAssessment(assessment)}
@@ -201,6 +237,7 @@ export default function InstructorGradePage() {
         isOpen={showAssessmentDialog}
         onClose={() => setShowAssessmentDialog(false)}
         onSubmit={handleSubmitAssessment}
+        onDelete={handleDeleteAssessment}
         assessment={editingAssessment}
         isLoading={isSubmitting}
       />

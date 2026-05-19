@@ -196,10 +196,8 @@ export default function EntityManagementPage() {
           await AdminApi.RemoveAdmin(item.id);
           break;
         case 'users':
-          alert(
-            'User deletion is restricted for data integrity. Please deactivate user instead (coming soon).'
-          );
-          return;
+          await AdminApi.DeleteUser(item.id);
+          break;
         default:
           alert(`Delete feature for ${activeEntity} is not fully integrated yet.`);
           return;
