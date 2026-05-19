@@ -27,24 +27,14 @@ describe('EntityModal component', () => {
 
   it('renders nothing when isOpen is false', () => {
     const { container } = render(
-      <EntityModal 
-        isOpen={false} 
-        onClose={mockOnClose} 
-        entityType="users" 
-        onSave={mockOnSave} 
-      />
+      <EntityModal isOpen={false} onClose={mockOnClose} entityType="users" onSave={mockOnSave} />
     );
     expect(container).toBeEmptyDOMElement();
   });
 
   it('renders user fields correctly for adding a new user', () => {
     render(
-      <EntityModal 
-        isOpen={true} 
-        onClose={mockOnClose} 
-        entityType="users" 
-        onSave={mockOnSave} 
-      />
+      <EntityModal isOpen={true} onClose={mockOnClose} entityType="users" onSave={mockOnSave} />
     );
 
     expect(screen.getByText('Add New user')).toBeInTheDocument();
@@ -56,11 +46,11 @@ describe('EntityModal component', () => {
   it('populates fields when initialData is provided (edit mode)', () => {
     const initialData = { id: 123, email: 'test@example.com' };
     render(
-      <EntityModal 
-        isOpen={true} 
-        onClose={mockOnClose} 
-        entityType="users" 
-        onSave={mockOnSave} 
+      <EntityModal
+        isOpen={true}
+        onClose={mockOnClose}
+        entityType="users"
+        onSave={mockOnSave}
         initialData={initialData}
       />
     );
@@ -74,12 +64,7 @@ describe('EntityModal component', () => {
 
   it('calls onSave with correct data when form is submitted for users', async () => {
     render(
-      <EntityModal 
-        isOpen={true} 
-        onClose={mockOnClose} 
-        entityType="users" 
-        onSave={mockOnSave} 
-      />
+      <EntityModal isOpen={true} onClose={mockOnClose} entityType="users" onSave={mockOnSave} />
     );
 
     fireEvent.change(screen.getByLabelText(/User ID/i), { target: { value: '456' } });
@@ -99,11 +84,11 @@ describe('EntityModal component', () => {
 
   it('fetches assessment categories and sets default category for assessments', async () => {
     render(
-      <EntityModal 
-        isOpen={true} 
-        onClose={mockOnClose} 
-        entityType="assessments" 
-        onSave={mockOnSave} 
+      <EntityModal
+        isOpen={true}
+        onClose={mockOnClose}
+        entityType="assessments"
+        onSave={mockOnSave}
       />
     );
 
@@ -116,18 +101,18 @@ describe('EntityModal component', () => {
     expect(select).toBeInTheDocument();
     expect(screen.getByText('Quiz')).toBeInTheDocument();
     expect(screen.getByText('Exam')).toBeInTheDocument();
-    
+
     // Should default to first category ID
     expect(select).toHaveValue('1');
   });
 
   it('renders enrollment fields correctly', () => {
     render(
-      <EntityModal 
-        isOpen={true} 
-        onClose={mockOnClose} 
-        entityType="enrollments" 
-        onSave={mockOnSave} 
+      <EntityModal
+        isOpen={true}
+        onClose={mockOnClose}
+        entityType="enrollments"
+        onSave={mockOnSave}
       />
     );
 

@@ -95,14 +95,14 @@ export const AdminApi = {
     let endpoint = `/courses/${courseId}/enroll`;
     if (role === 'ta') endpoint = `/courses/${courseId}/tas`;
     if (role === 'instructor') endpoint = `/courses/${courseId}/instructors`;
-    
-    const payload: any = { 
-      student_id: studentId, 
-      ta_id: studentId, 
+
+    const payload: any = {
+      student_id: studentId,
+      ta_id: studentId,
       instructor_id: studentId,
-      email: email 
+      email: email,
     };
-    
+
     return handleRequest(apiClient.post(endpoint, payload));
   },
 
@@ -125,7 +125,7 @@ export const AdminApi = {
   async UpdateEntity(entity: string, id: number | string, data: any) {
     return handleRequest(apiClient.put(`/admin/entities/${entity}/${id}`, data));
   },
-  
+
   // Make a user an admin
   async MakeAdmin(userId: number) {
     return handleRequest(apiClient.post(`/admin/${userId}`));

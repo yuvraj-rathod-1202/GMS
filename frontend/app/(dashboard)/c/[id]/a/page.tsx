@@ -117,7 +117,7 @@ export default function AnalyticsPage() {
         setAssessmentFrequencies(frequenciesData);
       } catch (err: any) {
         if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-          console.error('Failed to fetch assessment analytics:', err);  
+          console.error('Failed to fetch assessment analytics:', err);
         }
       }
     };

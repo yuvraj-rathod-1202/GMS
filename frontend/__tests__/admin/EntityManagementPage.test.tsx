@@ -39,9 +39,7 @@ describe('EntityManagementPage component', () => {
     { id: 2, email: 'user2@test.com', role: 'instructor' },
   ];
 
-  const mockAssessments = [
-    { id: 101, course_id: 1, name: 'Quiz 1', max_marks: 20 },
-  ];
+  const mockAssessments = [{ id: 101, course_id: 1, name: 'Quiz 1', max_marks: 20 }];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -54,7 +52,7 @@ describe('EntityManagementPage component', () => {
     render(<EntityManagementPage />);
 
     expect(screen.getByText('System Entity Manager')).toBeInTheDocument();
-    
+
     await waitFor(() => {
       expect(AdminApi.FetchAllUsers).toHaveBeenCalled();
     });
@@ -107,7 +105,7 @@ describe('EntityManagementPage component', () => {
 
     // Switch to assessments
     fireEvent.click(screen.getByRole('button', { name: /Assessments/i }));
-    
+
     await waitFor(() => {
       expect(screen.getByText('Quiz 1')).toBeInTheDocument();
     });

@@ -22,7 +22,11 @@ export const FlagsApi = {
     return handleRequest(apiClient.get(`/course/${courseId}/flags`));
   },
 
-  SetCourseOverride: async (courseId: string | number, flagName: string, data: { enabled: boolean; config?: any }) => {
+  SetCourseOverride: async (
+    courseId: string | number,
+    flagName: string,
+    data: { enabled: boolean; config?: any }
+  ) => {
     return handleRequest(apiClient.post(`/course/${courseId}/flags/${flagName}/override`, data));
   },
 

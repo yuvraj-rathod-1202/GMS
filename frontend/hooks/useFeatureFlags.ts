@@ -12,7 +12,7 @@ export const useFeatureFlags = (courseId?: string | number | null) => {
   useEffect(() => {
     // Fetch if flags are empty OR if the courseId has changed
     const shouldFetch = Object.keys(flags).length === 0 || courseId !== currentCourseId;
-    
+
     if (shouldFetch && !isLoading) {
       fetchFlags(courseId);
     }
@@ -23,6 +23,6 @@ export const useFeatureFlags = (courseId?: string | number | null) => {
     isLoading,
     error,
     isFeatureEnabled,
-    refreshFlags: () => fetchFlags(courseId)
+    refreshFlags: () => fetchFlags(courseId),
   };
 };

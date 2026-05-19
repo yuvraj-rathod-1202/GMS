@@ -13,7 +13,13 @@ interface EntityModalProps {
   initialData?: any;
 }
 
-export default function EntityModal({ isOpen, onClose, entityType, onSave, initialData }: EntityModalProps) {
+export default function EntityModal({
+  isOpen,
+  onClose,
+  entityType,
+  onSave,
+  initialData,
+}: EntityModalProps) {
   const [formData, setFormData] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
@@ -24,11 +30,16 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
         .then((res: any) => {
           const cats = res.categories || [];
           setCategories(cats);
-          if (entityType === 'assessments' && !initialData && cats.length > 0 && !formData.assessment_type_id) {
+          if (
+            entityType === 'assessments' &&
+            !initialData &&
+            cats.length > 0 &&
+            !formData.assessment_type_id
+          ) {
             setFormData((prev: any) => ({ ...prev, assessment_type_id: cats[0].id }));
           }
         })
-        .catch(err => {
+        .catch((err) => {
           if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
             console.error('Failed to fetch categories:', err);
           }
@@ -41,7 +52,9 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
       // For assessments, we need to convert the date string to YYYY-MM-DD for the input[type=date]
       const preparedData = { ...initialData };
       if (preparedData.assessment_date) {
-        preparedData.assessment_date = new Date(preparedData.assessment_date).toISOString().split('T')[0];
+        preparedData.assessment_date = new Date(preparedData.assessment_date)
+          .toISOString()
+          .split('T')[0];
       }
       setFormData(preparedData);
     } else {
@@ -71,11 +84,12 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
         console.error(`Failed to ${isEdit ? 'update' : 'add'} entity:`, error);
       }
       const errorMsg = error.response?.data?.detail;
-      const displayMsg = typeof errorMsg === 'string' 
-        ? errorMsg 
-        : (Array.isArray(errorMsg) 
+      const displayMsg =
+        typeof errorMsg === 'string'
+          ? errorMsg
+          : Array.isArray(errorMsg)
             ? errorMsg.map((e: any) => `${e.loc.join('.')}: ${e.msg}`).join('\n')
-            : 'Please check your input.');
+            : 'Please check your input.';
       alert(`Failed to ${isEdit ? 'update' : 'add'} entity:\n${displayMsg}`);
     } finally {
       setLoading(false);
@@ -88,42 +102,50 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
         return (
           <>
             <div className="space-y-1">
-              <label htmlFor="user-id" className="text-xs font-bold text-gray-400 uppercase">User ID (Roll No/Staff ID)</label>
-              <input 
+              <label htmlFor="user-id" className="text-xs font-bold text-gray-400 uppercase">
+                User ID (Roll No/Staff ID)
+              </label>
+              <input
                 id="user-id"
-                type="number" 
+                type="number"
                 required
                 disabled={isEdit}
                 value={formData.id || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm disabled:opacity-50"
-                onChange={e => setFormData({...formData, id: parseInt(e.target.value)})}
+                onChange={(e) => setFormData({ ...formData, id: parseInt(e.target.value) })}
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="email" className="text-xs font-bold text-gray-400 uppercase">Email</label>
-              <input 
+              <label htmlFor="email" className="text-xs font-bold text-gray-400 uppercase">
+                Email
+              </label>
+              <input
                 id="email"
-                type="email" 
+                type="email"
                 required
                 value={formData.email || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
             {!isEdit && (
               <div className="space-y-1">
-                <label htmlFor="password" className="text-xs font-bold text-gray-400 uppercase">Password</label>
-                <input 
+                <label htmlFor="password" className="text-xs font-bold text-gray-400 uppercase">
+                  Password
+                </label>
+                <input
                   id="password"
-                  type="password" 
+                  type="password"
                   required
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  onChange={e => setFormData({...formData, password: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
               </div>
             )}
             {isEdit && (
-              <p className="text-[10px] text-gray-400 italic">Password cannot be changed here for security reasons.</p>
+              <p className="text-[10px] text-gray-400 italic">
+                Password cannot be changed here for security reasons.
+              </p>
             )}
           </>
         );
@@ -131,74 +153,95 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
         return (
           <>
             <div className="space-y-1">
-              <label htmlFor="course-id" className="text-xs font-bold text-gray-400 uppercase">Course ID (Database ID)</label>
-              <input 
+              <label htmlFor="course-id" className="text-xs font-bold text-gray-400 uppercase">
+                Course ID (Database ID)
+              </label>
+              <input
                 id="course-id"
-                type="number" 
+                type="number"
                 required
                 value={formData.course_id || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, course_id: parseInt(e.target.value)})}
+                onChange={(e) => setFormData({ ...formData, course_id: parseInt(e.target.value) })}
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="assessment-name" className="text-xs font-bold text-gray-400 uppercase">Assessment Name</label>
-              <input 
+              <label
+                htmlFor="assessment-name"
+                className="text-xs font-bold text-gray-400 uppercase"
+              >
+                Assessment Name
+              </label>
+              <input
                 id="assessment-name"
-                type="text" 
+                type="text"
                 required
                 value={formData.name || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label htmlFor="max-marks" className="text-xs font-bold text-gray-400 uppercase">Max Marks</label>
-                <input 
+                <label htmlFor="max-marks" className="text-xs font-bold text-gray-400 uppercase">
+                  Max Marks
+                </label>
+                <input
                   id="max-marks"
-                  type="number" 
+                  type="number"
                   required
                   value={formData.max_marks || ''}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  onChange={e => setFormData({...formData, max_marks: parseFloat(e.target.value)})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, max_marks: parseFloat(e.target.value) })
+                  }
                 />
               </div>
               <div className="space-y-1">
-                <label htmlFor="category" className="text-xs font-bold text-gray-400 uppercase">Assessment Category</label>
-                <select 
+                <label htmlFor="category" className="text-xs font-bold text-gray-400 uppercase">
+                  Assessment Category
+                </label>
+                <select
                   id="category"
                   required
                   value={formData.assessment_type_id || ''}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  onChange={e => setFormData({...formData, assessment_type_id: parseInt(e.target.value)})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, assessment_type_id: parseInt(e.target.value) })
+                  }
                 >
                   <option value="">Select Category</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.type}</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.type}
+                    </option>
                   ))}
                 </select>
               </div>
             </div>
             <div className="space-y-1">
-              <label htmlFor="date" className="text-xs font-bold text-gray-400 uppercase">Date</label>
-              <input 
+              <label htmlFor="date" className="text-xs font-bold text-gray-400 uppercase">
+                Date
+              </label>
+              <input
                 id="date"
-                type="date" 
+                type="date"
                 required
                 value={formData.assessment_date || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, assessment_date: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, assessment_date: e.target.value })}
               />
             </div>
             <div className="flex items-center gap-2">
-              <input 
+              <input
                 id="published"
                 type="checkbox"
                 checked={formData.is_marks_published || false}
-                onChange={e => setFormData({...formData, is_marks_published: e.target.checked})}
+                onChange={(e) => setFormData({ ...formData, is_marks_published: e.target.checked })}
               />
-              <label htmlFor="published" className="text-xs font-bold text-gray-400 uppercase">Published</label>
+              <label htmlFor="published" className="text-xs font-bold text-gray-400 uppercase">
+                Published
+              </label>
             </div>
           </>
         );
@@ -206,45 +249,56 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
         return (
           <>
             <div className="space-y-1">
-              <label htmlFor="enroll-course-id" className="text-xs font-bold text-gray-400 uppercase">Course ID (Database ID)</label>
-              <input 
+              <label
+                htmlFor="enroll-course-id"
+                className="text-xs font-bold text-gray-400 uppercase"
+              >
+                Course ID (Database ID)
+              </label>
+              <input
                 id="enroll-course-id"
-                type="number" 
+                type="number"
                 required
                 value={formData.course_id || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, course_id: parseInt(e.target.value)})}
+                onChange={(e) => setFormData({ ...formData, course_id: parseInt(e.target.value) })}
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="enroll-user-id" className="text-xs font-bold text-gray-400 uppercase">User ID</label>
-              <input 
+              <label htmlFor="enroll-user-id" className="text-xs font-bold text-gray-400 uppercase">
+                User ID
+              </label>
+              <input
                 id="enroll-user-id"
-                type="number" 
+                type="number"
                 required
                 value={formData.user_id || formData.student_id || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, student_id: parseInt(e.target.value)})}
+                onChange={(e) => setFormData({ ...formData, student_id: parseInt(e.target.value) })}
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="enroll-email" className="text-xs font-bold text-gray-400 uppercase">Email (Optional)</label>
-              <input 
+              <label htmlFor="enroll-email" className="text-xs font-bold text-gray-400 uppercase">
+                Email (Optional)
+              </label>
+              <input
                 id="enroll-email"
-                type="email" 
+                type="email"
                 value={formData.email || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="enroll-role" className="text-xs font-bold text-gray-400 uppercase">Role</label>
-              <select 
+              <label htmlFor="enroll-role" className="text-xs font-bold text-gray-400 uppercase">
+                Role
+              </label>
+              <select
                 id="enroll-role"
                 required
                 value={formData.role || ''}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                onChange={e => setFormData({...formData, role: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               >
                 <option value="">Select Role</option>
                 <option value="student">Student</option>
@@ -259,25 +313,34 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
         return (
           <>
             <div className="space-y-1">
-              <label htmlFor="admin-user-id" className="text-xs font-bold text-gray-400 uppercase">User ID to Promote</label>
-              <input 
+              <label htmlFor="admin-user-id" className="text-xs font-bold text-gray-400 uppercase">
+                User ID to Promote
+              </label>
+              <input
                 id="admin-user-id"
-                type="number" 
+                type="number"
                 required
                 disabled={isEdit}
                 value={formData.id || ''}
                 placeholder="Enter User ID (Roll No/Staff ID)"
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm disabled:opacity-50"
-                onChange={e => setFormData({...formData, id: parseInt(e.target.value)})}
+                onChange={(e) => setFormData({ ...formData, id: parseInt(e.target.value) })}
               />
             </div>
             {!isEdit && (
-              <p className="text-[10px] text-gray-500 italic">Promoting a user to Admin grants them full system access. Please verify the User ID carefully.</p>
+              <p className="text-[10px] text-gray-500 italic">
+                Promoting a user to Admin grants them full system access. Please verify the User ID
+                carefully.
+              </p>
             )}
           </>
         );
       default:
-        return <p className="text-sm text-gray-500 italic">Adding for this entity type is coming soon.</p>;
+        return (
+          <p className="text-sm text-gray-500 italic">
+            Adding for this entity type is coming soon.
+          </p>
+        );
     }
   };
 
@@ -285,15 +348,20 @@ export default function EntityModal({ isOpen, onClose, entityType, onSave, initi
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">{isEdit ? 'Edit' : 'Add New'} {entityType.slice(0, -1)}</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+          <h2 className="text-xl font-bold text-gray-900">
+            {isEdit ? 'Edit' : 'Add New'} {entityType.slice(0, -1)}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
             <BiX className="text-2xl text-gray-400" />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {renderFields()}
-          
+
           <div className="pt-4 flex gap-3">
             <Button type="button" variant="ghost" onClick={onClose} className="flex-1">
               Cancel

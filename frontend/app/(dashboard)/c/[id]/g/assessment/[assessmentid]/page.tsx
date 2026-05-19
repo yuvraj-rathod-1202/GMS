@@ -359,7 +359,7 @@ export default function AssessmentPage() {
       if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
         console.error('Failed to save marks:', error);
       }
-      alert("Failed to save marks. Please try again.");
+      alert('Failed to save marks. Please try again.');
     } finally {
       setIsSaving(false);
     }

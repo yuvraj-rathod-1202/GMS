@@ -41,7 +41,8 @@ export default function GPView() {
   });
 
   const { isFeatureEnabled } = useFeatureFlags(courseId);
-  const canManagePolicy = role === 'instructor' || (role === 'ta' && isFeatureEnabled('course.ta_policy_management'));
+  const canManagePolicy =
+    role === 'instructor' || (role === 'ta' && isFeatureEnabled('course.ta_policy_management'));
 
   const currentCourse = useCourseDetailStore((s) => s.currentCourse);
   const instructorData = useCourseDetailStore((s) => s.instructorData);
@@ -324,7 +325,11 @@ export default function GPView() {
               </Button>
             </Link>
             {canManagePolicy && (
-              <Button type="button" onClick={handleCreatePolicy} className="flex items-center gap-2">
+              <Button
+                type="button"
+                onClick={handleCreatePolicy}
+                className="flex items-center gap-2"
+              >
                 <FaPlus className="text-sm" /> Create Policy
               </Button>
             )}

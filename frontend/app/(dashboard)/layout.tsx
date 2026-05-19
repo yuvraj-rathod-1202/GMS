@@ -14,9 +14,7 @@ export default function DashboardLayout({
         <DashboardSidebar />
         <div className="flex-1 flex flex-col h-full overflow-y-auto bg-gray-50/30">
           <NavBar />
-          <div className="flex-1">
-            {children}
-          </div>
+          <div className="flex-1">{children}</div>
         </div>
       </main>
     </ProtectedLayout>

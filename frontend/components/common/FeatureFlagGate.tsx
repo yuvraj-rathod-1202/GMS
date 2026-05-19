@@ -8,11 +8,11 @@ interface FeatureFlagGateProps {
   fallback?: React.ReactNode;
 }
 
-const FeatureFlagGate: React.FC<FeatureFlagGateProps> = ({ 
-  flagName, 
+const FeatureFlagGate: React.FC<FeatureFlagGateProps> = ({
+  flagName,
   courseId = null,
-  children, 
-  fallback = null 
+  children,
+  fallback = null,
 }) => {
   const { isFeatureEnabled, isLoading } = useFeatureFlags(courseId);
 

@@ -78,8 +78,8 @@ export function useCourseManagement(role: UserRole) {
         marksChanges: currentData?.marksChanges || {},
         CourseRoles: currentData?.CourseRoles || null,
         policies: updates?.policies ?? currentData?.policies ?? [],
-        ...(role === 'instructor' && { 
-          studentPolicyMap: updates?.studentPolicyMap ?? instructorData?.studentPolicyMap ?? {} 
+        ...(role === 'instructor' && {
+          studentPolicyMap: updates?.studentPolicyMap ?? instructorData?.studentPolicyMap ?? {},
         }),
         ...updates,
       } as any);

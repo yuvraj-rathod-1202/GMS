@@ -16,7 +16,7 @@ export const Authapi = {
       })
     );
   },
-  
+
   googleLogin: async (token: string) => {
     return handleRequest(apiClient.post('/auth/google-login', { token }));
   },

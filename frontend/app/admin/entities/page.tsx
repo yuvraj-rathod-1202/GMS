@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  BiUser, 
-  BiBookBookmark, 
-  BiShieldQuarter, 
-  BiSpreadsheet, 
+import {
+  BiUser,
+  BiBookBookmark,
+  BiShieldQuarter,
+  BiSpreadsheet,
   BiGroup,
   BiSearch,
   BiPlus,
   BiDotsHorizontalRounded,
   BiTrash,
-  BiEditAlt
+  BiEditAlt,
 } from 'react-icons/bi';
 import { AdminApi } from '@/lib/api/admin';
 import Button from '@/components/ui/Button';
@@ -54,18 +54,23 @@ export default function EntityManagementPage() {
   const handleSave = async (formData: any) => {
     try {
       const isEdit = !!selectedItem;
-      
+
       switch (activeEntity) {
         case 'users':
           if (isEdit) {
-            alert('Full user profile editing is coming soon. For now, users can change their own passwords in settings.');
+            alert(
+              'Full user profile editing is coming soon. For now, users can change their own passwords in settings.'
+            );
           } else {
             await Authapi.signup({ ...formData, password: formData.password });
           }
           break;
         case 'assessments':
           if (isEdit) {
-            await AdminApi.UpdateAssessment(selectedItem.course_id, selectedItem.id, { ...formData, user_id: 0 });
+            await AdminApi.UpdateAssessment(selectedItem.course_id, selectedItem.id, {
+              ...formData,
+              user_id: 0,
+            });
           } else {
             const { course_id: assessmentCourseId, ...assessmentData } = formData;
             await AdminApi.CreateAssessment(assessmentCourseId, { ...assessmentData, user_id: 0 });
@@ -75,7 +80,12 @@ export default function EntityManagementPage() {
           if (isEdit) {
             alert('Enrollments cannot be edited. Please delete and recreate if needed.');
           } else {
-            await AdminApi.CreateEnrollment(formData.course_id, formData.student_id, formData.role, formData.email);
+            await AdminApi.CreateEnrollment(
+              formData.course_id,
+              formData.student_id,
+              formData.role,
+              formData.email
+            );
           }
           break;
         case 'admins':
@@ -117,18 +127,20 @@ export default function EntityManagementPage() {
         default:
           result = [];
       }
-      
-      const newItems = Array.isArray(result) ? result : 
-        (result as any).data || 
-        (result as any).users || 
-        (result as any).admins || 
-        (result as any).enrollments || 
-        (result as any).assessments || [];
-      
+
+      const newItems = Array.isArray(result)
+        ? result
+        : (result as any).data ||
+          (result as any).users ||
+          (result as any).admins ||
+          (result as any).enrollments ||
+          (result as any).assessments ||
+          [];
+
       if (isInitial) {
         setData(newItems);
       } else {
-        setData(prev => [...prev, ...newItems]);
+        setData((prev) => [...prev, ...newItems]);
       }
 
       if (newItems.length < LIMIT) {
@@ -159,8 +171,9 @@ export default function EntityManagementPage() {
   };
 
   const handleDelete = async (item: any) => {
-    if (!window.confirm(`Are you sure you want to delete this ${activeEntity.slice(0, -1)}?`)) return;
-    
+    if (!window.confirm(`Are you sure you want to delete this ${activeEntity.slice(0, -1)}?`))
+      return;
+
     try {
       switch (activeEntity) {
         case 'assessments':
@@ -170,7 +183,11 @@ export default function EntityManagementPage() {
           if (item.role === 'ta') {
             await AdminApi.RemoveTA(item.course_id, item.user_id || item.student_id || item.ta_id);
           } else if (item.role === 'instructor') {
-            await AdminApi.RemoveInstructor(item.course_id, item.user_id || item.student_id || item.instructor_id, 0);
+            await AdminApi.RemoveInstructor(
+              item.course_id,
+              item.user_id || item.student_id || item.instructor_id,
+              0
+            );
           } else {
             await AdminApi.UnenrollStudent(item.course_id, item.user_id || item.student_id);
           }
@@ -179,7 +196,9 @@ export default function EntityManagementPage() {
           await AdminApi.RemoveAdmin(item.id);
           break;
         case 'users':
-          alert('User deletion is restricted for data integrity. Please deactivate user instead (coming soon).');
+          alert(
+            'User deletion is restricted for data integrity. Please deactivate user instead (coming soon).'
+          );
           return;
         default:
           alert(`Delete feature for ${activeEntity} is not fully integrated yet.`);
@@ -188,19 +207,20 @@ export default function EntityManagementPage() {
       fetchData(0, true);
     } catch (error) {
       if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
-          console.error('Delete failed:', error);
+        console.error('Delete failed:', error);
       }
       alert('Failed to delete record. It might have dependent data.');
     }
   };
 
-  const filteredData = data.filter(item => 
+  const filteredData = data.filter((item) =>
     JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const columns = data.length > 0 
-    ? Object.keys(data[0]).filter(col => activeEntity !== 'users' || col !== 'is_admin') 
-    : [];
+  const columns =
+    data.length > 0
+      ? Object.keys(data[0]).filter((col) => activeEntity !== 'users' || col !== 'is_admin')
+      : [];
 
   return (
     <div className="space-y-6">
@@ -210,8 +230,8 @@ export default function EntityManagementPage() {
           <p className="text-sm text-gray-500">Full admin control over all system data.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             className="flex items-center gap-2"
             onClick={() => {
               setSelectedItem(null);
@@ -224,7 +244,7 @@ export default function EntityManagementPage() {
         </div>
       </div>
 
-      <EntityModal 
+      <EntityModal
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
@@ -270,15 +290,22 @@ export default function EntityManagementPage() {
         {/* Data Table */}
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-20 text-center text-gray-500 animate-pulse">Loading {activeEntity}...</div>
+            <div className="p-20 text-center text-gray-500 animate-pulse">
+              Loading {activeEntity}...
+            </div>
           ) : data.length === 0 ? (
-            <div className="p-20 text-center text-gray-500">No records found in {activeEntity}.</div>
+            <div className="p-20 text-center text-gray-500">
+              No records found in {activeEntity}.
+            </div>
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
                   {columns.map((col) => (
-                    <th key={col} className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    <th
+                      key={col}
+                      className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400"
+                    >
                       {col.replace(/_/g, ' ')}
                     </th>
                   ))}
@@ -291,9 +318,14 @@ export default function EntityManagementPage() {
                 {filteredData.map((item, idx) => (
                   <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
                     {columns.map((col) => (
-                      <td key={col} className="px-6 py-4 text-sm text-gray-600 truncate max-w-[200px]">
+                      <td
+                        key={col}
+                        className="px-6 py-4 text-sm text-gray-600 truncate max-w-[200px]"
+                      >
                         {typeof item[col] === 'boolean' ? (
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${item[col] ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${item[col] ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}
+                          >
                             {item[col] ? 'True' : 'False'}
                           </span>
                         ) : typeof item[col] === 'object' ? (
@@ -305,13 +337,13 @@ export default function EntityManagementPage() {
                     ))}
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
+                        <button
                           onClick={() => handleEdit(item)}
                           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                         >
                           <BiEditAlt className="text-lg" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDelete(item)}
                           className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
                         >

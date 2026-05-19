@@ -9,7 +9,7 @@ export default function TANavbar() {
   const pathname = usePathname();
   const courseId = params.id;
   const { flags, isFeatureEnabled } = useFeatureFlags(Number(courseId));
-  
+
   const navItems = useMemo(() => {
     const items = [
       { label: 'Overview', href: `/c/${courseId}` },
@@ -20,7 +20,7 @@ export default function TANavbar() {
     if (isFeatureEnabled('course.ta_analytics_visibility')) {
       items.push({ label: 'Analytics', href: `/c/${courseId}/a` });
     }
-    
+
     if (isFeatureEnabled('course.ta_policy_management')) {
       items.push({ label: 'Policies', href: `/c/${courseId}/gp` });
     }

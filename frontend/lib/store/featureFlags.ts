@@ -29,5 +29,5 @@ export const useFeatureFlagsStore = create<FeatureFlagsState>((set, get) => ({
 
   isFeatureEnabled: (name: string) => {
     return !!get().flags[name];
-  }
+  },
 }));
