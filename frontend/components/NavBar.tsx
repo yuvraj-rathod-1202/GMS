@@ -137,7 +137,7 @@ export default function NavBar() {
         <div className="hidden md:flex gap-4 items-center">
           {isAdmin && (
             <Link href="/admin">
-              <button className="px-3 py-1.5 text-sm text-gms-blue font-medium hover:bg-blue-50 rounded-md transition-colors flex items-center gap-2">
+              <button className="px-4 py-1.5 text-sm text-gms-blue font-semibold hover:bg-blue-50 border border-blue-200 rounded-lg shadow-sm hover:shadow transition-all flex items-center gap-2">
                 <FaShieldAlt className="size-4" />
                 Admin
               </button>

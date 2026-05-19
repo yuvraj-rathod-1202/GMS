@@ -3,7 +3,7 @@ import logging
 import MySQLdb
 from fastapi import HTTPException, status
 from utils.db import get_db
-from models.dbobj.assessments import CourseOverviewBDObj, AssessmentAnalyticsBDObj, AssessmentMarkFrequencyBDObj, SystemOverviewBDObj
+from models.dbobj.assessments import CourseOverviewBDObj, AssessmentAnalyticsBDObj, AssessmentMarkFrequencyBDObj, CourseMarkFrequencyBDObj, SystemOverviewBDObj
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -94,6 +94,45 @@ def get_assessment_frequencies_from_db(course_id: int, assessment_id: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while retrieving assessment frequency data" if IS_PRODUCTION else f"Database error: {str(e)}"
+        )
+
+def get_course_frequencies_from_db(course_id: int):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+    
+    try:
+        cursor = db.cursor()
+        query = """
+        SELECT id, course_id, mark, frequency, computed_at FROM course_mark_frequency 
+        WHERE course_id = %s AND frequency > 0
+        ORDER BY mark ASC
+        """
+        
+        cursor.execute(query, (course_id,))
+        frequencies = cursor.fetchall()
+        
+        frequency_objs = []
+        for freq_record in frequencies:
+            frequency_objs.append(
+                CourseMarkFrequencyBDObj(
+                    id=freq_record[0],
+                    course_id=freq_record[1],
+                    mark=freq_record[2],
+                    frequency=freq_record[3],
+                    computed_at=freq_record[4]
+                )
+            )
+        
+        return frequency_objs
+    except Exception as e:
+        logger.error(f"Database error in get_course_frequencies_from_db: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while retrieving course frequency data" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
 
 def get_system_overview_from_db():

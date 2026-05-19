@@ -1,11 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import TANavbar from '../Course/TANavbar';
 import EnrollStudentDialog from './Dialogs/EnrollStudentDialog';
-import StudentList from './StudentList';
+import BulkEnrollDialog from './Dialogs/BulkEnrollDialog';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
-import { BiUserPlus } from 'react-icons/bi';
-import { StatCard } from './Cards/StateCard';
-import { EmptyState } from './Cards/EmptyState';
+// import { StatCard } from './Cards/StateCard';
+import { StudentSection } from './StudentSection';
 
 interface Student {
   user_id: number;
@@ -15,17 +14,24 @@ interface Student {
 export function TAPeopleView({
   setShowEnrollDialog,
   showEnrollDialog,
+  showBulkEnrollDialog,
+  setShowBulkEnrollDialog,
   handleEnrollStudent,
   handleRemoveStudent,
+  handleBulkEnroll,
   managementLoading,
 }: {
   setShowEnrollDialog: React.Dispatch<React.SetStateAction<boolean>>;
   showEnrollDialog: boolean;
+  showBulkEnrollDialog: boolean;
+  setShowBulkEnrollDialog: React.Dispatch<React.SetStateAction<boolean>>;
   handleEnrollStudent: (studentId: string, email: string) => Promise<void>;
   handleRemoveStudent: (studentId: number) => Promise<void>;
+  handleBulkEnroll: (file: File) => Promise<void>;
   managementLoading: boolean;
 }) {
   const taData = useCourseDetailStore((s) => s.taData);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const students = useMemo(() => {
     return (taData?.CourseRoles?.students || [])
@@ -37,52 +43,26 @@ export function TAPeopleView({
       }));
   }, [taData]);
 
-  const hasStudents = students.length > 0;
-
   return (
-    <div>
+    <div className="h-[calc(100vh-48px)] flex flex-col overflow-hidden">
       <TANavbar />
 
-      <div className="h-[calc(100vh-96px)] overflow-y-auto w-full md:max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <StatCard
-            label="Total Enrolled Students"
-            count={students.length}
-            isActive={true}
-            onClick={() => {}}
+      <div className="flex-1 flex flex-col min-h-0 w-full md:max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8 overflow-hidden">
+        {/* <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 shrink-0"> */}
+          {/* <StatCard label="Total Enrolled Students" count={students.length} /> */}
+        {/* </div> */}
+
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <StudentSection
+            students={students}
+            onEnroll={() => setShowEnrollDialog(true)}
+            onBulk={() => setShowBulkEnrollDialog(true)}
+            onRemoveStudent={handleRemoveStudent}
+            onUnenrollAll={async () => {}} // TA usually can't unenroll all
+            isLoading={managementLoading}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
           />
-        </div>
-
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-2">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Students</h2>
-              <p className="text-gray-500 text-sm">View and manage students in this course.</p>
-            </div>
-
-            <button
-              onClick={() => setShowEnrollDialog(true)}
-              className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 text-sm font-medium flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
-            >
-              <BiUserPlus className="text-lg" /> Enroll Student
-            </button>
-          </div>
-
-          {hasStudents ? (
-            <StudentList
-              students={students}
-              onRemoveStudent={handleRemoveStudent}
-              isLoading={managementLoading}
-            />
-          ) : (
-            <EmptyState
-              title="No students yet"
-              description="There are currently no students enrolled in this course."
-              primaryActionText="Enroll Student"
-              onPrimaryAction={() => setShowEnrollDialog(true)}
-              showSecondary={false}
-            />
-          )}
         </div>
 
         <EnrollStudentDialog
@@ -90,6 +70,12 @@ export function TAPeopleView({
           onClose={() => setShowEnrollDialog(false)}
           onSubmit={handleEnrollStudent}
           isLoading={managementLoading}
+        />
+
+        <BulkEnrollDialog
+          isOpen={showBulkEnrollDialog}
+          onClose={() => setShowBulkEnrollDialog(false)}
+          onUpload={handleBulkEnroll}
         />
       </div>
     </div>

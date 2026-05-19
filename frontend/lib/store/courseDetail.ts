@@ -83,7 +83,23 @@ export const useCourseDetailStore = create<CourseDetailState>((set) => ({
   hasFetchedTADataInSession: {},
   hasFetchedInstructorDataInSession: false,
 
-  setCurrentCourse: (course) => set({ currentCourse: course }),
+  setCurrentCourse: (course) =>
+    set((state) => {
+      if (state.currentCourse?.id !== course?.id) {
+        return {
+          currentCourse: course,
+          currentAssessment: null,
+          studentData: null,
+          taData: null,
+          instructorData: null,
+          error: null,
+          hasFetchedStudentDataInSession: false,
+          hasFetchedTADataInSession: {},
+          hasFetchedInstructorDataInSession: false,
+        };
+      }
+      return { currentCourse: course };
+    }),
   setCurrentAssessment: (assessment) => set({ currentAssessment: assessment }),
   setStudentData: (data) => set({ studentData: data }),
   setTAData: (data) => set({ taData: data }),

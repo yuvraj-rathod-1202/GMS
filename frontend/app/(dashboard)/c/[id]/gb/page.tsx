@@ -9,16 +9,22 @@ import { useTACourse } from '@/hooks/useTACourse';
 import UnenrolledStudentsDialog from '@/components/ui/UnenrolledStudentsDialog';
 import BulkUploadDialog from '@/components/ui/BulkUploadDialog';
 import IGradeSheet from '@/components/ui/IGradeSheet';
-import { IGradeSheetButtons } from '@/components/Grade/IGradeSheetButtons';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
 import {
   BiArrowBack,
   BiDotsVerticalRounded,
+  BiDownload,
   BiHide,
   BiShow,
   BiSliderAlt,
   BiSortAlt2,
   BiSortUp,
   BiSortDown,
+  BiSearch,
+  BiCloudUpload,
+  BiCalculator,
+  BiChart,
 } from 'react-icons/bi';
 import { exportGradeBookToExcel } from '@/components/Grade/ExportGradeBook';
 import calculateTotalMarks, { calculateTotalMarksOptimized } from '@/services/totalCalculation';
@@ -93,7 +99,7 @@ export default function GradeSheetView() {
   }>({});
 
   const { role, course, isLoading, hasAccess } = useRoleAccess({
-    allowedRoles: ['instructor'],
+    allowedRoles: ['instructor', 'ta'],
     courseId,
     assessmentId,
   });
@@ -112,7 +118,9 @@ export default function GradeSheetView() {
     updateStudentPolicy,
   } = useCourseManagement(role || 'instructor');
   const { PublishMarks, UnpublishMarks } = useTACourse();
-  const instructorData = useCourseDetailStore((s) => s.instructorData);
+  const storeInstructorData = useCourseDetailStore((s) => s.instructorData);
+  const storeTaData = useCourseDetailStore((s) => s.taData);
+  const instructorData = (role === 'ta' ? storeTaData : storeInstructorData) as any as InstructorCourseData | null;
 
   // fetch all the assessments
   useEffect(() => {
@@ -601,7 +609,7 @@ export default function GradeSheetView() {
     );
   }
 
-  if (role !== 'instructor') {
+  if (role !== 'instructor' && role !== 'ta') {
     return null;
   }
 
@@ -695,11 +703,19 @@ export default function GradeSheetView() {
         });
 
         // Update the store
-        useCourseDetailStore.getState().setInstructorData({
-          ...instructorData,
-          assessmentMarks: updatedAssessmentMarks,
-          totalMarks: updatedTotalMarks,
-        });
+        if (role === 'ta') {
+          useCourseDetailStore.getState().setTAData({
+            ...instructorData,
+            assessmentMarks: updatedAssessmentMarks,
+            totalMarks: updatedTotalMarks,
+          });
+        } else {
+          useCourseDetailStore.getState().setInstructorData({
+            ...instructorData,
+            assessmentMarks: updatedAssessmentMarks,
+            totalMarks: updatedTotalMarks,
+          });
+        }
       }
 
       setChangedMarks(new Map());
@@ -913,6 +929,16 @@ export default function GradeSheetView() {
     router.push(`/c/${courseId}/gp`);
   };
 
+  const handleGoAnalytics = () => {
+    if (
+      changedCellsSet.size > 0 &&
+      !confirm('Any unsaved changes will be lost. Are you sure you want to go to analytics page?')
+    ) {
+      return;
+    }
+    router.push(`/c/${courseId}/a`);
+  };
+
   const getSortIcon = (key: string) => {
     if (!sortConfig || sortConfig.key !== key) {
       return <BiSortAlt2 className="text-gray-400" />;
@@ -924,62 +950,79 @@ export default function GradeSheetView() {
     );
   };
 
+  const totalStudents = displayData.length;
+
   const assessmentColumns =
-    instructorData?.assessments.map((a) => ({
-      header: (
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSort(String(a.id));
-              }}
-              className="flex items-center gap-1 hover:text-blue-600 transition-colors"
-            >
-              <span className="font-bold text-gray-900 truncate" title={a.name}>
-                {a.name}
-              </span>
-              {getSortIcon(String(a.id))}
-            </button>
-            <div className="relative group">
+    instructorData?.assessments.map((a) => {
+      const marksForAssessment = instructorData.assessmentMarks?.[a.id] || [];
+      const filledCount = marksForAssessment.filter((m: any) => m.marks_obtained !== null && m.marks_obtained !== undefined).length;
+      const pct = totalStudents > 0 ? Math.round((filledCount / totalStudents) * 100) : 0;
+
+      return {
+        header: (
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setOpenMenuId(openMenuId === a.id ? null : a.id);
+                  handleSort(String(a.id));
                 }}
-                className="p-1 text-gray-400 hover:text-gray-700 rounded hover:bg-gray-100"
+                className="flex items-center gap-1 hover:text-blue-600 transition-colors"
               >
-                <BiDotsVerticalRounded />
+                <span className="font-bold text-gray-900 truncate" title={a.name}>
+                  {a.name}
+                </span>
+                {getSortIcon(String(a.id))}
               </button>
-              {openMenuId === a.id && (
-                <div className="absolute right-0 top-6 w-40 bg-white border border-gray-200 shadow-xl rounded-lg z-50 overflow-hidden">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePublishToggle(a, e);
-                      setOpenMenuId(null);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    {a.is_marks_published ? <BiHide /> : <BiShow />}
-                    {a.is_marks_published ? 'Unpublish' : 'Publish'}
-                  </button>
-                </div>
-              )}
+              <div className="relative group">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenMenuId(openMenuId === a.id ? null : a.id);
+                  }}
+                  className="p-1 text-gray-400 hover:text-gray-700 rounded hover:bg-gray-100"
+                >
+                  <BiDotsVerticalRounded />
+                </button>
+                {openMenuId === a.id && (
+                  <div className="absolute right-0 top-6 w-40 bg-white border border-gray-200 shadow-xl rounded-lg z-50 overflow-hidden">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePublishToggle(a, e);
+                        setOpenMenuId(null);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      {a.is_marks_published ? <BiHide /> : <BiShow />}
+                      {a.is_marks_published ? 'Unpublish' : 'Publish'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs mt-1">
+              <span className="text-gray-500">Max: {a.max_marks}</span>
+              <span className="text-gray-400 tabular-nums">{filledCount}/{totalStudents}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+              <div
+                className={`h-1 rounded-full transition-all ${
+                  pct === 100 ? 'bg-green-500' : pct > 50 ? 'bg-amber-400' : 'bg-red-400'
+                }`}
+                style={{ width: `${pct}%` }}
+              />
             </div>
           </div>
-
-          <div className="flex items-center justify-between text-xs mt-1">
-            <span className="text-gray-500">Max: {a.max_marks}</span>
-          </div>
-        </div>
-      ),
-      key: String(a.id),
-      width: '150px',
-      editable: true,
-      onEditComplete: handleMarkChange(a.id, a.max_marks),
-      max_marks: a.max_marks,
-    })) || [];
+        ),
+        key: String(a.id),
+        width: '150px',
+        editable: true,
+        onEditComplete: handleMarkChange(a.id, a.max_marks),
+        max_marks: a.max_marks,
+      };
+    }) || [];
 
   const columns = [
     {
@@ -1004,75 +1047,79 @@ export default function GradeSheetView() {
         </div>
       ),
     },
-    {
-      header: (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleSort('policy_name');
-          }}
-          className="flex items-center gap-1 hover:text-blue-600 transition-colors"
-        >
-          <span>Policy</span>
-          {getSortIcon('policy_name')}
-        </button>
-      ),
-      key: 'policy_name',
-      width: '200px',
-      render: (value: any, row: any) => {
-        const policies = instructorData?.policies || [];
-        const currentPolicyId = row.policy_id;
-        const isLoading = isUpdatingPolicy === row.student_id;
+    ...(role === 'instructor'
+      ? [
+          {
+            header: (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSort('policy_name');
+                }}
+                className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+              >
+                <span>Policy</span>
+                {getSortIcon('policy_name')}
+              </button>
+            ),
+            key: 'policy_name',
+            width: '200px',
+            render: (value: any, row: any) => {
+              const policies = instructorData?.policies || [];
+              const currentPolicyId = row.policy_id;
+              const isPolicyLoading = isUpdatingPolicy === row.student_id;
 
-        return (
-          <div className="relative">
-            <select
-              value={currentPolicyId || ''}
-              onChange={(e) => {
-                const newPolicyId = Number(e.target.value);
-                if (newPolicyId && newPolicyId !== currentPolicyId) {
-                  handlePolicyChange(row.student_id, newPolicyId);
-                }
-              }}
-              onClick={(e) => e.stopPropagation()}
-              disabled={isLoading}
-              className="w-full bg-transparent border-b border-transparent group-hover:border-gray-300 focus:border-blue-500 text-sm py-1 outline-none cursor-pointer"
-            >
-              {policies.map((policy) => (
-                <option key={policy.id} value={policy.id}>
-                  {policy.policy_name}
-                  {policy.is_default ? ' (Default)' : ''}
-                </option>
-              ))}
-            </select>
-            {isLoading && (
-              <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                <svg
-                  className="animate-spin h-4 w-4 text-blue-600"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
+              return (
+                <div className="relative">
+                  <select
+                    value={currentPolicyId || ''}
+                    onChange={(e) => {
+                      const newPolicyId = Number(e.target.value);
+                      if (newPolicyId && newPolicyId !== currentPolicyId) {
+                        handlePolicyChange(row.student_id, newPolicyId);
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    disabled={isPolicyLoading}
+                    className="w-full bg-transparent border-b border-transparent group-hover:border-gray-300 focus:border-blue-500 text-sm py-1 outline-none cursor-pointer"
+                  >
+                    {policies.map((policy) => (
+                      <option key={policy.id} value={policy.id}>
+                        {policy.policy_name}
+                        {policy.is_default ? ' (Default)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {isPolicyLoading && (
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                      <svg
+                        className="animate-spin h-4 w-4 text-blue-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              );
+            },
+          },
+        ]
+      : []),
     ...assessmentColumns,
     {
       header: (
@@ -1090,6 +1137,7 @@ export default function GradeSheetView() {
       key: 'total_marks',
       width: '100px',
       render: (val: any) => <span className="font-bold text-gray-900">{val}</span>,
+      sticky: 'right' as const,
     },
   ];
 
@@ -1098,50 +1146,117 @@ export default function GradeSheetView() {
       className="flex flex-col bg-gray-50 h-[calc(100vh-48px)] max-h-[calc(100vh-48px)]"
       onClick={() => setOpenMenuId(null)}
     >
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center shrink-0 h-16">
-        <div className="flex items-center gap-4">
+      <div className="bg-white border-b border-gray-200 px-6 py-3 flex flex-col md:flex-row justify-between items-center shrink-0 gap-4 min-h-[64px]">
+        <div className="flex items-center gap-4 w-full md:w-auto">
           <button
             onClick={() => handleGoBack()}
             className="text-gray-500 cursor-pointer hover:text-gray-900 transition-colors"
           >
             <BiArrowBack className="text-xl" />
           </button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Grade Book</h1>
-            <p className="text-xs text-gray-500">Course ID: {courseId}</p>
+          
+          <div className="relative w-full md:w-64">
+            <BiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base text-gray-400" />
+            <Input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search..."
+              className="pl-8 h-8 text-xs"
+              wrapperClassName="!space-y-0"
+            />
           </div>
         </div>
-        <div className="flex flex-row gap-2">
-          <button
+        <div className="flex flex-row flex-wrap items-center gap-1.5">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsImportModalOpen(true)}
+            className="flex items-center gap-1.5 h-8 text-xs px-2.5"
+          >
+            <BiCloudUpload className="text-base" />
+            <span>Import Excel</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleRecalculateTotal}
+            disabled={isRecalculating}
+            title="Recalculate total marks based on the current grading policy and assessment marks"
+            className="flex items-center gap-1.5 h-8 text-xs px-2.5"
+          >
+            <BiCalculator className="text-base" />
+            <span>{isRecalculating ? 'Calculating...' : 'Recalculate'}</span>
+          </Button>
+
+          <div className="hidden h-5 w-px bg-gray-300 md:block" />
+
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => handleExportGradeBook(instructorData, course?.course_code || 'Course')}
-            title="You will get a sheet with all the function of Calculation written in excel"
-            className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+            title="Export a full gradebook with calculation formulas in Excel"
+            className="flex items-center gap-1.5 h-8 text-xs px-2.5"
           >
-            Export Grade Book
-          </button>
-          <button
-            onClick={() => handleGoPolicy()}
-            className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            <BiSliderAlt /> Grading Policy
-          </button>
+            <BiDownload className="text-base" /> Export
+          </Button>
+          {role === 'instructor' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleGoPolicy()}
+              className="flex items-center gap-1.5 h-8 text-xs px-2.5"
+            >
+              <BiSliderAlt className="text-base" /> Policy
+            </Button>
+          )}
+          {role === 'instructor' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleGoAnalytics()}
+              className="flex items-center gap-1.5 h-8 text-xs px-2.5"
+            >
+              <BiChart className="text-base" /> Analytics
+            </Button>
+          )}
         </div>
       </div>
 
       {/* 2. Main Workspace */}
       <div className="flex-1 overflow-hidden p-4 md:p-6 flex flex-col">
-        {/* The New Toolbar */}
-        <IGradeSheetButtons
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          hasUnsavedChanges={hasUnsavedChanges}
-          isSaving={isSaving}
-          isRecalculating={isRecalculating}
-          onSave={handleSave}
-          onDiscard={handleDiscard}
-          onRecalculate={handleRecalculateTotal}
-          onImportClick={() => setIsImportModalOpen(true)} // Opens the selector modal
-        />
+
+        {/* Unsaved Changes Banner */}
+        {hasUnsavedChanges && (
+          <div className="mb-4 flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="text-sm font-medium text-amber-800">
+                {changedCellsSet.size} cell{changedCellsSet.size !== 1 ? 's' : ''} edited - save before leaving
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDiscard}
+                className="text-amber-700 hover:bg-amber-100"
+              >
+                Discard
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* The Table Container */}
         <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">

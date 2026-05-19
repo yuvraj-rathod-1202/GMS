@@ -46,6 +46,57 @@ export default function DashboardSidebar() {
             <span>Home</span>
           </Link>
 
+          {teaching.length > 0 && (
+            <div className="bg-white py-2">
+              <SectionHeader
+                title="Teaching"
+                expanded={teachOpen}
+                onToggle={() => setTeachOpen((v) => !v)}
+                icon={<MdGroups className="size-5 text-gms-black" />}
+              />
+              {teachOpen && (
+                <div className="mt-2 space-y-1">
+                  {loading && <div className="px-4 text-sm text-gray-500">Loading...</div>}
+                  {error && <div className="px-4 text-sm text-red-600">{error}</div>}
+                  {teaching.map((course) => (
+                    <CourseItem
+                      key={course.id}
+                      name={course.name}
+                      id={course.id}
+                      Highlight={
+                        pathname.split('/')[1] === `c` && pathname.split('/')[2] === `${course.id}`
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {enrolled.length > 0 && (
+            <div className="bg-white py-2">
+              <SectionHeader
+                title="Enrolled"
+                expanded={enrolledOpen}
+                onToggle={() => setEnrolledOpen((v) => !v)}
+                icon={<FaUserCheck className="size-5 text-gms-black" />}
+              />
+              {enrolledOpen && (
+                <div className="mt-2 space-y-1">
+                  {loading && <div className="px-4 text-sm text-gray-500">Loading...</div>}
+                  {error && <div className="px-4 text-sm text-red-600">{error}</div>}
+                  {enrolled.map((course) => (
+                    <CourseItem
+                      key={course.id}
+                      name={course.name}
+                      id={course.id}
+                      Highlight={pathname === `/c/${course.id}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <Link
             href="/feedback"
             className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-900 hover:bg-gms-indigoLight rounded-xl text-sm font-medium transition-colors ${
@@ -56,58 +107,6 @@ export default function DashboardSidebar() {
             <span>Bug Report</span>
           </Link>
 
-          <div className="bg-white py-2">
-            <SectionHeader
-              title="Teaching"
-              expanded={teachOpen}
-              onToggle={() => setTeachOpen((v) => !v)}
-              icon={<MdGroups className="size-5 text-gms-black" />}
-            />
-            {teachOpen && (
-              <div className="mt-2 space-y-1">
-                {loading && <div className="px-4 text-sm text-gray-500">Loading...</div>}
-                {error && <div className="px-4 text-sm text-red-600">{error}</div>}
-                {!loading && !error && teaching.length === 0 && (
-                  <div className="px-4 text-sm text-gray-500">No teaching courses</div>
-                )}
-                {teaching.map((course) => (
-                  <CourseItem
-                    key={course.id}
-                    name={course.name}
-                    id={course.id}
-                    Highlight={
-                      pathname.split('/')[1] === `c` && pathname.split('/')[2] === `${course.id}`
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="bg-white py-2">
-            <SectionHeader
-              title="Enrolled"
-              expanded={enrolledOpen}
-              onToggle={() => setEnrolledOpen((v) => !v)}
-              icon={<FaUserCheck className="size-5 text-gms-black" />}
-            />
-            {enrolledOpen && (
-              <div className="mt-2 space-y-1">
-                {loading && <div className="px-4 text-sm text-gray-500">Loading...</div>}
-                {error && <div className="px-4 text-sm text-red-600">{error}</div>}
-                {!loading && !error && enrolled.length === 0 && (
-                  <div className="px-4 text-sm text-gray-500">No enrolled courses</div>
-                )}
-                {enrolled.map((course) => (
-                  <CourseItem
-                    key={course.id}
-                    name={course.name}
-                    id={course.id}
-                    Highlight={pathname === `/c/${course.id}`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 

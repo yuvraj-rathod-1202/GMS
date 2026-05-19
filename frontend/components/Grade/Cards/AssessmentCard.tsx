@@ -111,17 +111,19 @@ export default function AssessmentCard({
             {isPublishing ? '...' : assessment.is_marks_published ? 'Hide Marks' : 'Publish Marks'}
           </Button>
 
-          <Button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEnterMarks?.();
-            }}
-            className="flex items-center gap-2 bg-gray-900 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-black sm:text-sm"
-          >
-            <BiSpreadsheet className="text-lg" />
-            Enter Marks
-          </Button>
+          {onEnterMarks && (
+            <Button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onEnterMarks();
+              }}
+              className="flex items-center gap-2 bg-gray-900 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-black sm:text-sm"
+            >
+              <BiSpreadsheet className="text-lg" />
+              Enter Marks
+            </Button>
+          )}
         </div>
       </div>
     </div>

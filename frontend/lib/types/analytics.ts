@@ -34,6 +34,14 @@ export interface AssessmentMarkFrequencyDBObject {
   computed_at: Date;
 }
 
+export interface CourseMarkFrequencyDBObject {
+  id: number;
+  course_id: number;
+  mark: number;
+  frequency: number;
+  computed_at: Date;
+}
+
 export interface SystemOverviewDBObject {
   total_courses: number;
   active_courses: number;

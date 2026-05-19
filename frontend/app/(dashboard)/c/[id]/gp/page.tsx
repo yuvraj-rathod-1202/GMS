@@ -311,12 +311,6 @@ export default function GPView() {
       {role === 'instructor' ? <InstructorNavbar /> : <TANavbar />}
       <div className="p-2 md:p-6 max-h-[calc(100vh-96px)] overflow-y-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Grading Policies</h1>
-            <p className="text-gray-500 mt-1">
-              Define how student grades are calculated (e.g., Exams 40%, Quizzes 20%).
-            </p>
-          </div>
           <div className="flex gap-3">
             <Link href={`/c/${courseId}/gb`}>
               <Button type="button" variant="secondary" className="flex items-center gap-2">

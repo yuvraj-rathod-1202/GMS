@@ -5,13 +5,19 @@ export default function StudentList({
   students,
   onRemoveStudent,
   isLoading = false,
-}: StudentListProps) {
+  searchQuery = '',
+}: {
+  students: any[];
+  onRemoveStudent: (id: number) => Promise<void>;
+  isLoading?: boolean;
+  searchQuery?: string;
+}) {
   return (
     <RosterList
       items={students}
       emptyMessage="No students enrolled yet"
-      searchPlaceholder="Search by Roll No or Email..."
       searchEmptyMessage="No students found matching your search"
+      searchQuery={searchQuery}
       onRemove={onRemoveStudent}
       isLoading={isLoading}
       label="student"

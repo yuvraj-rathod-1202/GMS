@@ -62,11 +62,21 @@ async def enroll_student_in_course_in_db(course_id: int, student_id: int, email:
         cursor = db.cursor()
         
         cursor.execute(
-            "SELECT id FROM courses_role WHERE user_id = %s AND course_id = %s AND role = %s",
-            (student_id, course_id, target_role)
+            "SELECT id, role FROM courses_role WHERE user_id = %s AND course_id = %s",
+            (student_id, course_id)
         )
-        role_id = cursor.fetchone()
-        if enroll and not role_id:
+        existing_data = cursor.fetchone()
+        
+        if enroll:
+            if existing_data:
+                role_id, existing_role = existing_data
+                if existing_role != target_role:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"User already has role '{existing_role}' in this course. One user can only have one role per course."
+                    )
+                return None # Already has this exact role
+                
             if email:
                 await ensure_bulk_user_exists([(student_id, email)])
                 cursor.execute(
@@ -80,12 +90,15 @@ async def enroll_student_in_course_in_db(course_id: int, student_id: int, email:
             )
             result_id = cursor.lastrowid
             
-        elif not enroll and role_id:
-            cursor.execute(
-                "DELETE FROM courses_role WHERE id = %s",
-                (role_id[0],)
-            )
-            result_id = role_id[0]
+        elif not enroll and existing_data:
+            role_id, existing_role = existing_data
+            # Only unenroll if roles match (safety)
+            if existing_role == target_role:
+                cursor.execute(
+                    "DELETE FROM courses_role WHERE id = %s",
+                    (role_id,)
+                )
+                result_id = role_id
         
         if result_id and target_role == 'student':
             cursor.execute(

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from models.schema.policy import CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest, AssignPolicyRequest
 from utils.auth import verifyRoleInCourse, verifyInstructorOrTA, verifyAdmin
 from utils.feature_flags import is_feature_enabled
-from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db, initialize_total_recalculation, fetch_total_scores_from_db, add_policy_component_to_db, set_policy_as_default_in_db, assign_policy_to_student_in_db, get_student_policy_mapping_from_db, get_assessment_categories_from_db
+from services.policy import add_policy_to_db, get_policy_from_db, delete_policy_from_db, update_policy_in_db, delete_policy_component_from_db, update_component_in_db, initialize_total_recalculation, fetch_total_scores_from_db, add_policy_component_to_db, set_policy_as_default_in_db, assign_policy_to_student_in_db, get_student_policy_mapping_from_db, get_assessment_categories_from_db, delete_student_course_data_from_db
 
 
 router = APIRouter()
@@ -341,11 +341,8 @@ async def recalculate_policy(course_id: int, user_id: int):
                 raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
             raise e
     
-    if role == "instructor":
+    if role == "instructor" or role == "ta":
         pass
-    elif role == "ta":
-        if not is_feature_enabled("course.ta_policy_management", {"course_id": course_id, "user_id": user_id, "role": role}):
-            raise HTTPException(status_code=403, detail="TA policy management is disabled")
     else:
         raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
         
@@ -398,3 +395,9 @@ async def get_total_score_for_studet(course_id: int, student_id: int, user_id: i
         )
         
     return {"totals": totals}
+
+@router.delete("/{course_id}/student/{student_id}/data")
+async def delete_student_course_data(course_id: int, student_id: int, user_id: int = 0):
+    """Delete policy assignments and computed totals for a student in a course (called on unenrollment)."""
+    result = delete_student_course_data_from_db(course_id, student_id)
+    return {"detail": f"Cleaned up policy data for student {student_id}", **result}

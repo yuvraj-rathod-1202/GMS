@@ -17,10 +17,11 @@ describe('StudentList component', () => {
   });
 
   it('filters students by search query', () => {
-    render(<StudentList students={mockStudents} onRemoveStudent={mockRemove} />);
-    const searchInput = screen.getByPlaceholderText(/Search/i);
+    const { rerender } = render(<StudentList students={mockStudents} onRemoveStudent={mockRemove} searchQuery="" />);
+    expect(screen.getByText('2021001')).toBeInTheDocument();
+    expect(screen.getByText('2021002')).toBeInTheDocument();
 
-    fireEvent.change(searchInput, { target: { value: '2021001' } });
+    rerender(<StudentList students={mockStudents} onRemoveStudent={mockRemove} searchQuery="2021001" />);
 
     expect(screen.getByText('2021001')).toBeInTheDocument();
     expect(screen.queryByText('2021002')).not.toBeInTheDocument();

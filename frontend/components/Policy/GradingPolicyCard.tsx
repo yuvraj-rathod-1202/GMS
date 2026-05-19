@@ -54,9 +54,10 @@ export default function GradingPolicyCard({
                   size="sm"
                   onClick={onEdit}
                   title="Edit Policy"
-                  className="h-9 w-9 p-0 text-gray-600 hover:text-gms-indigo"
+                  className="flex items-center gap-1.5 text-gray-600 hover:text-gms-indigo"
                 >
-                  <FaPencil className="size-4" />
+                  <FaPencil className="size-3.5" />
+                  <span>Edit</span>
                 </Button>
                 <Button
                   type="button"
@@ -64,9 +65,10 @@ export default function GradingPolicyCard({
                   size="sm"
                   onClick={onDelete}
                   title="Delete Policy"
-                  className="h-9 w-9 p-0 text-red-600 hover:text-red-800"
+                  className="flex items-center gap-1.5 text-red-600 hover:bg-red-50 hover:text-red-800"
                 >
-                  <MdDelete className="size-4" />
+                  <MdDelete className="size-3.5" />
+                  <span>Delete</span>
                 </Button>
               </>
             )}
@@ -77,9 +79,31 @@ export default function GradingPolicyCard({
       {/* Components */}
       <div className="px-4 sm:px-6 py-4">
         {policy.components.length > 0 ? (
-          <div className="space-y-3">
-            {policy.components.map((component, index) => (
-              <div key={component.id} className="p-3 rounded-md bg-gray-50 border border-gray-100">
+          <div className="space-y-4">
+            {/* Visual Weightage Bar */}
+            <div className="flex h-2 w-full gap-1">
+              {policy.components.map((component, index) => (
+                <div
+                  key={`bar-${component.id}`}
+                  style={{
+                    width: `${Math.min((component.weightage / policy.total_weightage) * 100, 100)}%`,
+                  }}
+                  className={`rounded-full ${['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500'][index % 4]}`}
+                  title={`${getAssessmentTypeLabel(component.assessment_category_id)}: ${component.weightage}%`}
+                />
+              ))}
+              {(() => {
+                const totalComponents = policy.components.reduce((sum, c) => sum + c.weightage, 0);
+                if (totalComponents < policy.total_weightage) {
+                  return <div className="flex-1 rounded-full bg-gray-200" />;
+                }
+                return null;
+              })()}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+              {policy.components.map((component, index) => (
+                <div key={component.id} className={`p-3 rounded-md bg-gray-50 border border-gray-100 border-l-4 ${['border-l-blue-500', 'border-l-purple-500', 'border-l-green-500', 'border-l-orange-500'][index % 4]}`}>
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
                     <span className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white text-xs font-medium text-gray-700">
@@ -121,10 +145,11 @@ export default function GradingPolicyCard({
               </div>
             ))}
           </div>
-        ) : (
-          <p className="text-sm text-gray-500 text-center py-4">No components defined</p>
-        )}
-      </div>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 text-center py-4">No components defined</p>
+      )}
+    </div>
 
       {/* Footer */}
       <div className="rounded-b-lg border-t border-gray-100 bg-gray-50 px-4 py-3 sm:px-6">
