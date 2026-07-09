@@ -29,7 +29,9 @@ export default function CreateCourseForm({ userId, onClose, onSuccess }: CreateC
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof CourseFormValues, string>>>({});
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof CourseFormValues, string>>>(
+    {}
+  );
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -57,7 +59,9 @@ export default function CreateCourseForm({ userId, onClose, onSuccess }: CreateC
       onSuccess();
       onClose();
     } catch (error: unknown) {
-      console.error('Error creating course:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error creating course:', error);
+      }
       setError(error instanceof Error ? error.message : 'Failed to create course');
     } finally {
       setLoading(false);
@@ -84,7 +88,13 @@ export default function CreateCourseForm({ userId, onClose, onSuccess }: CreateC
         />
 
         <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
-          <Button type="button" variant="secondary" className="flex-1" onClick={onClose} disabled={loading}>
+          <Button
+            type="button"
+            variant="secondary"
+            className="flex-1"
+            onClick={onClose}
+            disabled={loading}
+          >
             Cancel
           </Button>
           <Button type="submit" className="flex-1" disabled={loading}>

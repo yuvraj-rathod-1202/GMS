@@ -1,16 +1,25 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
 import TANavbar from '@/components/Course/TANavbar';
 import AssessmentCard from '@/components/Grade/Cards/AssessmentCard';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useCourseManagement } from '@/hooks/useCourseManagement';
 import OverviewCard from './Cards/OverviewCard';
+import AssessmentDialog, { AssessmentFormData } from './Dialogs/AssessmentDialog';
+import { MarksApi } from '@/lib/api/marks';
+import { AssessmentDBObject } from '@/lib/types/assessments';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import Button from '../ui/Button';
+import { BiPlus, BiSpreadsheet } from 'react-icons/bi';
+import { useAssessmentCategories } from '@/hooks/useAssessmentCategories';
 
 export default function TAGradePage() {
   const params = useParams();
   const courseId = Number(params.id);
+  const { categories, createCategory } = useAssessmentCategories(courseId);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
@@ -56,6 +65,16 @@ export default function TAGradePage() {
 
   const isLoadingData = managementLoading || isFetchingData;
 
+  // Feature flags for TA management (course-scoped)
+  const { isFeatureEnabled } = useFeatureFlags(courseId);
+  const canEditAssessment = isFeatureEnabled('course.ta_assessment_management');
+  const canCreateAssessment = canEditAssessment;
+  const canViewAnalytics = isFeatureEnabled('course.ta_analytics_visibility');
+
+  const [showAssessmentDialog, setShowAssessmentDialog] = useState(false);
+  const [editingAssessment, setEditingAssessment] = useState<AssessmentDBObject | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleOnEnterMarks = (assessmentId: number) => {
     router.push(`/c/${courseId}/g/assessment/${assessmentId}`);
   };
@@ -71,6 +90,66 @@ export default function TAGradePage() {
     }
   };
 
+  const handleCreateAssessment = () => {
+    setEditingAssessment(null);
+    setShowAssessmentDialog(true);
+  };
+
+  const handleEditAssessment = (assessment: AssessmentDBObject) => {
+    setEditingAssessment(assessment);
+    setShowAssessmentDialog(true);
+  };
+
+  const handleDeleteAssessment = async () => {
+    if (!editingAssessment) return;
+
+    if (
+      !confirm('Are you sure you want to delete this assessment? This action cannot be undone.')
+    ) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await MarksApi.DeleteAssessment(courseId, editingAssessment.id);
+      await fetchAllAssessments(courseId, true);
+      setShowAssessmentDialog(false);
+    } catch (error) {
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error deleting assessment:', error);
+      }
+      alert('Failed to delete assessment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitAssessment = async (data: AssessmentFormData) => {
+    setIsSubmitting(true);
+    try {
+      const assessmentData = {
+        ...data,
+        assessment_date: new Date(data.assessment_date),
+      };
+
+      if (editingAssessment) {
+        await MarksApi.UpdateAssessment(courseId, editingAssessment.id, assessmentData);
+      } else {
+        await MarksApi.CreateAssessment(courseId, assessmentData);
+      }
+
+      await fetchAllAssessments(courseId, true);
+      setShowAssessmentDialog(false);
+    } catch (error: any) {
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error submitting assessment:', error);
+      }
+      alert('Failed to save assessment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div>
       <TANavbar />
@@ -78,18 +157,51 @@ export default function TAGradePage() {
         <div className="space-y-6 md:space-y-8">
           {/* Page Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grades</h1>
-              <p className="text-gray-500 mt-1">View assessments and manage student marks.</p>
+            <div className="flex items-center gap-3">
+              <Link href={`/c/${courseId}/gb`}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  title="View Master Gradebook"
+                  className="flex items-center gap-2"
+                >
+                  <BiSpreadsheet className="text-lg" />
+                  View Master Gradebook
+                </Button>
+              </Link>
+              {canViewAnalytics && (
+                <Link href={`/c/${courseId}/a`}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    title="View Detailed Analytics"
+                    className="flex items-center gap-2"
+                  >
+                    View Analytics
+                  </Button>
+                </Link>
+              )}
+              {canCreateAssessment && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleCreateAssessment}
+                  title="Create Assessment"
+                  className="bg-black hover:bg-gray-800 text-white flex items-center gap-2"
+                >
+                  <BiPlus className="text-lg" />
+                  Create Assessment
+                </Button>
+              )}
             </div>
           </div>
 
-          <OverviewCard currentCourse={currentCourse} assessments={taData?.assessments || null} />
+          {canViewAnalytics && (
+            <OverviewCard currentCourse={currentCourse} assessments={taData?.assessments || null} />
+          )}
 
           {/* Assessments Section */}
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Assigned Assessments</h2>
-
             {isLoadingData ? (
               <div className="p-12 text-center text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
                 Loading assessments...
@@ -107,12 +219,11 @@ export default function TAGradePage() {
                   <AssessmentCard
                     key={assessment.id}
                     isInstructor={false}
-                    onClick={() => handleOnEnterMarks(assessment.id)}
+                    canManage={canEditAssessment}
                     assessment={assessment}
                     onPublishToggle={() => handlePublishToggle()}
-                    onEnterMarks={() => {
-                      handleOnEnterMarks(assessment.id);
-                    }}
+                    onEdit={() => handleEditAssessment(assessment)}
+                    categories={categories}
                   />
                 ))}
               </div>
@@ -120,6 +231,20 @@ export default function TAGradePage() {
           </div>
         </div>
       </div>
+
+      {/* Assessment Dialog for TA create/edit (if allowed) */}
+      {canEditAssessment && (
+        <AssessmentDialog
+          isOpen={showAssessmentDialog}
+          onClose={() => setShowAssessmentDialog(false)}
+          onSubmit={handleSubmitAssessment}
+          onDelete={handleDeleteAssessment}
+          assessment={editingAssessment}
+          isLoading={isSubmitting}
+          categories={categories}
+          onAddCategory={createCategory}
+        />
+      )}
     </div>
   );
 }

@@ -27,6 +27,7 @@ export interface IGradeSheetColumn<T = any> {
   editable?: boolean;
   max_marks?: number;
   headerActions?: React.ReactNode;
+  sticky?: 'left' | 'right';
   render?: (value: any, row: T, rowIndex: number) => React.ReactNode;
   onEdit?: (value: any, row: T, rowIndex: number) => void | Promise<void>;
   onEditComplete?: (newValue: any, oldValue: any, row: T, rowIndex: number) => void | Promise<void>;

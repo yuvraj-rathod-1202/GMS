@@ -27,7 +27,7 @@ export default function Checkbox({
         <input
           id={checkboxId}
           type="checkbox"
-          className={`mt-0.5 h-4 w-4 rounded border-gray-300 text-mms-blue focus:ring-2 focus:ring-mms-blue/20 ${className}`}
+          className={`mt-0.5 h-4 w-4 rounded border-gray-300 text-gms-blue focus:ring-2 focus:ring-gms-blue/20 ${className}`}
           {...props}
         />
         <span className="space-y-0.5">

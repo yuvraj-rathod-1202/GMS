@@ -6,7 +6,7 @@ import { AssessmentDBObject } from '@/lib/types/assessments';
 import { useTACourse } from '@/hooks/useTACourse';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
-import { getAssessmentTypeLabel } from '@/lib/utils/assessmentlabel';
+import { getAssessmentTypeLabel, AssessmentCategory } from '@/lib/utils/assessmentlabel';
 import { formatDate, handlePublishToggle } from '@/services/grades';
 
 interface AssessmentCardProps {
@@ -16,6 +16,8 @@ interface AssessmentCardProps {
   onPublishToggle?: () => void;
   onEnterMarks?: () => void;
   onEdit?: () => void;
+  canManage?: boolean;
+  categories?: AssessmentCategory[];
 }
 
 export default function AssessmentCard({
@@ -25,6 +27,8 @@ export default function AssessmentCard({
   onPublishToggle,
   onEnterMarks,
   onEdit,
+  canManage,
+  categories,
 }: AssessmentCardProps) {
   const [isPublishing, setIsPublishing] = useState(false);
   const { PublishMarks, UnpublishMarks } = useTACourse();
@@ -45,12 +49,15 @@ export default function AssessmentCard({
         </div>
 
         <div className="mb-4 text-sm text-gray-500">
-          <span>{getAssessmentTypeLabel(assessment.assessment_type_id)}</span> • Created on {formattedDate}
+          <span>{getAssessmentTypeLabel(assessment.assessment_type_id, categories)}</span> • Created
+          on {formattedDate}
         </div>
 
         <div
           className={`flex w-fit items-center gap-2 rounded-lg px-3 py-2 text-xs ${
-            assessment.is_marks_published ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+            assessment.is_marks_published
+              ? 'bg-green-50 text-green-700'
+              : 'bg-yellow-50 text-yellow-700'
           }`}
         >
           {assessment.is_marks_published ? (
@@ -66,7 +73,7 @@ export default function AssessmentCard({
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-gray-200 bg-gray-50 p-4">
-        {isInstructor && (
+        {(isInstructor || canManage) && (
           <Button
             type="button"
             variant="ghost"
@@ -106,17 +113,19 @@ export default function AssessmentCard({
             {isPublishing ? '...' : assessment.is_marks_published ? 'Hide Marks' : 'Publish Marks'}
           </Button>
 
-          <Button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEnterMarks?.();
-            }}
-            className="flex items-center gap-2 bg-gray-900 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-black sm:text-sm"
-          >
-            <BiSpreadsheet className="text-lg" />
-            Enter Marks
-          </Button>
+          {onEnterMarks && (
+            <Button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onEnterMarks();
+              }}
+              className="flex items-center gap-2 bg-gray-900 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-black sm:text-sm"
+            >
+              <BiSpreadsheet className="text-lg" />
+              Enter Marks
+            </Button>
+          )}
         </div>
       </div>
     </div>

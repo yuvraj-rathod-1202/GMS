@@ -15,6 +15,7 @@ import { AssessmentAnalyticsDBObject } from '../types/analytics';
 export interface StudentCourseData {
   marks: AllMarksDBObject[];
   analytics: AssessmentAnalyticsDBObject[] | [];
+  totalMarks?: TotalScoreDBObject;
 }
 
 export interface TACourseData {
@@ -23,6 +24,7 @@ export interface TACourseData {
   totalMarks: TotalScoreDBObject[];
   marksChanges: Record<number, MarksChanges[]>;
   CourseRoles: CourseRoles | null;
+  policies: PolicyDBObject[];
 }
 
 export interface InstructorCourseData {
@@ -81,7 +83,23 @@ export const useCourseDetailStore = create<CourseDetailState>((set) => ({
   hasFetchedTADataInSession: {},
   hasFetchedInstructorDataInSession: false,
 
-  setCurrentCourse: (course) => set({ currentCourse: course }),
+  setCurrentCourse: (course) =>
+    set((state) => {
+      if (state.currentCourse?.id !== course?.id) {
+        return {
+          currentCourse: course,
+          currentAssessment: null,
+          studentData: null,
+          taData: null,
+          instructorData: null,
+          error: null,
+          hasFetchedStudentDataInSession: false,
+          hasFetchedTADataInSession: {},
+          hasFetchedInstructorDataInSession: false,
+        };
+      }
+      return { currentCourse: course };
+    }),
   setCurrentAssessment: (assessment) => set({ currentAssessment: assessment }),
   setStudentData: (data) => set({ studentData: data }),
   setTAData: (data) => set({ taData: data }),

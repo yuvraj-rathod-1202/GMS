@@ -22,15 +22,19 @@ export const metadata: Metadata = {
   description: 'Management System',
 };
 
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} ${geist.variable} antialiased`}>
-        {children}
+        <GoogleOAuthProvider clientId={googleClientId}>{children}</GoogleOAuthProvider>
       </body>
     </html>
   );

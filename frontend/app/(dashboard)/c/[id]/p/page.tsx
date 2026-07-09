@@ -75,8 +75,11 @@ export default function PeoplePage() {
         <TAPeopleView
           setShowEnrollDialog={setShowEnrollDialog}
           showEnrollDialog={showEnrollDialog}
+          showBulkEnrollDialog={showBulkEnrollDialog}
+          setShowBulkEnrollDialog={setShowBulkEnrollDialog}
           handleEnrollStudent={handleEnrollStudent}
           handleRemoveStudent={handleRemoveStudent}
+          handleBulkEnroll={handleBulkEnroll}
           managementLoading={managementLoading}
         />
       );

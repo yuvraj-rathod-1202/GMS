@@ -1,8 +1,8 @@
-CREATE USER IF NOT EXISTS 'mms_user'@'%' IDENTIFIED BY 'MmsUserPass123';
+CREATE USER IF NOT EXISTS 'gms_user'@'%' IDENTIFIED BY 'GmsUserPass123';
 
 CREATE DATABASE IF NOT EXISTS courses;
 
-GRANT ALL PRIVILEGES ON courses.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON courses.* TO 'gms_user'@'%';
 
 USE courses;
 
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS courses_role (
     role VARCHAR(20) NOT NULL,
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_course_user_role (course_id, user_id, role)
+    UNIQUE KEY unique_course_user (course_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS id_email_map (

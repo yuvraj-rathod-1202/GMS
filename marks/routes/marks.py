@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Query
 from utils.auth import verifyInstructorOrTa, verifyRoleInCourse, verifyRoleInCourseAndPublish
 from models.schemas.marks import AddMarksRequest
-from services.marks import add_marks_to_db, get_all_assessment_marks_from_db, get_marks_from_db, delete_marks_from_db, publish_marks_in_db, get_all_marks_from_db
+from services.marks import add_marks_to_db, get_all_assessment_marks_from_db, get_marks_from_db, delete_marks_from_db, publish_marks_in_db, get_all_marks_from_db, delete_student_course_data_from_db
 import httpx, os
 from dotenv import load_dotenv
 
@@ -120,7 +120,7 @@ async def unpublish_marks(course_id: int, assessment_id: int, user_id: int = Que
     return {"detail": "Marks unpublished successfully"}
 
 @router.get("/{course_id}/marks/all/{student_id}")
-async def get_all_marks_for_student(course_id: int, student_id: int, user_id: int = Query(...)):
+async def get_all_marks_for_student(course_id: int, student_id: int, user_id: int = Query(...), analytics: bool = Query(True)):
     verified = await verifyRoleInCourse(user_id, course_id)
     if verified.get("role", "") == 'student' and student_id != user_id:
         raise HTTPException(
@@ -136,16 +136,16 @@ async def get_all_marks_for_student(course_id: int, student_id: int, user_id: in
     check_published = user_role == 'student'
     marks = get_all_marks_from_db(student_id, course_id, check_published=check_published)
     analytics = []
-    for mark in marks:
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.get(f"{ANALYTICS_SERVICE_URL}/{course_id}/assessments/{mark.assessment_id}/analytics", params={"user_id": user_id})
-                if response.status_code == 200:
-                    data = response.json()
-                    analytics.append(data.get("assessment_analytics", None))
-            except:
-                continue
-    
+    if analytics:
+        for mark in marks:
+            async with httpx.AsyncClient() as client:
+                try:
+                    response = await client.get(f"{ANALYTICS_SERVICE_URL}/{course_id}/assessments/{mark.assessment_id}/analytics", params={"user_id": user_id})
+                    if response.status_code == 200:
+                        data = response.json()
+                        analytics.append(data.get("assessment_analytics", None))
+                except:
+                    continue
     
     return {"marks": marks, "analytics": analytics}
 
@@ -161,3 +161,16 @@ async def get_all_marks(course_id: int, user_id: int = Query(...)):
     marks = get_all_assessment_marks_from_db(course_id)
     
     return {"marks": marks}
+
+@router.delete("/{course_id}/student/{student_id}/data")
+async def delete_student_course_data(course_id: int, student_id: int, user_id: int = Query(...)):
+    """Delete all marks for a student in a course (called on unenrollment)."""
+    verified = await verifyInstructorOrTa(user_id, course_id)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Instructor or TA privileges required"
+        )
+
+    deleted_count = delete_student_course_data_from_db(course_id, student_id)
+    return {"detail": f"Deleted {deleted_count} marks for student {student_id}", "deleted_count": deleted_count}

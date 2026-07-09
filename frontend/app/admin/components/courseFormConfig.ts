@@ -76,7 +76,10 @@ type ValidationOptions = {
   requireSemester?: boolean;
 };
 
-export function validateCourseForm(values: Partial<CourseFormValues>, options: ValidationOptions = {}) {
+export function validateCourseForm(
+  values: Partial<CourseFormValues>,
+  options: ValidationOptions = {}
+) {
   const errors: Partial<Record<keyof CourseFormValues, string>> = {};
   const requireSemester = options.requireSemester ?? false;
 

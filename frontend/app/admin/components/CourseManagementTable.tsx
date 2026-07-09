@@ -37,7 +37,9 @@ export default function CourseManagementTable({
         setCourses(response.courses || []);
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : 'Failed to fetch courses');
-        console.error('Error fetching courses:', error);
+        if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+          console.error('Error fetching courses:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -49,7 +51,8 @@ export default function CourseManagementTable({
   const handleStatusToggle = useCallback(async (courseId: number, currentStatus: string) => {
     try {
       setUpdatingStatus((prev) => ({ ...prev, [courseId]: true }));
-      const newStatus: CourseDBObject['status'] = currentStatus === 'ongoing' ? 'completed' : 'ongoing';
+      const newStatus: CourseDBObject['status'] =
+        currentStatus === 'ongoing' ? 'completed' : 'ongoing';
 
       await AdminApi.UpdateCourseStatus(courseId, { status: newStatus });
 
@@ -57,7 +60,9 @@ export default function CourseManagementTable({
         prev.map((course) => (course.id === courseId ? { ...course, status: newStatus } : course))
       );
     } catch (error: unknown) {
-      console.error('Error updating course status:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error updating course status:', error);
+      }
       setError(error instanceof Error ? error.message : 'Failed to update course status');
     } finally {
       setUpdatingStatus((prev) => ({ ...prev, [courseId]: false }));
@@ -74,7 +79,9 @@ export default function CourseManagementTable({
         await AdminApi.DeleteCourse(courseId, userId);
         setCourses((prev) => prev.filter((course) => course.id !== courseId));
       } catch (error: unknown) {
-        console.error('Error deleting course:', error);
+        if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+          console.error('Error deleting course:', error);
+        }
         setError(error instanceof Error ? error.message : 'Failed to delete course');
       }
     },

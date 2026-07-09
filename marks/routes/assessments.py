@@ -1,18 +1,44 @@
 from fastapi import APIRouter, HTTPException, status, Query
-from utils.auth import verifyInstructor, verifyRoleInCourse
+from utils.auth import verifyRoleInCourse
+from utils.feature_flags import is_feature_enabled
 from models.schemas.assessments import CreateAssessmentRequest, UpdateAssessmentRequest
-from services.assessments import add_assessment_to_db, get_all_assessments_from_db, update_assessment_in_db, delete_assessment_from_db
+from services.assessments import add_assessment_to_db, get_all_assessments_from_db, update_assessment_in_db, delete_assessment_from_db, fetch_system_wide_assessments
+from utils.auth import verifyRoleInCourse, verifyAdmin
 
 router = APIRouter()
 
-@router.post("/{course_id}/assessments")
-async def create_assessment(course_id: int, data: CreateAssessmentRequest):
-    verified = await verifyInstructor(data.user_id, course_id)
+@router.get("/assessments/all")
+async def get_all_assessments_admin(limit: int = 50, offset: int = 0, user_id: int = Query(...)):
+    verified = await verifyAdmin(user_id)
     if not verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Instructor privileges required"
+            detail="Admin privileges required"
         )
+    return fetch_system_wide_assessments(limit, offset)
+
+@router.post("/{course_id}/assessments")
+async def create_assessment(course_id: int, data: CreateAssessmentRequest):
+    # Admin bypass
+    if await verifyAdmin(data.user_id):
+        role = "instructor"
+    else:
+        # Check if user has basic permission (Instructor or TA)
+        try:
+            verified_data = await verifyRoleInCourse(data.user_id, course_id)
+            role = verified_data.get("role")
+        except HTTPException as e:
+            if e.status_code == 403:
+                raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
+            raise e
+    
+    if role == "instructor":
+        pass # OK
+    elif role == "ta":
+        if not is_feature_enabled("course.ta_assessment_management", {"course_id": course_id, "user_id": data.user_id, "role": role}):
+            raise HTTPException(status_code=403, detail="TA assessment management is disabled for this course")
+    else:
+        raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
         
     assessment_id = add_assessment_to_db(course_id, data)
     
@@ -26,12 +52,13 @@ async def create_assessment(course_id: int, data: CreateAssessmentRequest):
 
 @router.get("/{course_id}/assessments")
 async def get_all_assessments(course_id: int, user_id: int = Query(...)):
-    verified = await verifyRoleInCourse(user_id, course_id)
-    if not verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User does not have a role in this course"
-        )
+    if not await verifyAdmin(user_id):
+        verified = await verifyRoleInCourse(user_id, course_id)
+        if not verified:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User does not have a role in this course"
+            )
     
     assessments = get_all_assessments_from_db(course_id)
     
@@ -39,12 +66,13 @@ async def get_all_assessments(course_id: int, user_id: int = Query(...)):
 
 @router.get("/assessments/{course_id}/{assessment_id}")
 async def get_assessment(course_id: int, assessment_id: int, user_id: int = Query(...)):
-    verified = await verifyRoleInCourse(user_id, course_id)
-    if not verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User does not have a role in this course"
-        )
+    if not await verifyAdmin(user_id):
+        verified = await verifyRoleInCourse(user_id, course_id)
+        if not verified:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User does not have a role in this course"
+            )
     
     assessments = get_all_assessments_from_db(course_id, assessment_id)
     
@@ -58,12 +86,24 @@ async def get_assessment(course_id: int, assessment_id: int, user_id: int = Quer
 
 @router.put("/assessments/{course_id}/{assessment_id}")
 async def update_assessment(course_id: int, assessment_id: int, data: UpdateAssessmentRequest):
-    verified = await verifyInstructor(data.user_id, course_id)
-    if not verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Instructor privileges required"
-        )
+    if await verifyAdmin(data.user_id):
+        role = "instructor"
+    else:
+        try:
+            verified_data = await verifyRoleInCourse(data.user_id, course_id)
+            role = verified_data.get("role")
+        except HTTPException as e:
+            if e.status_code == 403:
+                raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
+            raise e
+    
+    if role == "instructor":
+        pass
+    elif role == "ta":
+        if not is_feature_enabled("course.ta_assessment_management", {"course_id": course_id, "user_id": data.user_id, "role": role}):
+            raise HTTPException(status_code=403, detail="TA assessment management is disabled for this course")
+    else:
+        raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
     
     success = update_assessment_in_db(course_id, assessment_id, data)
     
@@ -77,12 +117,24 @@ async def update_assessment(course_id: int, assessment_id: int, data: UpdateAsse
     
 @router.delete("/assessments/{course_id}/{assessment_id}")
 async def delete_assessment(course_id: int, assessment_id: int, user_id: int = Query(...)):
-    verified = await verifyInstructor(user_id, course_id)
-    if not verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Instructor privileges required"
-        )
+    if await verifyAdmin(user_id):
+        role = "instructor"
+    else:
+        try:
+            verified_data = await verifyRoleInCourse(user_id, course_id)
+            role = verified_data.get("role")
+        except HTTPException as e:
+            if e.status_code == 403:
+                raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
+            raise e
+    
+    if role == "instructor":
+        pass
+    elif role == "ta":
+        if not is_feature_enabled("course.ta_assessment_management", {"course_id": course_id, "user_id": user_id, "role": role}):
+            raise HTTPException(status_code=403, detail="TA assessment management is disabled for this course")
+    else:
+        raise HTTPException(status_code=403, detail="Instructor or authorized TA privileges required")
     
     success = delete_assessment_from_db(course_id, assessment_id)
     

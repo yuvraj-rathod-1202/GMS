@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from fastapi import HTTPException, status
 from models.schema.policy import AssignPolicyRequest, CreatePolicyRequest, UpdatePolicyRequest, UpdatePolicyComponentRequest, CreatePolicyComponentRequest
 from utils.db import get_db
-from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj, TotalScoreDBObj
+from models.dbobj.policy import PolicyDBObj, GradingComponentDBObj, GradingRuleDBObj, TotalScoreDBObj, AssessmentCategoryDBObj
 import httpx
 from dotenv import load_dotenv
 
@@ -514,4 +514,104 @@ def fetch_total_scores_from_db(course_id: int, student_id: int | None = None):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while retrieving total scores" if IS_PRODUCTION else f"Database error: {str(e)}"
         )
+
+def get_assessment_categories_from_db(course_id: int | None = None):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
         
+    try:
+        cursor = db.cursor()
+        if course_id is not None:
+            cursor.execute(
+                "SELECT id, type FROM assessment_category WHERE course_id IS NULL OR course_id = %s",
+                (course_id,)
+            )
+        else:
+            cursor.execute("SELECT id, type FROM assessment_category WHERE course_id IS NULL")
+        rows = cursor.fetchall()
+        return [AssessmentCategoryDBObj(id=row[0], type=row[1]) for row in rows]
+    except Exception as e:
+        logger.error(f"Database error in get_assessment_categories_from_db: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while retrieving assessment categories" if IS_PRODUCTION else f"Database error: {str(e)}"
+        )
+
+def add_assessment_category_to_db(course_id: int, category_name: str) -> int:
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+        
+    try:
+        cursor = db.cursor()
+        # Check if same category already exists globally or for this course
+        cursor.execute(
+            "SELECT id FROM assessment_category WHERE BINARY type = %s AND (course_id IS NULL OR course_id = %s)",
+            (category_name, course_id)
+        )
+        if cursor.fetchone():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Assessment category already exists"
+            )
+            
+        cursor.execute(
+            "INSERT INTO assessment_category (type, course_id) VALUES (%s, %s)",
+            (category_name, course_id)
+        )
+        db.commit()
+        return cursor.lastrowid
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Database error in add_assessment_category_to_db: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while adding assessment category" if IS_PRODUCTION else f"Database error: {str(e)}"
+        )
+        
+def delete_student_course_data_from_db(course_id: int, student_id: int):
+    """Delete policy assignment and computed totals for a student in a course (used on unenrollment)."""
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+
+    try:
+        cursor = db.cursor()
+
+        # Delete student's policy assignment for this course
+        cursor.execute(
+            "DELETE FROM student_course_policy WHERE course_id = %s AND student_id = %s",
+            (course_id, student_id)
+        )
+        policy_deleted = cursor.rowcount
+
+        # Delete student's computed totals for this course
+        cursor.execute(
+            "DELETE FROM computed_totals WHERE course_id = %s AND student_id = %s",
+            (course_id, student_id)
+        )
+        totals_deleted = cursor.rowcount
+
+        db.commit()
+        logger.info(f"Deleted student {student_id} data from course {course_id}: {policy_deleted} policy assignments, {totals_deleted} computed totals")
+        return {"policy_deleted": policy_deleted, "totals_deleted": totals_deleted}
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting student course data from policy DB: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while deleting student data" if IS_PRODUCTION else f"Failed to delete student course data: {e}"
+        )

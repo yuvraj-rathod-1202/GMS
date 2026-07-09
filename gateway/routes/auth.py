@@ -23,25 +23,36 @@ def _error_detail(response, default_msg: str) -> str:
         text = (response.text or "").strip()
         return text or default_msg
 
-@router.post("/login")
+# @router.post("/login")
+# @limiter.limit("10/minute")
+# async def login(request: Request, credentials: HTTPBasicCredentials = Depends(basic_auth)):
+#     async with httpx.AsyncClient() as client:
+#         try:
+#             response = await client.post(
+...
+#         except httpx.RequestError as e:
+#             raise HTTPException(
+#                 status_code=503,
+#                 detail=f"Auth service unavailable: {str(e)}"
+#             )
+
+@router.post("/google-login")
 @limiter.limit("10/minute")
-async def login(request: Request, credentials: HTTPBasicCredentials = Depends(basic_auth)):
+async def google_login(request: Request):
+    data = await request.json()
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                f"{AUTH_SERVICE_URL}/login",
-                auth=(credentials.username, credentials.password)
+                f"{AUTH_SERVICE_URL}/google-login",
+                json=data
             )
             
             if response.status_code == 200:
-                try:
-                    return response.json()
-                except Exception:
-                    return {"text": response.text}
+                return response.json()
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=_error_detail(response, "Authentication failed")
+                    detail=_error_detail(response, "Google authentication failed")
                 )
         except httpx.RequestError as e:
             raise HTTPException(
@@ -49,31 +60,17 @@ async def login(request: Request, credentials: HTTPBasicCredentials = Depends(ba
                 detail=f"Auth service unavailable: {str(e)}"
             )
 
-@router.post("/signup")
-async def signup(request: Request, user: SignUpUser):
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(
-                f"{AUTH_SERVICE_URL}/signup",
-                json=user.model_dump(),
-                auth=(str(user.id), user.password)
-            )
-            
-            if response.status_code in (200, 201):
-                try:
-                    return response.json()
-                except Exception:
-                    return {"text": response.text or "Signup succeeded"}
-            else:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=_error_detail(response, "Signup failed")
-                )
-        except httpx.RequestError as e:
-            raise HTTPException(
-                status_code=503,
-                detail=f"Auth service unavailable: {str(e)}"
-            )
+# @router.post("/signup")
+# async def signup(request: Request, user: SignUpUser):
+#     async with httpx.AsyncClient() as client:
+#         try:
+#             response = await client.post(
+...
+#         except httpx.RequestError as e:
+#             raise HTTPException(
+#                 status_code=503,
+#                 detail=f"Auth service unavailable: {str(e)}"
+#             )
             
 @router.post("/logout", dependencies=[Depends(verify_token)])
 async def logout(credentials: HTTPBasicCredentials = Depends(basic_auth)):
@@ -97,51 +94,31 @@ async def logout(credentials: HTTPBasicCredentials = Depends(basic_auth)):
                 detail=f"Auth service unavailable: {str(e)}"
             )
             
-@router.post("/change-password", dependencies=[Depends(verify_token)])
-@limiter.limit("5/minute")
-async def change_password(request: Request, data: ChangePasswordRequest):
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.put(
-                f"{AUTH_SERVICE_URL}/change-password",
-                json={"old_password": data.old_password, "new_password": data.new_password, "id": data.id},
-            )
+# @router.post("/change-password", dependencies=[Depends(verify_token)])
+# @limiter.limit("5/minute")
+# async def change_password(request: Request, data: ChangePasswordRequest):
+#     async with httpx.AsyncClient() as client:
+#         try:
+#             response = await client.put(
+...
+#         except httpx.RequestError as e:
+#             raise HTTPException(
+#                 status_code=503,
+#                 detail=f"Auth service unavailable: {str(e)}"
+#             )
             
-            if response.status_code == 200:
-                return {"text": "Password changed successfully"}
-            else:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=_error_detail(response, "Password change failed")
-                )
-        except httpx.RequestError as e:
-            raise HTTPException(
-                status_code=503,
-                detail=f"Auth service unavailable: {str(e)}"
-            )
-            
-@router.post("/forgot-password", dependencies=[Depends(verify_token)])
-@limiter.limit("3/hour")
-async def forgot_password(request: Request, data: ForgotPasswordRequest):
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(
-                f"{AUTH_SERVICE_URL}/forgot-password",
-                json={"id": data.id}
-            )
-            
-            if response.status_code == 200:
-                return {"text": "Password reset link sent"}
-            else:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=_error_detail(response, "Forgot password failed")
-                )
-        except httpx.RequestError as e:
-            raise HTTPException(
-                status_code=503,
-                detail=f"Auth service unavailable: {str(e)}"
-            )
+# @router.post("/forgot-password", dependencies=[Depends(verify_token)])
+# @limiter.limit("3/hour")
+# async def forgot_password(request: Request, data: ForgotPasswordRequest):
+#     async with httpx.AsyncClient() as client:
+#         try:
+#             response = await client.post(
+...
+#         except httpx.RequestError as e:
+#             raise HTTPException(
+#                 status_code=503,
+#                 detail=f"Auth service unavailable: {str(e)}"
+#             )
             
 @router.post("/feedback")
 @limiter.limit("10/hour")
@@ -164,25 +141,70 @@ async def submit_feedback(request: Request, data: FeedbackRequest):
                 status_code=503,
                 detail=f"Auth service Error: {str(e)}"
             )
-            
-@router.post("/instructor/reset-password", dependencies=[Depends(verify_token)])
-@limiter.limit("20/hour")
-async def instructor_reset_password(request: Request, data: InstructorResetPasswordRequest, user_info: dict = Depends(verify_token)):
+
+@router.get("/users", dependencies=[Depends(verify_token)])
+async def get_all_users(request: Request, limit: int = 50, offset: int = 0, search: str = None, user_info: dict = Depends(verify_token)):
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(
-                f"{AUTH_SERVICE_URL}/instructor/reset-password",
-                json={"user_id": user_info.get("user_id", ""), "target_user_id": data.target_user_id, "new_password": data.new_password},
+            params = {"limit": limit, "offset": offset}
+            if search:
+                params["search"] = search
+            response = await client.get(
+                f"{AUTH_SERVICE_URL}/users",
+                params=params
             )
             if response.status_code == 200:
-                return {"text": "Password reset successfully"}
+                return response.json()
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=_error_detail(response, "Failed to reset password")
+                    detail=_error_detail(response, "Failed to fetch users")
                 )
         except httpx.RequestError as e:
             raise HTTPException(
                 status_code=503,
-                detail=f"Auth service Error: {str(e)}"
+                detail=f"Auth service unavailable: {str(e)}"
             )
+
+@router.delete("/users/{user_id}", dependencies=[Depends(verify_token)])
+async def delete_user(user_id: int, user_info: dict = Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.delete(
+                f"{AUTH_SERVICE_URL}/users/{user_id}",
+                params={"admin_id": user_info.get("user_id", "")}
+            )
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=_error_detail(response, "Failed to delete user")
+                )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Auth service unavailable: {str(e)}"
+            )
+            
+# @router.post("/instructor/reset-password", dependencies=[Depends(verify_token)])
+# @limiter.limit("20/hour")
+# async def instructor_reset_password(request: Request, data: InstructorResetPasswordRequest, user_info: dict = Depends(verify_token)):
+#     async with httpx.AsyncClient() as client:
+#         try:
+#             response = await client.post(
+#                 f"{AUTH_SERVICE_URL}/instructor/reset-password",
+#                 json={"user_id": user_info.get("user_id", ""), "target_user_id": data.target_user_id, "new_password": data.new_password},
+#             )
+#             if response.status_code == 200:
+#                 return {"text": "Password reset successfully"}
+#             else:
+#                 raise HTTPException(
+#                     status_code=response.status_code,
+#                     detail=_error_detail(response, "Failed to reset password")
+#                 )
+#         except httpx.RequestError as e:
+#             raise HTTPException(
+#                 status_code=503,
+#                 detail=f"Auth service Error: {str(e)}"
+#             )

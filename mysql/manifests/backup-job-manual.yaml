@@ -1,0 +1,104 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: mysql-backup-manual-
+  labels:
+    app: mysql-backup
+    job-type: manual
+spec:
+  backoffLimit: 3
+
+  template:
+    metadata:
+      labels:
+        app: mysql-backup
+        job: backup-manual
+    spec:
+      serviceAccountName: mysql-backup
+      
+      initContainers:
+      - name: rclone-config
+        image: alpine:latest
+        command:
+          - /bin/sh
+          - -c
+          - |
+            mkdir -p /etc/rclone
+            if printf '%s' "$RCLONE_GDRIVE_AUTH" | base64 -d >/tmp/rclone_auth.json 2>/dev/null; then
+              AUTH_CONTENT=$(cat /tmp/rclone_auth.json)
+            else
+              AUTH_CONTENT="$RCLONE_GDRIVE_AUTH"
+            fi
+
+            cat > /etc/rclone/rclone.conf <<EOF
+            [gdrive]
+            type = drive
+            scope = drive
+            EOF
+
+            if echo "$AUTH_CONTENT" | grep -q '"type"[[:space:]]*:[[:space:]]*"service_account"'; then
+              printf '%s' "$AUTH_CONTENT" > /etc/rclone/gdrive-sa.json
+              echo "service_account_file = /etc/rclone/gdrive-sa.json" >> /etc/rclone/rclone.conf
+            else
+              AUTH_TOKEN=$(printf '%s' "$AUTH_CONTENT" | tr -d '\n\r')
+              echo "token = ${AUTH_TOKEN}" >> /etc/rclone/rclone.conf
+            fi
+
+            chmod 600 /etc/rclone/rclone.conf
+        env:
+        - name: RCLONE_GDRIVE_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: RCLONE_CONFIG_GDRIVE_TOKEN
+        volumeMounts:
+        - name: rclone-config
+          mountPath: /etc/rclone
+      
+      containers:
+      - name: mysql-backup
+        image: yrrathod/gms_backup
+        imagePullPolicy: Always
+        
+        env:
+        - name: MYSQL_HOST
+          value: "mysql"
+        - name: MYSQL_USER
+          value: "gms_user"
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_PASSWORD
+        - name: GOOGLE_DRIVE_FOLDER_ID
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: GOOGLE_DRIVE_FOLDER_ID
+        - name: BACKUP_DIR
+          value: "/backup"
+        - name: RCLONE_CONFIG
+          value: "/etc/rclone/rclone.conf"
+        
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        
+        volumeMounts:
+        - name: backup-storage
+          mountPath: /backup
+        - name: rclone-config
+          mountPath: /etc/rclone
+      
+      volumes:
+      - name: backup-storage
+        persistentVolumeClaim:
+          claimName: mysql-backup-pvc
+      - name: rclone-config
+        emptyDir: {}
+      
+      restartPolicy: Never

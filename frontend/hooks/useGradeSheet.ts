@@ -93,8 +93,10 @@ export function useGradeSheet({
       setEditingCell(null);
       setEditValue('');
     } catch (error) {
-      console.error('Error saving edit:', error);
-      // You might want to show an error message to the user here
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error saving edit:', error);
+      }
+      alert('Error saving edit');
     } finally {
       setIsProcessing(false);
     }

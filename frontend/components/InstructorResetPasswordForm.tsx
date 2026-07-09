@@ -88,9 +88,7 @@ export default function InstructorResetPasswordForm({ onSubmit, loading, error, 
 
       {localError && <div className="text-red-600 mb-2 text-sm">{localError}</div>}
       {error && <div className="text-red-600 mb-2 text-sm">{error}</div>}
-      {success && (
-        <div className="text-green-600 mb-2 text-sm">Password reset successfully!</div>
-      )}
+      {success && <div className="text-green-600 mb-2 text-sm">Password reset successfully!</div>}
 
       <button
         type="submit"

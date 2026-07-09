@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: policy
-          image: yrrathod/mms_policy
+          image: yrrathod/gms_policy
           ports:
             - containerPort: 7070
           envFrom:

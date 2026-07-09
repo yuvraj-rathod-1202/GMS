@@ -1,9 +1,10 @@
 import pytest
 from unittest.mock import patch
+from fastapi import HTTPException
 
-@patch('routes.assessments.verifyInstructor')
+@patch('routes.assessments.verifyRoleInCourse')
 def test_get_course_analytics_overview_success(mock_verify, client, mock_db):
-    mock_verify.return_value = True
+    mock_verify.return_value = {"success": True, "role": "instructor"}
     # mock get_course_overview_from_db return via mock_db fetchone
     mock_db.set_fetchone_result((1, 1, 85.5, 85.0, 100.0, 50.0, 10.0, 100, "2023-01-01", 1))
     
@@ -12,9 +13,9 @@ def test_get_course_analytics_overview_success(mock_verify, client, mock_db):
     assert response.status_code == 200
     assert "overview" in response.json()
 
-@patch('routes.assessments.verifyInstructor')
+@patch('routes.assessments.verifyRoleInCourse')
 def test_get_course_analytics_overview_unauthorized(mock_verify, client, mock_db):
-    mock_verify.return_value = False
+    mock_verify.side_effect = HTTPException(status_code=403, detail="Instructor privileges required")
     
     response = client.get("/1/analytics/overview?user_id=1")
     
@@ -23,7 +24,7 @@ def test_get_course_analytics_overview_unauthorized(mock_verify, client, mock_db
 
 @patch('routes.assessments.verifyRoleInCourse')
 def test_get_assessment_analytics_success(mock_verify, client, mock_db):
-    mock_verify.return_value = True
+    mock_verify.return_value = {"success": True, "role": "instructor"}
     mock_db.set_fetchone_result((1, 1, 1, 85.5, 85.0, 100.0, 50.0, 10.0, 100, "2026-05-05", 1))
     
     response = client.get("/1/assessments/1/analytics?user_id=1")
@@ -33,16 +34,16 @@ def test_get_assessment_analytics_success(mock_verify, client, mock_db):
 
 @patch('routes.assessments.verifyRoleInCourse')
 def test_get_assessment_analytics_unauthorized(mock_verify, client, mock_db):
-    mock_verify.return_value = False
+    mock_verify.side_effect = HTTPException(status_code=403, detail="Instructor privileges required")
     
     response = client.get("/1/assessments/1/analytics?user_id=1")
     
     assert response.status_code == 403
     assert "Instructor privileges required" in response.json()["detail"]
 
-@patch('routes.assessments.verifyInstructor')
+@patch('routes.assessments.verifyRoleInCourse')
 def test_get_assessment_frequencies_success(mock_verify, client, mock_db):
-    mock_verify.return_value = True
+    mock_verify.return_value = {"success": True, "role": "instructor"}
     mock_db.set_fetchall_result([(1, 1, 1, 85.0, 5, "2023-01-01")])
     
     response = client.get("/1/assessments/1/frequencies?user_id=1")

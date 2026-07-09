@@ -1,23 +1,40 @@
 'use client';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { useMemo } from 'react';
 
 export default function TANavbar() {
   const params = useParams();
   const pathname = usePathname();
   const courseId = params.id;
+  const { flags, isFeatureEnabled } = useFeatureFlags(Number(courseId));
 
-  const navItems = [
-    { label: 'Overview', href: `/c/${courseId}` },
-    { label: 'Students', href: `/c/${courseId}/p` },
-    { label: 'Grades', href: `/c/${courseId}/g` },
-  ];
+  const navItems = useMemo(() => {
+    const items = [
+      { label: 'Overview', href: `/c/${courseId}` },
+      { label: 'Students', href: `/c/${courseId}/p` },
+      { label: 'Grades', href: `/c/${courseId}/g` },
+    ];
+
+    if (
+      flags['course.ta_analytics_visibility'] ||
+      isFeatureEnabled('course.ta_analytics_visibility')
+    ) {
+      items.push({ label: 'Analytics', href: `/c/${courseId}/a` });
+    }
+    if (flags['course.ta_policy_management'] || isFeatureEnabled('course.ta_policy_management')) {
+      items.push({ label: 'Policies', href: `/c/${courseId}/gp` });
+    }
+
+    return items;
+  }, [courseId, flags, isFeatureEnabled]);
 
   const isActive = (href: string) => {
     if (href === `/c/${courseId}`) {
       return pathname === href;
     }
-    return pathname?.startsWith(href);
+    return pathname === href || pathname?.startsWith(`${href}/`);
   };
 
   return (
@@ -31,7 +48,7 @@ export default function TANavbar() {
                 href={item.href}
                 className={`px-3 sm:px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
                   isActive(item.href)
-                    ? 'border-b-4 border-b-mms-blue'
+                    ? 'border-b-4 border-b-gms-blue'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >

@@ -13,11 +13,13 @@ import UnenrolledStudentsDialog from '@/components/ui/UnenrolledStudentsDialog';
 import * as XLSX from 'xlsx';
 import { getAssessmentTypeLabel } from '@/lib/utils/assessmentlabel';
 import { BiSortAlt2, BiSortUp, BiSortDown, BiSliderAlt } from 'react-icons/bi';
+import { useAssessmentCategories } from '@/hooks/useAssessmentCategories';
 
 export default function AssessmentPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = Number(params.id);
+  const { categories } = useAssessmentCategories(courseId);
   const assessmentId = Number(params.assessmentid);
   const [isFetchingMarks, setIsFetchingMarks] = useState(false);
   const [isFetchingRoles, setIsFetchingRoles] = useState(false);
@@ -222,7 +224,7 @@ export default function AssessmentPage() {
       filtered = filtered.filter((row) => {
         const grade = row.marks_obtained;
         if (grade === null || grade === undefined) return true;
-        
+
         const meetsMin = filters.minGrade === undefined || grade >= filters.minGrade;
         const meetsMax = filters.maxGrade === undefined || grade <= filters.maxGrade;
         return meetsMin && meetsMax;
@@ -290,9 +292,7 @@ export default function AssessmentPage() {
   };
 
   // Check if any filters are active
-  const hasActiveFilters = 
-    filters.minGrade !== undefined ||
-    filters.maxGrade !== undefined;
+  const hasActiveFilters = filters.minGrade !== undefined || filters.maxGrade !== undefined;
 
   // Helper function to get sort icon
   const getSortIcon = (key: string) => {
@@ -358,8 +358,10 @@ export default function AssessmentPage() {
       // Refresh data
       await getmarksofassessment(courseId, assessmentId, true);
     } catch (error) {
-      console.error('Failed to save marks:', error);
-      // alert("Failed to save marks. Please try again.");
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Failed to save marks:', error);
+      }
+      alert('Failed to save marks. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -528,7 +530,9 @@ export default function AssessmentPage() {
         await importMarks(enrolled);
       }
     } catch (error) {
-      console.error('Bulk upload error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Bulk upload error:', error);
+      }
       alert('Failed to process file. Please check the format and try again.');
     }
   };
@@ -549,7 +553,9 @@ export default function AssessmentPage() {
         `Successfully imported marks for ${marksData.length} student${marksData.length > 1 ? 's' : ''}. Click "Save Marks" to apply changes.`
       );
     } catch (error) {
-      console.error('Import marks error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Import marks error:', error);
+      }
       alert('Failed to import marks. Please try again.');
     }
   };
@@ -571,7 +577,9 @@ export default function AssessmentPage() {
 
       await fetchCourseRoles(courseId);
     } catch (error) {
-      console.error('Enrollment error:', error);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Enrollment error:', error);
+      }
       alert('Failed to enroll students. Please try again.');
     } finally {
       setIsProcessingEnrollment(false);
@@ -660,7 +668,7 @@ export default function AssessmentPage() {
         handleBackClick={handleBackClick}
         currentAssessment={currentAssessment}
         isLoadingData={isLoadingData}
-        getAssessmentTypeLabel={getAssessmentTypeLabel}
+        getAssessmentTypeLabel={(typeId) => getAssessmentTypeLabel(typeId, categories)}
         formattedDate={formattedDate}
       />
       <GradeSheetButtons
@@ -684,11 +692,6 @@ export default function AssessmentPage() {
       {showUnenrolledDialog && (
         <UnenrolledStudentsDialog
           students={unenrolledStudents}
-          onEnrollAll={() =>
-            handleEnrollAndImport(
-              unenrolledStudents.map((s) => ({ student_id: s.student_id, email: s.email }))
-            )
-          }
           onSkipAll={handleSkipUnenrolled}
           onSelectiveEnroll={handleEnrollAndImport}
           onClose={() => setShowUnenrolledDialog(false)}

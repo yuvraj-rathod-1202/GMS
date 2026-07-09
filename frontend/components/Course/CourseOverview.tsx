@@ -1,12 +1,19 @@
 import { CourseDBObject } from '@/lib/types/courses';
 import QuickAction from '../ui/Overview/QuickAction';
 import StatsComponent from '../ui/Overview/StatsComponent';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 interface CourseOverviewProps {
   course: CourseDBObject;
 }
 
 export default function CourseOverview({ course }: CourseOverviewProps) {
+  const { flags, isFeatureEnabled } = useFeatureFlags(course.id);
+  const showPolicy =
+    flags['course.ta_policy_management'] || isFeatureEnabled('course.ta_policy_management');
+  const showAnalytics =
+    flags['course.ta_analytics_visibility'] || isFeatureEnabled('course.ta_analytics_visibility');
+
   const stats = [
     { label: 'Course Code', value: course.course_code },
     { label: 'Semester', value: course.semester },
@@ -23,7 +30,6 @@ export default function CourseOverview({ course }: CourseOverviewProps) {
               <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1">
                 {course.name}
               </h1>
-              <p className="text-xs sm:text-sm text-gray-600">Course Overview</p>
             </div>
           </div>
         </div>
@@ -36,7 +42,7 @@ export default function CourseOverview({ course }: CourseOverviewProps) {
           <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
             Quick Actions
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <QuickAction
               href={`/c/${course.id}/g`}
               title="Manage Student Marks"
@@ -47,6 +53,20 @@ export default function CourseOverview({ course }: CourseOverviewProps) {
               title="Manage Students"
               description="Add or remove participants"
             />
+            {showPolicy && (
+              <QuickAction
+                href={`/c/${course.id}/gp`}
+                title="Grading Policy Settings"
+                description="Configure grading rules"
+              />
+            )}
+            {showAnalytics && (
+              <QuickAction
+                href={`/c/${course.id}/a`}
+                title="Course Analytics"
+                description="View performance insights"
+              />
+            )}
           </div>
         </div>
       </div>

@@ -20,6 +20,8 @@ def _error_detail(response, default_msg: str) -> str:
         text = (response.text or "").strip()
         return text or default_msg
 
+        return text or default_msg
+
 @router.post("/{course_id}/policy")
 @limiter.limit("100/minute")
 async def create_policy(request: Request, course_id: int, data: CreatePolicyRequest, user_info: dict = Depends(verify_token)):

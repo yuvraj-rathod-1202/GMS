@@ -41,7 +41,9 @@ export default function NavBar() {
       try {
         const response = await CoursesApi.VerifyAdmin();
         setIsAdmin((response as any).isAdmin || false);
-        console.log('Admin status:', (response as any).isAdmin);
+        if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+          console.log('Admin status:', (response as any).isAdmin);
+        }
       } catch (err) {
         setIsAdmin(false);
       } finally {
@@ -78,11 +80,11 @@ export default function NavBar() {
     router.push('/login');
   };
 
-  const handleChangePassword = () => {
+  /*const handleChangePassword = () => {
     router.push('/change-password');
     setMenuOpen(false);
   };
-
+*/
   const handleFeedback = () => {
     router.push('/feedback');
     setMenuOpen(false);
@@ -99,7 +101,7 @@ export default function NavBar() {
 
   return (
     <div className="w-full relative z-9999">
-      <nav className="bg-white h-12 gap-4 border-b-2 border-mms-grayLight flex text-sm items-center px-6 justify-between relative z-9999">
+      <nav className="bg-white h-12 gap-4 border-b-2 border-gms-grayLight flex text-sm items-center px-6 justify-between relative z-9999">
         <div className="flex gap-4 items-center">
           <Link href="/">
             <p>Dashboard</p>
@@ -109,7 +111,7 @@ export default function NavBar() {
             <>
               <p>/</p>
               <Link href="/admin">
-                <p className="text-mms-blue font-medium">Admin</p>
+                <p className="text-gms-blue font-medium">Admin</p>
               </Link>
             </>
           )}
@@ -135,7 +137,7 @@ export default function NavBar() {
         <div className="hidden md:flex gap-4 items-center">
           {isAdmin && (
             <Link href="/admin">
-              <button className="px-3 py-1.5 text-sm text-mms-blue font-medium hover:bg-blue-50 rounded-md transition-colors flex items-center gap-2">
+              <button className="px-4 py-1.5 text-sm text-gms-blue font-semibold hover:bg-blue-50 border border-blue-200 rounded-lg shadow-sm hover:shadow transition-all flex items-center gap-2">
                 <FaShieldAlt className="size-4" />
                 Admin
               </button>
@@ -160,13 +162,13 @@ export default function NavBar() {
                     router.push('/admin');
                     setMenuOpen(false);
                   }}
-                  className="w-full text-left px-4 py-2.5 text-sm text-mms-blue flex gap-2 items-center first:rounded-t-lg transition font-medium border-b border-gray-100"
+                  className="w-full text-left px-4 py-2.5 text-sm text-gms-blue flex gap-2 items-center first:rounded-t-lg transition font-medium border-b border-gray-100"
                 >
                   <FaShieldAlt className="size-4" />
                   Admin Dashboard
                 </button>
               )}
-              <button
+              {/* <button
                 onClick={handleChangePassword}
                 className={`w-full text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center transition ${
                   !isAdmin ? 'first:rounded-t-lg' : ''
@@ -174,7 +176,7 @@ export default function NavBar() {
               >
                 <RiLockPasswordLine className="size-4" />
                 Change Password
-              </button>
+              </button> */}
               {isInstructorOrTa && (
                 <button
                   onClick={handleInstructorResetPassword}

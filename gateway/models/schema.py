@@ -28,8 +28,6 @@ class UpdateCourseStatusRequest(BaseModel):
     name: Optional[str] = None
     credits: Optional[int] = None
     
-    model_config = ConfigDict(extra="forbid")
-    
 class EnrollStudentRequest(BaseModel):
     student_id: int
     email: Optional[EmailStr] = None
@@ -58,8 +56,6 @@ class UpdateAssessmentRequest(BaseModel):
     max_marks: Optional[float] = None
     is_marks_published: Optional[bool] = None
     assessment_date: Optional[datetime] = None
-        
-    model_config = ConfigDict(extra="forbid")
         
 class StudentMark(BaseModel):
     student_id: int
@@ -114,3 +110,6 @@ class FeedbackRequest(BaseModel):
 class InstructorResetPasswordRequest(BaseModel):
     target_user_id: int
     new_password: str
+
+class CreateCategoryRequest(BaseModel):
+    type: str = Field(..., max_length=50)

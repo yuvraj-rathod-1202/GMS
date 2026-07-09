@@ -31,13 +31,23 @@ export function EmptyState({
       <div className="flex gap-3">
         {showSecondary && onSecondaryAction && (
           <>
-            <Button type="button" variant="ghost" onClick={onSecondaryAction} className="px-0 text-sm text-blue-600 hover:bg-transparent hover:text-blue-700">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onSecondaryAction}
+              className="px-0 text-sm text-blue-600 hover:bg-transparent hover:text-blue-700"
+            >
               {secondaryActionText}
             </Button>
             <span className="text-gray-300">|</span>
           </>
         )}
-        <Button type="button" variant="ghost" onClick={onPrimaryAction} className="px-0 text-sm text-blue-600 hover:bg-transparent hover:text-blue-700">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onPrimaryAction}
+          className="px-0 text-sm text-blue-600 hover:bg-transparent hover:text-blue-700"
+        >
           {primaryActionText}
         </Button>
       </div>

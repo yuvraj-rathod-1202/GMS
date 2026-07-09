@@ -62,11 +62,21 @@ async def enroll_student_in_course_in_db(course_id: int, student_id: int, email:
         cursor = db.cursor()
         
         cursor.execute(
-            "SELECT id FROM courses_role WHERE user_id = %s AND course_id = %s AND role = %s",
-            (student_id, course_id, target_role)
+            "SELECT id, role FROM courses_role WHERE user_id = %s AND course_id = %s",
+            (student_id, course_id)
         )
-        role_id = cursor.fetchone()
-        if enroll and not role_id:
+        existing_data = cursor.fetchone()
+        
+        if enroll:
+            if existing_data:
+                role_id, existing_role = existing_data
+                if existing_role != target_role:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"User already has role '{existing_role}' in this course. One user can only have one role per course."
+                    )
+                return None # Already has this exact role
+                
             if email:
                 await ensure_bulk_user_exists([(student_id, email)])
                 cursor.execute(
@@ -80,12 +90,15 @@ async def enroll_student_in_course_in_db(course_id: int, student_id: int, email:
             )
             result_id = cursor.lastrowid
             
-        elif not enroll and role_id:
-            cursor.execute(
-                "DELETE FROM courses_role WHERE id = %s",
-                (role_id[0],)
-            )
-            result_id = role_id[0]
+        elif not enroll and existing_data:
+            role_id, existing_role = existing_data
+            # Only unenroll if roles match (safety)
+            if existing_role == target_role:
+                cursor.execute(
+                    "DELETE FROM courses_role WHERE id = %s",
+                    (role_id,)
+                )
+                result_id = role_id
         
         if result_id and target_role == 'student':
             cursor.execute(
@@ -178,4 +191,41 @@ def unenroll_all_students_in_course_in_db(course_id: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while unenrolling all students" if IS_PRODUCTION else f"Failed to unenroll all students: {str(e)}"
+        )
+
+def fetch_all_enrollments_from_db(limit: int = 50, offset: int = 0):
+    db = get_db()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error"
+        )
+    try:
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT cr.id, cr.course_id, c.course_code, cr.user_id, COALESCE(cr.email, ie.email) as email, cr.role, cr.assigned_at "
+            "FROM courses_role cr "
+            "LEFT JOIN courses c ON cr.course_id = c.id "
+            "LEFT JOIN id_email_map ie ON cr.user_id = ie.user_id "
+            "ORDER BY cr.assigned_at DESC LIMIT %s OFFSET %s",
+            (limit, offset)
+        )
+        enrollments = cursor.fetchall()
+        enrollment_list = []
+        for e in enrollments:
+            enrollment_list.append({
+                "id": e[0],
+                "course_id": e[1],
+                "course_code": e[2],
+                "user_id": e[3],
+                "email": e[4],
+                "role": e[5],
+                "assigned_at": e[6]
+            })
+        return enrollment_list
+    except Exception as e:
+        logger.error(f"Error fetching all enrollments: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while fetching enrollments" if IS_PRODUCTION else f"Error: {str(e)}"
         )

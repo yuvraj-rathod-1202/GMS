@@ -34,6 +34,13 @@ class AssessmentMarkFrequencyBDObj(BaseModel):
     frequency: int
     computed_at: datetime
 
+class CourseMarkFrequencyBDObj(BaseModel):
+    id: int
+    course_id: int
+    mark: float
+    frequency: int
+    computed_at: datetime
+
 class SystemOverviewBDObj(BaseModel):
     total_courses: int
     active_courses: int

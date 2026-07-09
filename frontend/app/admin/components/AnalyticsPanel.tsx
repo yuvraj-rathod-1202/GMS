@@ -16,7 +16,9 @@ export default function AnalyticsPanel() {
       const data = await AdminApi.FetchSystemAnalytics();
       setAnalytics(data);
     } catch (err: any) {
-      console.error('Error fetching analytics:', err);
+      if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+        console.error('Error fetching analytics:', err);
+      }
       setError(err?.message || 'Failed to fetch analytics');
     } finally {
       setLoading(false);
@@ -73,11 +75,7 @@ export default function AnalyticsPanel() {
   }
 
   if (!analytics) {
-    return (
-      <div className="text-center py-12 text-gray-500">
-        No analytics data available
-      </div>
-    );
+    return <div className="text-center py-12 text-gray-500">No analytics data available</div>;
   }
 
   return (
@@ -114,34 +112,6 @@ export default function AnalyticsPanel() {
           subtext="Teaching courses"
           color="bg-purple-500"
         />
-
-        <StatCard
-          title="Total Assessments"
-          value={analytics.total_assessments}
-          subtext="Created by instructors"
-          color="bg-orange-500"
-        />
-
-        <StatCard
-          title="Avg Student Grade"
-          value={`${analytics.average_student_grade.toFixed(2)}%`}
-          subtext="System-wide average"
-          color="bg-rose-500"
-        />
-
-        <StatCard
-          title="Last Updated"
-          value={new Date(analytics.computed_at).toLocaleDateString()}
-          subtext={new Date(analytics.computed_at).toLocaleTimeString()}
-          color="bg-gray-500"
-        />
-      </div>
-
-      <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-sm text-blue-900">
-          <span className="font-medium">Note:</span> Analytics are aggregated from all courses in the system. 
-          Data is computed periodically and may take a few minutes to reflect recent changes.
-        </p>
       </div>
     </div>
   );

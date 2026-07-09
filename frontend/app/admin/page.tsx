@@ -8,6 +8,8 @@ import AssignInstructorModal from './components/AssignInstructorModal';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import EditCourseForm from './components/EditCourseForm';
 import { CourseDBObject } from '@/lib/types/courses';
+import Link from 'next/link';
+import { BiShieldQuarter, BiSpreadsheet } from 'react-icons/bi';
 
 type Tab = 'overview' | 'courses';
 
@@ -96,11 +98,21 @@ export default function AdminPage() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-600">
-          Manage courses, assign instructors, and view system-wide analytics
-        </p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+          <p className="text-gray-600">
+            Manage courses, assign instructors, and view system-wide analytics
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/admin/entities">
+            <button className="flex items-center gap-2 px-4 py-2 bg-gms-blue text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium">
+              <BiSpreadsheet className="text-xl" />
+              Manage All Entities
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Tab Navigation (Mobile Only) */}
@@ -109,7 +121,7 @@ export default function AdminPage() {
           onClick={() => setActiveTab('overview')}
           className={`px-4 py-3 font-medium text-sm transition-colors ${
             activeTab === 'overview'
-              ? 'text-mms-blue border-b-2 border-mms-blue'
+              ? 'text-gms-blue border-b-2 border-gms-blue'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -119,7 +131,7 @@ export default function AdminPage() {
           onClick={() => setActiveTab('courses')}
           className={`px-4 py-3 font-medium text-sm transition-colors ${
             activeTab === 'courses'
-              ? 'text-mms-blue border-b-2 border-mms-blue'
+              ? 'text-gms-blue border-b-2 border-gms-blue'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >

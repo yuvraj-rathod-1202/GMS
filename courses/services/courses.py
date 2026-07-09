@@ -10,7 +10,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development').lower() == 'production'
 
-def fetch_all_courses_from_db():
+def fetch_all_courses_from_db(limit: int = 50, offset: int = 0, search: str = None):
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -19,9 +19,20 @@ def fetch_all_courses_from_db():
         )
     try:
         cursor = db.cursor()
-        cursor.execute(
-            "SELECT id, course_code, name, semester, credits, status, total_students, created_at, updated_at FROM courses ORDER BY created_at DESC"
-        )
+        if search:
+            search_query = f"%{search}%"
+            cursor.execute(
+                "SELECT id, course_code, name, semester, credits, status, total_students, created_at, updated_at "
+                "FROM courses WHERE course_code LIKE %s OR name LIKE %s "
+                "ORDER BY created_at DESC LIMIT %s OFFSET %s",
+                (search_query, search_query, limit, offset)
+            )
+        else:
+            cursor.execute(
+                "SELECT id, course_code, name, semester, credits, status, total_students, created_at, updated_at "
+                "FROM courses ORDER BY created_at DESC LIMIT %s OFFSET %s",
+                (limit, offset)
+            )
         courses = cursor.fetchall()
         course_list = []
         for course in courses:

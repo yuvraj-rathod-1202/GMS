@@ -35,8 +35,10 @@ export const AdminApi = {
   },
 
   // Fetch all courses (admin view)
-  FetchAllCourses: async () => {
-    return handleRequest(apiClient.get('/courses/'));
+  async FetchAllCourses(limit = 50, offset = 0, search = '') {
+    let url = `/courses/?limit=${limit}&offset=${offset}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    return handleRequest(apiClient.get(url));
   },
 
   // Fetch system-wide analytics
@@ -56,9 +58,95 @@ export const AdminApi = {
   },
 
   // Remove instructor from a course
-  RemoveInstructor: async (courseId: number, instructorId: number, userId: number) => {
+  async RemoveInstructor(courseId: number, instructorId: number, userId: number) {
     return handleRequest(
-      apiClient.delete(`/courses/${courseId}/instructors?user_id=${userId}&instructor_id=${instructorId}`)
+      apiClient.delete(
+        `/courses/${courseId}/instructors?user_id=${userId}&instructor_id=${instructorId}`
+      )
     );
+  },
+
+  // --- Entity Management (Admin) ---
+
+  // Fetch all users across the system
+  async FetchAllUsers(limit = 50, offset = 0, search = '') {
+    let url = `/auth/users?limit=${limit}&offset=${offset}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    return handleRequest(apiClient.get(url));
+  },
+
+  // Fetch all enrollments
+  async FetchAllEnrollments(limit = 50, offset = 0) {
+    return handleRequest(apiClient.get(`/courses/enrollments/all?limit=${limit}&offset=${offset}`));
+  },
+
+  // Fetch all assessments across the system
+  async FetchAllAssessments(limit = 50, offset = 0) {
+    return handleRequest(apiClient.get(`/assessments/all?limit=${limit}&offset=${offset}`));
+  },
+
+  // Create a new assessment
+  async CreateAssessment(courseId: number, data: any) {
+    return handleRequest(apiClient.post(`/courses/${courseId}/assessments`, data));
+  },
+
+  // Update an existing assessment
+  async UpdateAssessment(courseId: number, assessmentId: number, data: any) {
+    return handleRequest(apiClient.put(`/assessments/${courseId}/${assessmentId}`, data));
+  },
+
+  async CreateEnrollment(courseId: number, studentId: number, role: string, email?: string) {
+    let endpoint = `/courses/${courseId}/enroll`;
+    if (role === 'ta') endpoint = `/courses/${courseId}/tas`;
+    if (role === 'instructor') endpoint = `/courses/${courseId}/instructors`;
+
+    const payload: any = {
+      student_id: studentId,
+      ta_id: studentId,
+      instructor_id: studentId,
+      email: email,
+    };
+
+    return handleRequest(apiClient.post(endpoint, payload));
+  },
+
+  // Delete an assessment
+  async DeleteAssessment(courseId: number, assessmentId: number) {
+    return handleRequest(apiClient.delete(`/assessments/${courseId}/${assessmentId}`));
+  },
+
+  // Unenroll a student
+  async UnenrollStudent(courseId: number, studentId: number) {
+    return handleRequest(apiClient.delete(`/courses/${courseId}/enroll?student_id=${studentId}`));
+  },
+
+  // Remove TA
+  async RemoveTA(courseId: number, taId: number) {
+    return handleRequest(apiClient.delete(`/courses/${courseId}/tas?ta_id=${taId}`));
+  },
+
+  // Generic Update (Work in progress)
+  async UpdateEntity(entity: string, id: number | string, data: any) {
+    return handleRequest(apiClient.put(`/admin/entities/${entity}/${id}`, data));
+  },
+
+  // Make a user an admin
+  async MakeAdmin(userId: number) {
+    return handleRequest(apiClient.post(`/admin/${userId}`));
+  },
+
+  // Remove admin status from a user
+  async RemoveAdmin(userId: number) {
+    return handleRequest(apiClient.delete(`/admin/${userId}`));
+  },
+
+  // Fetch all admin user IDs
+  async FetchAllAdmins() {
+    return handleRequest(apiClient.get('/admin/all'));
+  },
+
+  // Delete a user
+  async DeleteUser(userId: number) {
+    return handleRequest(apiClient.delete(`/auth/users/${userId}`));
   },
 };

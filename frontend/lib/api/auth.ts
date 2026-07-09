@@ -1,6 +1,12 @@
 import { apiClient } from './client';
 import { handleRequest } from './utils';
-import { SignUpRequest, ChangePasswordRequest, ForgotPasswordRequest, FeedBackSubmitRequest, InstructorResetPasswordRequest } from '@/lib/types/auth';
+import {
+  SignUpRequest,
+  ChangePasswordRequest,
+  ForgotPasswordRequest,
+  FeedBackSubmitRequest,
+  InstructorResetPasswordRequest,
+} from '@/lib/types/auth';
 
 export const Authapi = {
   login: async (username: number, password: string) => {
@@ -11,6 +17,10 @@ export const Authapi = {
     );
   },
 
+  googleLogin: async (token: string) => {
+    return handleRequest(apiClient.post('/auth/google-login', { token }));
+  },
+
   signup: async (userData: SignUpRequest) => {
     return handleRequest(apiClient.post('/auth/signup', userData));
   },
@@ -19,9 +29,10 @@ export const Authapi = {
     return handleRequest(apiClient.post('/auth/logout'));
   },
 
-  changePassword: async (data: ChangePasswordRequest) => {
+  /*changePassword: async (data: ChangePasswordRequest) => {
     return handleRequest(apiClient.post('/auth/change-password', data));
   },
+  */
 
   forgotPassword: async (data: ForgotPasswordRequest) => {
     return handleRequest(apiClient.post('/auth/forgot-password', data));

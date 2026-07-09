@@ -1,4 +1,16 @@
-export const getAssessmentTypeLabel = (typeId: number): string => {
+export interface AssessmentCategory {
+  id: number;
+  type: string;
+}
+
+export const getAssessmentTypeLabel = (
+  typeId: number,
+  categories?: AssessmentCategory[]
+): string => {
+  if (categories && categories.length > 0) {
+    const found = categories.find((c) => c.id === typeId);
+    if (found) return found.type;
+  }
   const types: { [key: number]: string } = {
     1: 'Quiz',
     2: 'Assignment',

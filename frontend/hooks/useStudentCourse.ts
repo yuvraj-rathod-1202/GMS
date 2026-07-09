@@ -1,8 +1,10 @@
 'use client';
 import { useState, useCallback } from 'react';
 import { MarksApi } from '@/lib/api/marks';
+import { PolicyApi } from '@/lib/api/policy';
 import { useCourseDetailStore } from '@/lib/store/courseDetail';
 import { useAuthStore } from '@/lib/store/auth';
+import { useFeatureFlags } from './useFeatureFlags';
 
 export function useStudentCourse() {
   const [loading, setLoading] = useState(false);
@@ -12,6 +14,9 @@ export function useStudentCourse() {
   const hasFetchedInSession = useCourseDetailStore((s) => s.hasFetchedStudentDataInSession);
   const setHasFetchedInSession = useCourseDetailStore((s) => s.setHasFetchedStudentDataInSession);
   const user = useAuthStore((s) => s.user);
+  const { isFeatureEnabled } = useFeatureFlags(
+    useCourseDetailStore.getState().currentCourse?.id || 0
+  );
 
   const fetchStudentCourseData = useCallback(
     async (courseId: number) => {
@@ -34,13 +39,24 @@ export function useStudentCourse() {
         const marksList = (marksData as any)?.marks || [];
         const analyticsList = (marksData as any)?.analytics || [];
 
-        // console.log('Fetched student marks data:', marksList);
-        // console.log('Fetched student analytics data:', analyticsList);
+        // Fetch total marks if enabled
+        let totalMarks = undefined;
+        if (isFeatureEnabled('course.total_marks_visibility')) {
+          try {
+            const totalData = await PolicyApi.GetTotalByStudentId(courseId, user.id);
+            totalMarks = (totalData as any)?.totals?.[0] || (totalData as any)?.totals;
+          } catch (e) {
+            if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+              console.error('Failed to fetch total marks:', e);
+            }
+          }
+        }
 
         // Store in the shared store
         setStudentData({
           marks: marksList,
           analytics: analyticsList,
+          totalMarks: totalMarks,
         });
 
         // Mark as fetched in this session

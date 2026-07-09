@@ -14,7 +14,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/mms
+  IMAGE_PREFIX: ${{ github.repository_owner }}/gms
 
 jobs:
   build-and-push:

@@ -43,11 +43,25 @@ export default function StudentCourseView() {
       {error && <div className="text-center py-4 text-red-600 bg-red-50 rounded-lg">{error}</div>}
 
       {!loading && !error && (
-        <AssessmentTable
-          columns={columns}
-          data={studentData?.marks || []}
-          emptyMessage="No assessments found."
-        />
+        <>
+          {studentData?.totalMarks && (
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Total Marks
+                </p>
+                <h3 className="text-3xl font-bold text-gray-900 mt-1">
+                  {studentData.totalMarks.total_marks.toFixed(2)}
+                </h3>
+              </div>
+            </div>
+          )}
+          <AssessmentTable
+            columns={columns}
+            data={studentData?.marks || []}
+            emptyMessage="No assessments found."
+          />
+        </>
       )}
 
       {/* Analytics Modal */}

@@ -8,6 +8,7 @@ import {
   CourseOverviewDBObject,
   AssessmentAnalyticsDBObject,
   AssessmentMarkFrequencyDBObject,
+  CourseMarkFrequencyDBObject,
 } from '@/lib/types/analytics';
 import { AssessmentDBObject } from '@/lib/types/assessments';
 import {
@@ -23,6 +24,8 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import InstructorNavbar from '@/components/Course/InstructorNavbar';
+import TANavbar from '@/components/Course/TANavbar';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { BiArrowBack, BiBarChartAlt2, BiHash, BiStats, BiTrendingUp, BiUser } from 'react-icons/bi';
 
 // Register Chart.js components
@@ -44,14 +47,20 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { role } = useRoleAccess({
+    allowedRoles: ['instructor', 'ta'],
+    courseId: courseId || 0,
+  });
+
   // Data states
   const [courseOverview, setCourseOverview] = useState<CourseOverviewDBObject | null>(null);
   const [assessments, setAssessments] = useState<AssessmentDBObject[]>([]);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<number | null>(null);
-  const [assessmentAnalytics, setAssessmentAnalytics] =
-    useState<AssessmentAnalyticsDBObject | null>(null);
+  const [assessmentAnalytics, setAssessmentAnalytics] = useState<
+    AssessmentAnalyticsDBObject | CourseOverviewDBObject | null
+  >(null);
   const [assessmentFrequencies, setAssessmentFrequencies] = useState<
-    AssessmentMarkFrequencyDBObject[]
+    AssessmentMarkFrequencyDBObject[] | CourseMarkFrequencyDBObject[]
   >([]);
 
   // Fetch course overview and assessments
@@ -88,32 +97,51 @@ export default function AnalyticsPage() {
     fetchData();
   }, [courseId]);
 
-  // Fetch assessment-specific analytics
+  // Fetch assessment-specific analytics OR course-wide analytics
   useEffect(() => {
-    if (!courseId || !selectedAssessmentId) return;
+    if (!courseId) return;
 
-    const fetchAssessmentData = async () => {
+    if (selectedAssessmentId === undefined) return;
+
+    const fetchAnalyticsData = async () => {
       try {
-        const [analytics, frequencies] = await Promise.all([
-          AnalyticsApi.GetAssessmentAnalytics(courseId, selectedAssessmentId),
-          AnalyticsApi.GetAssessmentFrequencies(courseId, selectedAssessmentId),
-        ]);
+        if (selectedAssessmentId === null) {
+          // Fetch Course Analytics and Frequencies
+          const [analytics, frequencies] = await Promise.all([
+            AnalyticsApi.GetCourseAnalytics(courseId),
+            AnalyticsApi.GetCourseFrequencies(courseId),
+          ]);
 
-        // Handle analytics response - extract from assessment_analytics key
-        const analyticsData = (analytics as any)?.assessment_analytics || analytics;
-        setAssessmentAnalytics(analyticsData as AssessmentAnalyticsDBObject);
+          const analyticsData = (analytics as any)?.overview || analytics;
+          setAssessmentAnalytics(analyticsData);
 
-        // Handle frequencies response
-        const frequenciesData = Array.isArray(frequencies)
-          ? frequencies
-          : (frequencies as any)?.frequencies || (frequencies as any)?.data || [];
-        setAssessmentFrequencies(frequenciesData);
+          const frequenciesData = Array.isArray(frequencies)
+            ? frequencies
+            : (frequencies as any)?.frequencies || (frequencies as any)?.data || [];
+          setAssessmentFrequencies(frequenciesData);
+        } else {
+          // Fetch Assessment Analytics
+          const [analytics, frequencies] = await Promise.all([
+            AnalyticsApi.GetAssessmentAnalytics(courseId, selectedAssessmentId),
+            AnalyticsApi.GetAssessmentFrequencies(courseId, selectedAssessmentId),
+          ]);
+
+          const analyticsData = (analytics as any)?.assessment_analytics || analytics;
+          setAssessmentAnalytics(analyticsData);
+
+          const frequenciesData = Array.isArray(frequencies)
+            ? frequencies
+            : (frequencies as any)?.frequencies || (frequencies as any)?.data || [];
+          setAssessmentFrequencies(frequenciesData);
+        }
       } catch (err: any) {
-        console.error('Failed to fetch assessment analytics:', err);
+        if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+          console.error('Failed to fetch analytics:', err);
+        }
       }
     };
 
-    fetchAssessmentData();
+    fetchAnalyticsData();
   }, [courseId, selectedAssessmentId]);
 
   if (loading) {
@@ -138,19 +166,40 @@ export default function AnalyticsPage() {
     );
   }
 
-  const selectedAssessment = assessments.find((assessment) => assessment.id === selectedAssessmentId);
-  const maxPossibleMarks = selectedAssessment?.max_marks ?? assessmentAnalytics?.max ?? 100;
+  const selectedAssessment =
+    selectedAssessmentId === null
+      ? null
+      : assessments.find((assessment) => assessment.id === selectedAssessmentId);
+  const maxPossibleMarks =
+    selectedAssessmentId === null
+      ? 100
+      : (selectedAssessment?.max_marks ?? (assessmentAnalytics as any)?.max ?? 100);
+
   const observedMaxMark = assessmentFrequencies.reduce(
     (highest, entry) => Math.max(highest, entry.mark),
     0
   );
+  const observedMinMark = assessmentFrequencies.reduce(
+    (lowest, entry) => Math.min(lowest, entry.mark),
+    0
+  );
+
   const histogramUpperBound = Math.max(maxPossibleMarks, observedMaxMark, 1);
-  const binCount = Math.min(10, Math.max(5, Math.ceil(Math.sqrt(Math.max(assessmentFrequencies.length, 1)))));
-  const binSize = Math.max(1, Math.ceil(histogramUpperBound / binCount));
-  const bins = Array.from({ length: Math.ceil(histogramUpperBound / binSize) }, (_, index) => {
-    const start = index * binSize;
+  const histogramLowerBound = Math.min(0, observedMinMark);
+  const range = Math.max(histogramUpperBound - histogramLowerBound, 1);
+
+  const binCount = Math.min(
+    10,
+    Math.max(5, Math.ceil(Math.sqrt(Math.max(assessmentFrequencies.length, 1))))
+  );
+
+  const binSize = Math.max(1, Math.ceil(range / binCount));
+
+  const totalBins = Math.ceil(range / binSize);
+  const bins = Array.from({ length: totalBins }, (_, index) => {
+    const start = histogramLowerBound + index * binSize;
     const end = Math.min(start + binSize, histogramUpperBound);
-    const isLastBin = index === Math.ceil(histogramUpperBound / binSize) - 1;
+    const isLastBin = index === totalBins - 1;
     const frequency = assessmentFrequencies.reduce((count, entry) => {
       const inRange = isLastBin
         ? entry.mark >= start && entry.mark <= end
@@ -179,10 +228,60 @@ export default function AnalyticsPage() {
     ],
   };
 
+  const meanLinePlugin = {
+    id: 'meanMedianLines',
+    afterDraw: (chart: any) => {
+      const pluginOptions = chart.options.plugins?.meanMedianLines;
+      if (!pluginOptions) return;
+
+      const { mean, median, exactMin, exactRange } = pluginOptions;
+      if (exactRange === undefined || exactRange === 0) return;
+
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return;
+
+      const { left, right, top, bottom } = chartArea;
+
+      const drawLine = (value: number, color: string, label: string) => {
+        const fraction = Math.max(0, Math.min((value - exactMin) / exactRange, 1));
+        const xPos = left + (right - left) * fraction;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(xPos, top);
+        ctx.lineTo(xPos, bottom);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = color;
+        ctx.stroke();
+
+        ctx.fillStyle = color;
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, xPos, top - 6);
+        ctx.restore();
+      };
+
+      if (mean !== null && mean !== undefined) {
+        drawLine(mean, '#22c55e', 'Mean');
+      }
+      if (median !== null && median !== undefined) {
+        drawLine(median, '#a855f7', 'Median');
+      }
+    },
+  };
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: { padding: { top: 20 } },
     plugins: {
+      meanMedianLines: {
+        mean: assessmentAnalytics?.mean,
+        median: assessmentAnalytics?.median,
+        exactMin: histogramLowerBound,
+        exactRange: totalBins * binSize,
+      },
       legend: { display: false },
       tooltip: {
         backgroundColor: '#1f2937',
@@ -214,58 +313,17 @@ export default function AnalyticsPage() {
 
   return (
     <>
-      <InstructorNavbar />
+      {role === 'instructor' ? <InstructorNavbar /> : <TANavbar />}
       <div className="flex flex-col overflow-y-auto h-[calc(100vh-96px)] bg-gray-50">
-        <div className="bg-white border-b border-gray-200 px-6 py-4 shrink-0">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all"
-              >
-                <BiArrowBack className="text-xl" />
-              </button>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  Course Analytics
-                </h1>
-                <p className="text-xs text-gray-500">Performance insights and grade distribution</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-7xl mx-auto space-y-8">
             {courseOverview && (
               <section>
-                <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
-                  Course Overview
-                </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <OverviewCard
-                    label="Total Students"
-                    value={courseOverview.total_students}
-                    trend="Enrolled"
-                  />
-                  <OverviewCard
-                    label="Class Average"
-                    value={courseOverview.mean?.toFixed(1)}
-                    trend="Mean Score"
-                    accentColor="text-green-600"
-                  />
-                  <OverviewCard
-                    label="Median Score"
-                    value={courseOverview.median?.toFixed(1)}
-                    trend="Middle Point"
-                    accentColor="text-purple-600"
-                  />
-                  <OverviewCard
-                    label="Standard Dev"
-                    value={courseOverview.std?.toFixed(2)}
-                    trend="Variability"
-                    accentColor="text-orange-600"
-                  />
+                  <OverviewCard label="Total Students" value={courseOverview.total_students} />
+                  <OverviewCard label="Average" value={courseOverview.mean?.toFixed(1)} />
+                  <OverviewCard label="Median" value={courseOverview.median?.toFixed(1)} />
+                  <OverviewCard label="STD" value={courseOverview.std?.toFixed(2)} />
                 </div>
               </section>
             )}
@@ -274,26 +332,31 @@ export default function AnalyticsPage() {
 
             <section className="space-y-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h2 className="text-lg font-bold text-gray-900">Assessment Analysis</h2>
-
                 {assessments.length > 0 && (
-                  <div className="relative">
-                    <select
-                      value={selectedAssessmentId || ''}
-                      onChange={(e) => setSelectedAssessmentId(Number(e.target.value))}
-                      className="appearance-none bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium min-w-60"
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setSelectedAssessmentId(null)}
+                      className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                        selectedAssessmentId === null
+                          ? 'bg-teal-50 text-gms-blue ring-1 ring-inset ring-gms-blue/20'
+                          : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                      }`}
                     >
-                      {assessments.map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                      <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
-                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                      </svg>
-                    </div>
+                      Total Mark
+                    </button>
+                    {assessments.map((a) => (
+                      <button
+                        key={a.id}
+                        onClick={() => setSelectedAssessmentId(a.id)}
+                        className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                          selectedAssessmentId === a.id
+                            ? 'bg-teal-50 text-gms-blue ring-1 ring-inset ring-gms-blue/20'
+                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {a.name}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -301,23 +364,19 @@ export default function AnalyticsPage() {
               {assessmentAnalytics ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-base font-semibold text-gray-900 mb-6">
-                      Performance Metrics
-                    </h3>
-
                     <div className="space-y-6">
                       <MetricRow
-                        label="Average Score"
+                        label="Mean"
                         value={assessmentAnalytics.mean}
                         max={
                           selectedAssessmentId
                             ? assessments.filter((a) => a.id === selectedAssessmentId)[0]?.max_marks
                             : 100
                         }
-                        color="bg-blue-500"
+                        color="bg-green-500"
                       />
                       <MetricRow
-                        label="Median Score"
+                        label="Median"
                         value={assessmentAnalytics.median}
                         max={
                           selectedAssessmentId
@@ -326,17 +385,23 @@ export default function AnalyticsPage() {
                         }
                         color="bg-purple-500"
                       />
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100">
                         <div>
                           <div className="text-xs text-gray-500 mb-1">Highest</div>
-                          <div className="text-xl font-bold text-green-600">
+                          <div className="text-xl font-bold text-black">
                             {assessmentAnalytics.max}
                           </div>
                         </div>
                         <div>
                           <div className="text-xs text-gray-500 mb-1">Lowest</div>
-                          <div className="text-xl font-bold text-red-600">
+                          <div className="text-xl font-bold text-black">
                             {assessmentAnalytics.min}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Std Dev</div>
+                          <div className="text-xl font-bold text-black">
+                            {assessmentAnalytics.std?.toFixed(2)}
                           </div>
                         </div>
                       </div>
@@ -344,14 +409,12 @@ export default function AnalyticsPage() {
                   </div>
 
                   <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-base font-semibold text-gray-900">Grade Distribution</h3>
-                      <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded text-gray-600">
-                        Frequency Histogram
-                      </span>
-                    </div>
                     <div className="h-64 md:h-80">
-                      <Bar data={frequencyChartData} options={chartOptions} />
+                      <Bar
+                        data={frequencyChartData}
+                        options={chartOptions}
+                        plugins={[meanLinePlugin]}
+                      />
                     </div>
                   </div>
                 </div>
@@ -368,24 +431,11 @@ export default function AnalyticsPage() {
   );
 }
 
-function OverviewCard({
-  label,
-  value,
-  trend,
-  accentColor = 'text-gray-900',
-}: {
-  label: string;
-  value: string | number | null;
-  trend: string;
-  accentColor?: string;
-}) {
+function OverviewCard({ label, value }: { label: string; value: string | number | null }) {
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between">
-      <div>
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
-        <h3 className={`text-2xl font-bold mt-1 ${accentColor}`}>{value || '-'}</h3>
-        <p className="text-xs text-gray-400 mt-1">{trend}</p>
-      </div>
+    <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+      <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">{label}</p>
+      <h3 className="text-xl font-bold text-gray-900 leading-none">{value || '-'}</h3>
     </div>
   );
 }

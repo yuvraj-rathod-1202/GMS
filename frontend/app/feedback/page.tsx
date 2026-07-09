@@ -18,7 +18,11 @@ export default function FeedbackPage() {
     setSuccess(false);
 
     try {
-      await Authapi.feedBack({ feedback_text: feedbackText, user_id: user?.id || 11111111 });
+      if (!user?.id) {
+        setError('You must be logged in to submit feedback');
+        return;
+      }
+      await Authapi.feedBack({ feedback_text: feedbackText, user_id: user.id });
       setSuccess(true);
     } catch (err: any) {
       setError(err?.message || 'Failed to submit feedback');
@@ -50,12 +54,7 @@ export default function FeedbackPage() {
             We value your Bug Reports. Share your thoughts with us!
           </p>
         </div>
-        <FeedbackForm
-          onSubmit={handleSubmit}
-          loading={loading}
-          error={error}
-          success={success}
-        />
+        <FeedbackForm onSubmit={handleSubmit} loading={loading} error={error} success={success} />
       </div>
     </main>
   );

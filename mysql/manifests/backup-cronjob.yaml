@@ -1,0 +1,136 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+  labels:
+    app: mysql-backup
+spec:
+  # Schedule: 4 times daily (every 6 hours)
+  # 0 0,6,12,18 * * * = midnight, 6am, noon, 6pm UTC
+  schedule: "0 0,6,12,18 * * *"
+  
+  # Keep last 3 successful jobs and 1 failed job for debugging
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  
+  jobTemplate:
+    spec:
+      # Job retry policy
+      backoffLimit: 3
+
+      # Pod restart policy
+      template:
+        metadata:
+          labels:
+            app: mysql-backup
+            job: backup
+          annotations:
+            description: "MySQL full database backup to local PVC and Google Drive"
+        spec:
+          serviceAccountName: mysql-backup
+          
+          # Initialize rclone configuration from secrets
+          initContainers:
+          - name: rclone-config
+            image: alpine:latest
+            command:
+              - /bin/sh
+              - -c
+              - |
+                mkdir -p /etc/rclone
+                if printf '%s' "$RCLONE_GDRIVE_AUTH" | base64 -d >/tmp/rclone_auth.json 2>/dev/null; then
+                  AUTH_CONTENT=$(cat /tmp/rclone_auth.json)
+                else
+                  AUTH_CONTENT="$RCLONE_GDRIVE_AUTH"
+                fi
+
+                cat > /etc/rclone/rclone.conf <<EOF
+                [gdrive]
+                type = drive
+                scope = drive
+                EOF
+
+                if echo "$AUTH_CONTENT" | grep -q '"type"[[:space:]]*:[[:space:]]*"service_account"'; then
+                  printf '%s' "$AUTH_CONTENT" > /etc/rclone/gdrive-sa.json
+                  echo "service_account_file = /etc/rclone/gdrive-sa.json" >> /etc/rclone/rclone.conf
+                else
+                  AUTH_TOKEN=$(printf '%s' "$AUTH_CONTENT" | tr -d '\n\r')
+                  echo "token = ${AUTH_TOKEN}" >> /etc/rclone/rclone.conf
+                fi
+
+                chmod 600 /etc/rclone/rclone.conf
+            env:
+            - name: RCLONE_GDRIVE_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: RCLONE_CONFIG_GDRIVE_TOKEN
+            volumeMounts:
+            - name: rclone-config
+              mountPath: /etc/rclone
+          
+          containers:
+          - name: mysql-backup
+            image: yrrathod/gms_backup
+            imagePullPolicy: Always
+            
+            env:
+            - name: MYSQL_HOST
+              value: "mysql"
+            - name: MYSQL_USER
+              value: "gms_user"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
+            - name: GOOGLE_DRIVE_FOLDER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: GOOGLE_DRIVE_FOLDER_ID
+            - name: BACKUP_DIR
+              value: "/backup"
+            - name: RCLONE_CONFIG
+              value: "/etc/rclone/rclone.conf"
+            
+            # Resource limits to prevent runaway backups
+            resources:
+              requests:
+                cpu: 500m
+                memory: 512Mi
+              limits:
+                cpu: 1000m
+                memory: 2Gi
+            
+            # Mount backup storage and rclone config
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+            - name: rclone-config
+              mountPath: /etc/rclone
+            
+            # Liveness probe to detect hung backups
+            livenessProbe:
+              exec:
+                command:
+                - /bin/bash
+                - -c
+                - "test -f /backup/backup-*.sql.gz && exit 0 || exit 1"
+              initialDelaySeconds: 300
+              periodSeconds: 60
+              failureThreshold: 5
+          
+          # Volumes
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: mysql-backup-pvc
+          - name: rclone-config
+            emptyDir: {}
+          
+          # Pod restart policy
+          restartPolicy: OnFailure
+          
+          # Tolerate tainted nodes if needed
+          tolerations: []

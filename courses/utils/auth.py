@@ -1,25 +1,19 @@
 from fastapi import HTTPException, status
 from utils.db import get_db
 
-def verifyAdmin(user_id: int):
+def isAdmin(user_id: int) -> bool:
     db = get_db()
-    if db is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error"
-        )
-    
+    if db is None: return False
     cursor = db.cursor()
-    cursor.execute(
-        "SELECT id FROM admin WHERE user_id = %s",
-        (user_id,)
-    )
-    admin = cursor.fetchone()
-    if admin is None:
-        raise HTTPException(status_code=403, detail="Admin privileges required")
-    return True
+    cursor.execute("SELECT id FROM admin WHERE user_id = %s", (user_id,))
+    return cursor.fetchone() is not None
+
+def verifyAdmin(user_id: int):
+    if isAdmin(user_id): return True
+    raise HTTPException(status_code=403, detail="Admin privileges required")
 
 def verifyInstructor(user_id: int, course_id: int):
+    if isAdmin(user_id): return True
     db = get_db()
     if db is None:
         raise HTTPException(
@@ -41,6 +35,7 @@ def verifyInstructor(user_id: int, course_id: int):
     return True
 
 def verifyInstructorOrTa(user_id: int, course_id: int):
+    if isAdmin(user_id): return True
     db = get_db()
     if db is None:
         raise HTTPException(

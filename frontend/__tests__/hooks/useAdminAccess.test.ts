@@ -8,44 +8,44 @@ jest.mock('@/lib/api/courses');
 jest.mock('next/navigation');
 
 describe('useAdminAccess hook', () => {
-    const mockPush = jest.fn();
+  const mockPush = jest.fn();
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-    });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+  });
 
-    it('sets isAdmin to true if verified', async () => {
-        (CoursesApi.VerifyAdmin as jest.Mock).mockResolvedValue({ isAdmin: true });
-        
-        const { result } = renderHook(() => useAdminAccess());
-        
-        await waitFor(() => {
-            expect(result.current.isAdmin).toBe(true);
-            expect(result.current.isLoading).toBe(false);
-        });
-        expect(mockPush).not.toHaveBeenCalled();
-    });
+  it('sets isAdmin to true if verified', async () => {
+    (CoursesApi.VerifyAdmin as jest.Mock).mockResolvedValue({ isAdmin: true });
 
-    it('redirects if not admin', async () => {
-        (CoursesApi.VerifyAdmin as jest.Mock).mockResolvedValue({ isAdmin: false });
-        
-        const { result } = renderHook(() => useAdminAccess('/login'));
-        
-        await waitFor(() => {
-            expect(result.current.isAdmin).toBe(false);
-            expect(result.current.isLoading).toBe(false);
-        });
-        expect(mockPush).toHaveBeenCalledWith('/login');
-    });
+    const { result } = renderHook(() => useAdminAccess());
 
-    it('redirects to dashboard by default if not admin', async () => {
-        (CoursesApi.VerifyAdmin as jest.Mock).mockResolvedValue({ isAdmin: false });
-        
-        const { result } = renderHook(() => useAdminAccess());
-        
-        await waitFor(() => {
-            expect(mockPush).toHaveBeenCalledWith('/dashboard');
-        });
+    await waitFor(() => {
+      expect(result.current.isAdmin).toBe(true);
+      expect(result.current.isLoading).toBe(false);
     });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('redirects if not admin', async () => {
+    (CoursesApi.VerifyAdmin as jest.Mock).mockResolvedValue({ isAdmin: false });
+
+    const { result } = renderHook(() => useAdminAccess('/login'));
+
+    await waitFor(() => {
+      expect(result.current.isAdmin).toBe(false);
+      expect(result.current.isLoading).toBe(false);
+    });
+    expect(mockPush).toHaveBeenCalledWith('/login');
+  });
+
+  it('redirects to dashboard by default if not admin', async () => {
+    (CoursesApi.VerifyAdmin as jest.Mock).mockResolvedValue({ isAdmin: false });
+
+    const { result } = renderHook(() => useAdminAccess());
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/dashboard');
+    });
+  });
 });

@@ -1,9 +1,9 @@
-CREATE USER IF NOT EXISTS 'mms_user'@'%' IDENTIFIED BY 'MmsUserPass123';
+CREATE USER IF NOT EXISTS 'gms_user'@'%' IDENTIFIED BY 'GmsUserPass123';
 
 -- Auth Database
 CREATE DATABASE auth;
 
-GRANT ALL PRIVILEGES ON auth.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON auth.* TO 'gms_user'@'%';
 
 USE auth;
 
@@ -20,7 +20,7 @@ CREATE INDEX idx_id ON users (id);
 
 -- Courses Database
 CREATE DATABASE IF NOT EXISTS courses;
-GRANT ALL PRIVILEGES ON courses.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON courses.* TO 'gms_user'@'%';
 
 USE courses;
 
@@ -70,7 +70,7 @@ CREATE INDEX idx_id_email ON id_email_map (user_id);
 -- Marks Database
 CREATE DATABASE IF NOT EXISTS marks;
 
-GRANT ALL PRIVILEGES ON marks.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON marks.* TO 'gms_user'@'%';
 
 USE marks;
 
@@ -146,7 +146,7 @@ CREATE INDEX idx_assessment ON assessments (id);
 -- Policy Database
 CREATE DATABASE IF NOT EXISTS policy;
 
-GRANT ALL PRIVILEGES ON policy.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON policy.* TO 'gms_user'@'%';
 
 USE policy;
 
@@ -165,7 +165,9 @@ CREATE TABLE IF NOT EXISTS course_policy (
 
 CREATE TABLE IF NOT EXISTS assessment_category (
     id int AUTO_INCREMENT PRIMARY KEY,
-    type VARCHAR(50) NOT NULL UNIQUE
+    type VARCHAR(50) NOT NULL,
+    course_id INT DEFAULT NULL,
+    UNIQUE KEY unique_type_course (type, course_id)
 );
 
 CREATE TABLE IF NOT EXISTS grading_components (
@@ -230,7 +232,7 @@ CREATE INDEX idx_course_student ON computed_totals (course_id, student_id);
 -- Analytics Database
 CREATE DATABASE IF NOT EXISTS analytics;
 
-GRANT ALL PRIVILEGES ON analytics.* TO 'mms_user'@'%';
+GRANT ALL PRIVILEGES ON analytics.* TO 'gms_user'@'%';
 
 USE analytics;
 

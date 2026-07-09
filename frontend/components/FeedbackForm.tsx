@@ -27,7 +27,7 @@ export default function FeedbackForm({ onSubmit, loading, error, success }: Prop
     try {
       await onSubmit(feedbackText);
       setFeedbackText(''); // Clear form on success
-      } catch {
+    } catch {
       // error is handled by parent
     }
   }
@@ -43,19 +43,23 @@ export default function FeedbackForm({ onSubmit, loading, error, success }: Prop
         wrapperClassName="mb-4"
       />
 
-      {localError && <Alert variant="error" className="mb-3">{localError}</Alert>}
-      {error && <Alert variant="error" className="mb-3">{error}</Alert>}
+      {localError && (
+        <Alert variant="error" className="mb-3">
+          {localError}
+        </Alert>
+      )}
+      {error && (
+        <Alert variant="error" className="mb-3">
+          {error}
+        </Alert>
+      )}
       {success && (
         <Alert variant="success" className="mb-3">
           Thank you! Your Bug Report has been submitted successfully.
         </Alert>
       )}
 
-      <Button
-        type="submit"
-        disabled={loading}
-        className="w-full"
-      >
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? 'Submitting...' : 'Submit Report'}
       </Button>
     </form>

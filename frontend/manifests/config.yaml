@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: frontend-config
 data:
-  NEXT_PUBLIC_BACKEND_URL: 'http://mms-backend.com'
+  NEXT_PUBLIC_BACKEND_URL: '/api'
   NEXT_PUBLIC_ENVIRONMENT: 'production'

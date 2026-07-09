@@ -8,46 +8,46 @@ jest.mock('@/lib/api/courses');
 jest.mock('@/lib/store/courses');
 
 describe('useCourses hook', () => {
-    const mockSetCourses = jest.fn();
-    const mockClearCourses = jest.fn();
+  const mockSetCourses = jest.fn();
+  const mockClearCourses = jest.fn();
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        (useCoursesStore as unknown as jest.Mock).mockImplementation((selector) => {
-            const state = { setCourses: mockSetCourses, clearCourses: mockClearCourses };
-            return selector(state);
-        });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useCoursesStore as unknown as jest.Mock).mockImplementation((selector) => {
+      const state = { setCourses: mockSetCourses, clearCourses: mockClearCourses };
+      return selector(state);
+    });
+  });
+
+  it('fetchCourses updates store on success', async () => {
+    const mockCourses = [{ id: 1, name: 'CS101' }];
+    (CoursesApi.FetchMyCourses as jest.Mock).mockResolvedValue(mockCourses);
+
+    const { result } = renderHook(() => useCourses());
+
+    await act(async () => {
+      await result.current.fetchCourses();
     });
 
-    it('fetchCourses updates store on success', async () => {
-        const mockCourses = [{ id: 1, name: 'CS101' }];
-        (CoursesApi.FetchMyCourses as jest.Mock).mockResolvedValue(mockCourses);
+    expect(mockClearCourses).toHaveBeenCalled();
+    expect(mockSetCourses).toHaveBeenCalledWith(mockCourses);
+    expect(result.current.loading).toBe(false);
+  });
 
-        const { result } = renderHook(() => useCourses());
+  it('fetchCourses handles error', async () => {
+    (CoursesApi.FetchMyCourses as jest.Mock).mockRejectedValue(new Error('Fetch failed'));
 
-        await act(async () => {
-            await result.current.fetchCourses();
-        });
+    const { result } = renderHook(() => useCourses());
 
-        expect(mockClearCourses).toHaveBeenCalled();
-        expect(mockSetCourses).toHaveBeenCalledWith(mockCourses);
-        expect(result.current.loading).toBe(false);
+    await act(async () => {
+      try {
+        await result.current.fetchCourses();
+      } catch (e: any) {
+        expect(e.message).toBe('Fetch failed');
+      }
     });
 
-    it('fetchCourses handles error', async () => {
-        (CoursesApi.FetchMyCourses as jest.Mock).mockRejectedValue(new Error('Fetch failed'));
-
-        const { result } = renderHook(() => useCourses());
-
-        await act(async () => {
-            try {
-                await result.current.fetchCourses();
-            } catch (e: any) {
-                expect(e.message).toBe('Fetch failed');
-            }
-        });
-
-        expect(result.current.error).toBe('Fetch failed');
-        expect(mockClearCourses).toHaveBeenCalledTimes(2); // Initial + Error
-    });
+    expect(result.current.error).toBe('Fetch failed');
+    expect(mockClearCourses).toHaveBeenCalledTimes(2); // Initial + Error
+  });
 });

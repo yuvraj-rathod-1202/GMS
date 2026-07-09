@@ -1,4 +1,6 @@
-import os, logging, datetime, bcrypt
+import os, logging, datetime, bcrypt, random
+from google.oauth2 import id_token
+from google.auth.transport import requests
 from fastapi import HTTPException, status
 from models.schema import User, BulkEnrollStudentRequest, ChangePasswordRequest, ForgotPasswordRequest, FeedbackRequest
 from utils.security import create_jwt_token, verify_password
@@ -40,6 +42,72 @@ def _handle_service_error(action: str, exc: Exception, public_message: str):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail=public_message if IS_PRODUCTION else f"{action} error: {str(exc)}",
     )
+
+def _generate_unique_id(cursor) -> int:
+    while True:
+        new_id = random.randint(1000000, 9999999)
+        cursor.execute("SELECT id FROM email_id_map WHERE id = %s", (new_id,))
+        if not cursor.fetchone():
+            return new_id
+
+def google_login_user(token: str):
+    db = _get_db_or_raise()
+    try:
+        # Verify the ID token
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), os.getenv("GOOGLE_CLIENT_ID"), clock_skew_in_seconds=60)
+
+        
+        email = idinfo['email']
+        if not email.endswith("@iitgn.ac.in"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only @iitgn.ac.in emails are allowed"
+            )
+        
+        google_id = idinfo['sub']
+        cur = db.cursor()
+        
+        # 1. Map email to ID
+        cur.execute("SELECT id FROM email_id_map WHERE email = %s", (email,))
+        row = cur.fetchone()
+        if row:
+            user_id = row[0]
+        else:
+            # Generate new 7-digit unique ID
+            user_id = _generate_unique_id(cur)
+            cur.execute("INSERT INTO email_id_map (email, id) VALUES (%s, %s)", (email, user_id))
+            db.commit()
+            
+        # 2. Check/Create user in users table
+        cur.execute("SELECT id, email FROM users WHERE id = %s", (user_id,))
+        row = cur.fetchone()
+        
+        if row:
+            # Update google_id if not set or different
+            cur.execute("UPDATE users SET google_id = %s, last_login = %s WHERE id = %s", (google_id, _utcnow(), user_id))
+        else:
+            # Create new user
+            cur.execute(
+                "INSERT INTO users (id, email, google_id, last_login, created_at) VALUES (%s, %s, %s, %s, %s)",
+                (user_id, email, google_id, _utcnow(), _utcnow())
+            )
+        db.commit()
+        
+        # 3. Issue JWT
+        jwt_token = create_jwt_token(
+            User(id=user_id, email=email),
+            os.getenv("JWT_SECRET_KEY") or "default",
+        )
+        
+        return {"token": jwt_token, "user": {"id": user_id, "email": email, "last_login": _utcnow()}}
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid Google token: {str(e)}"
+        )
+    except Exception as e:
+        _handle_service_error("Google Login", e, "An error occurred during Google login")
 
 def login_user(username: str, password: str):
     db = _get_db_or_raise()
@@ -122,6 +190,12 @@ def bulk_signup_users(data: BulkEnrollStudentRequest):
             cursor.executemany(
                 "INSERT IGNORE INTO users (id, email, password_hash, last_login, created_at) VALUES (%s, %s, %s, %s, %s)",
                 user_data
+            )
+            # Update email_id_map
+            email_id_data = [(user.email, user.id) for user in data.users]
+            cursor.executemany(
+                "INSERT IGNORE INTO email_id_map (email, id) VALUES (%s, %s)",
+                email_id_data
             )
             db.commit()
             return {"message": f"Created {len(user_data)} new users, {len(existing_ids)} already existed"}
@@ -226,3 +300,69 @@ def instructor_reset_user_password(target_user_id: int, new_password: str):
     
     except Exception as e:
         _handle_service_error("Instructor reset password", e, "Failed to reset password")
+
+def get_all_users(limit: int = 50, offset: int = 0, search: str = None):
+    db = _get_db_or_raise()
+    try:
+        cur = db.cursor()
+        if search:
+            search_query = f"%{search}%"
+            cur.execute(
+                "SELECT id, email, last_login, created_at FROM users WHERE id LIKE %s OR email LIKE %s LIMIT %s OFFSET %s",
+                (search_query, search_query, limit, offset)
+            )
+        else:
+            cur.execute(
+                "SELECT id, email, last_login, created_at FROM users LIMIT %s OFFSET %s",
+                (limit, offset)
+            )
+        rows = cur.fetchall()
+        users = []
+        for row in rows:
+            users.append({
+                "id": row[0],
+                "email": row[1],
+                "last_login": row[2],
+                "created_at": row[3]
+            })
+        return {"users": users}
+    except Exception as e:
+        _handle_service_error("Fetch users", e, "Failed to fetch users")
+
+def get_users_by_ids(user_ids: list[int]):
+    db = _get_db_or_raise()
+    try:
+        if not user_ids:
+            return {'users': []}
+        cur = db.cursor()
+        placeholders = ','.join(['%s'] * len(user_ids))
+        cur.execute(
+            f'SELECT id, email, last_login, created_at FROM users WHERE id IN ({placeholders})',
+            tuple(user_ids)
+        )
+        rows = cur.fetchall()
+        return {'users': [{'id': r[0], 'email': r[1], 'last_login': r[2], 'created_at': r[3]} for r in rows]}
+    except Exception as e:
+        _handle_service_error('Fetch users by IDs', e, 'Failed to fetch users')
+
+def delete_user(user_id: int):
+    db = _get_db_or_raise()
+    try:
+        cur = db.cursor()
+        
+        # 1. Get user email to delete from email_id_map
+        cur.execute("SELECT email FROM users WHERE id = %s", (user_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # 2. Delete from users
+        cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        
+        db.commit()
+        return {"text": f"User {user_id} and associated data deleted successfully"}
+    except Exception as e:
+        _handle_service_error("Delete user", e, "Failed to delete user")

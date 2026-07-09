@@ -2,9 +2,27 @@ from services.assessments import get_course_overview_from_db, get_assessment_ana
 from models.schema.queue import AssessmentQueueMessage
 import numpy as np
 from utils.db import get_db
+import os
+import MySQLdb
+
+def get_total_enrolled_students(course_id: int) -> int:
+    db_host = os.getenv("DB_HOST", "localhost")
+    db_user = os.getenv("DB_USER", "gms_user")
+    db_password = os.getenv("DB_PASSWORD", "GmsUserPass123")
+    db_port = int(os.getenv("DB_PORT", 3306))
+    try:
+        courses_db = MySQLdb.connect(host=db_host, user=db_user, passwd=db_password, db="courses", port=db_port)
+        cursor = courses_db.cursor()
+        cursor.execute("SELECT COUNT(DISTINCT user_id) FROM courses_role WHERE course_id = %s AND role = 'student'", (course_id,))
+        result = cursor.fetchone()
+        cursor.close()
+        courses_db.close()
+        return int(result[0]) if result and result[0] else 0
+    except Exception:
+        return 0
 
 def add_course_analytics_to_db(course_id: int, marks: np.array):
-    total_students = len(marks)
+    total_students = get_total_enrolled_students(course_id)
     mean = np.mean(marks)
     std = np.std(marks)
     median = np.median(marks)
@@ -55,7 +73,7 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
     old_max = course_analytic_overview.max
     old_min = course_analytic_overview.min
     
-    new_total_students = old_total_students + len(new_entries) - len(deleted_entries)
+    new_total_students = get_total_enrolled_students(course_id)
     
     affected = deleted_entries + [old for old, new in old_entries]
     
@@ -63,10 +81,19 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
         any(mark == old_max for mark in affected) or
         any(mark == old_min for mark in affected)
     )
-    # recompute_needed = True
     
-    old_s = old_mean*old_total_students
-    old_q = (old_std**2 + old_mean**2)*old_total_students
+    cursor = db.cursor()
+    cursor.execute("SELECT SUM(frequency) FROM course_mark_frequency WHERE course_id = %s", (course_id,))
+    res = cursor.fetchone()
+    old_marks_count = int(res[0]) if res and res[0] else 0
+    new_marks_count = old_marks_count + len(new_entries) - len(deleted_entries)
+    
+    if old_marks_count > 0:
+        old_s = old_mean * old_marks_count
+        old_q = (old_std**2 + old_mean**2) * old_marks_count
+    else:
+        old_s = 0.0
+        old_q = 0.0
     
     new_s = old_s + sum(new_entries) - sum(deleted_entries)
     new_q = old_q + sum([x*x for x in new_entries]) - sum([x*x for x in deleted_entries])
@@ -75,8 +102,12 @@ def update_course_analytics_in_db(course_id: int, new_entries: list, old_entries
         new_s += (new - old)
         new_q += (new*new - old*old)
     
-    new_mean = new_s / new_total_students
-    new_var = new_q/new_total_students - new_mean**2
+    if new_marks_count > 0:
+        new_mean = new_s / new_marks_count
+        new_var = new_q / new_marks_count - new_mean**2
+    else:
+        new_mean = 0.0
+        new_var = 0.0
     new_std = np.sqrt(max(new_var, 0))
     
     try:
@@ -192,7 +223,7 @@ def update_course_analytics(data: AssessmentQueueMessage):
         update_course_analytics_in_db(data.course_id, new_entry, old_entry, deleted_entry, course_analytic_overview)
 
 def add_assessment_analytics_to_db(course_id: int, assessment_id: int | None, marks: np.array):
-    total_students = len(marks)
+    total_students = get_total_enrolled_students(course_id)
     mean = np.mean(marks)
     std = np.std(marks)
     median = np.median(marks)
@@ -243,7 +274,7 @@ def update_assessment_analytics_in_db(course_id: int, assessment_id: int | None,
     old_max = assessment_analytic_overview.max
     old_min = assessment_analytic_overview.min
     
-    new_total_students = old_total_students + len(new_entries) - len(deleted_entries)
+    new_total_students = get_total_enrolled_students(course_id)
     
     affected = deleted_entries + [old for old, new in old_entries]
     
@@ -251,12 +282,19 @@ def update_assessment_analytics_in_db(course_id: int, assessment_id: int | None,
         any(mark == old_max for mark in affected) or
         any(mark == old_min for mark in affected)
     )
-     
-    # recompute_needed = True
     
+    cursor = db.cursor()
+    cursor.execute("SELECT SUM(frequency) FROM assessment_mark_frequency WHERE assessment_id = %s", (assessment_id,))
+    res = cursor.fetchone()
+    old_marks_count = int(res[0]) if res and res[0] else 0
+    new_marks_count = old_marks_count + len(new_entries) - len(deleted_entries)
     
-    old_s = old_mean*old_total_students
-    old_q = (old_std**2 + old_mean**2)*old_total_students
+    if old_marks_count > 0:
+        old_s = old_mean * old_marks_count
+        old_q = (old_std**2 + old_mean**2) * old_marks_count
+    else:
+        old_s = 0.0
+        old_q = 0.0
     
     new_s = old_s + sum(new_entries) - sum(deleted_entries)
     new_q = old_q + sum([x*x for x in new_entries]) - sum([x*x for x in deleted_entries])
@@ -265,8 +303,12 @@ def update_assessment_analytics_in_db(course_id: int, assessment_id: int | None,
         new_s += (new - old)
         new_q += (new*new - old*old)
     
-    new_mean = new_s / new_total_students
-    new_var = new_q/new_total_students - new_mean**2
+    if new_marks_count > 0:
+        new_mean = new_s / new_marks_count
+        new_var = new_q / new_marks_count - new_mean**2
+    else:
+        new_mean = 0.0
+        new_var = 0.0
     new_std = np.sqrt(max(new_var, 0))
     
     try:

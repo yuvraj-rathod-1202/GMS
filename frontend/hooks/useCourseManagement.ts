@@ -67,7 +67,7 @@ export function useCourseManagement(role: UserRole) {
 
   // Update store data helper
   const updateStoreData = useCallback(
-    (updates: Partial<typeof taData | typeof instructorData>) => {
+    (updates: any) => {
       const currentData = role === 'ta' ? taData : instructorData;
       const setData = role === 'ta' ? setTaData : setInstructorData;
 
@@ -77,8 +77,10 @@ export function useCourseManagement(role: UserRole) {
         totalMarks: currentData?.totalMarks || [],
         marksChanges: currentData?.marksChanges || {},
         CourseRoles: currentData?.CourseRoles || null,
-        ...(role === 'instructor' && { policies: instructorData?.policies || [] }),
-        ...(role === 'instructor' && { studentPolicyMap: instructorData?.studentPolicyMap || {} }),
+        policies: updates?.policies ?? currentData?.policies ?? [],
+        ...(role === 'instructor' && {
+          studentPolicyMap: updates?.studentPolicyMap ?? instructorData?.studentPolicyMap ?? {},
+        }),
         ...updates,
       } as any);
     },
@@ -343,7 +345,7 @@ export function useCourseManagement(role: UserRole) {
         const policies = await PolicyApi.GetAllPolicy(courseId);
         const policyList = Array.isArray(policies) ? policies : (policies as any)?.policy || [];
 
-        if (role === 'instructor') {
+        if (role === 'instructor' || role === 'ta') {
           updateStoreData({ policies: policyList });
         }
 

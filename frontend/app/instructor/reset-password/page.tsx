@@ -23,7 +23,9 @@ export default function InstructorResetPasswordPage() {
     }
 
     // Check if user is an instructor in any course
-    const hasInstructorOrTaRole = courses.some((course) => course.role === 'instructor' || course.role === 'ta');
+    const hasInstructorOrTaRole = courses.some(
+      (course) => course.role === 'instructor' || course.role === 'ta'
+    );
     setIsInstructorOrTa(hasInstructorOrTaRole);
 
     // Redirect non-instructors
@@ -80,7 +82,8 @@ export default function InstructorResetPasswordPage() {
           </button>
           <h1 className="text-2xl font-semibold text-gray-900">Reset User Password</h1>
           <p className="text-sm text-gray-600 mt-2">
-            As an instructor or TA, you can reset a user&apos;s password by entering their user ID(Roll No)
+            As an instructor or TA, you can reset a user&apos;s password by entering their user
+            ID(Roll No)
           </p>
         </div>
         <InstructorResetPasswordForm

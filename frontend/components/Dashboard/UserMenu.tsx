@@ -22,10 +22,12 @@ export default function UserMenu() {
     router.push('/login');
   };
 
+  /*
   const handleChangePassword = () => {
     router.push('/change-password');
     setUserMenuOpen(false);
   };
+  */
 
   const handleInstructorResetPassword = () => {
     router.push('/instructor/reset-password');
@@ -38,8 +40,11 @@ export default function UserMenu() {
 
   return (
     <div className="relative">
-      <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="w-full px-4 py-2 flex items-center gap-3 hover:bg-mms-indigoLight rounded-lg">
-        <FaUserCircle className="size-6 text-mms-black" />
+      <button
+        onClick={() => setUserMenuOpen(!userMenuOpen)}
+        className="w-full px-4 py-2 flex items-center gap-3 hover:bg-gms-indigoLight rounded-lg"
+      >
+        <FaUserCircle className="size-6 text-gms-black" />
         <span
           className="truncate font-semibold text-base text-gray-900"
           title={user?.email || 'User'}
@@ -50,21 +55,21 @@ export default function UserMenu() {
 
       {userMenuOpen && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg z-50">
-          <button
+          {/* <button
             onClick={handleChangePassword}
-            className="w-full text-left px-4 py-2.5 text-sm text-gray-900 hover:bg-mms-indigoLight flex gap-2 items-center first:rounded-t-lg transition"
+            className="w-full text-left px-4 py-2.5 text-sm text-gray-900 hover:bg-gms-indigoLight flex gap-2 items-center first:rounded-t-lg transition"
           >
             <RiLockPasswordLine className="size-4" /> Change Password
-          </button>
+          </button> */}
           {isInstructorOrTa && (
-              <button
-                onClick={handleInstructorResetPassword}
-                className="w-full cursor-pointer text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center transition"
-              >
-                <FaUserCog className="size-4" />
-                Reset User Password
-              </button>
-            )}
+            <button
+              onClick={handleInstructorResetPassword}
+              className="w-full cursor-pointer text-left px-4 py-2.5 text-sm text-gray-900 flex gap-2 items-center transition"
+            >
+              <FaUserCog className="size-4" />
+              Reset User Password
+            </button>
+          )}
           <button
             onClick={handleLogout}
             className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 last:rounded-b-lg  flex items-center gap-2"
