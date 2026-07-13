@@ -26,3 +26,6 @@ GMS is a microservices-based grading management platform with a web frontend, AP
 - Setup: [docs/setup.md](docs/setup.md)
 - Development: [docs/development.md](docs/development.md)
 - Contribution: [docs/contribution.md](docs/contribution.md)
+
+## License
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for the full text.
